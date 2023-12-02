@@ -1,0 +1,106 @@
+.NavBar {
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.NavBar-logo {
+    font-weight: bold;
+    color: var(--DarkFontColour);
+}
+
+.NavBar-menu-icon {
+    display: block;
+    cursor: pointer;
+}
+
+.NavBar-menu-icon-sgv {
+    height: 20px;
+    width: auto;
+    transition: all 0.3s ease-in;
+}
+
+.NavBar-menu-icon-sgv.active {
+    transform: rotate(90deg);
+    transition: all 0.3s ease-in;
+}
+
+.NavBar-nav-elements {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background-color: var(--BackgroudSecondary);
+    width: 0px;
+    height: calc(100vh - 80px);
+    transition: all 0.3s ease-in;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.NavBar-nav-elements.active {
+    width: 100%;
+}
+
+.NavBar-nav-elements ul {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.NavBar-nav-elements ul li {
+    margin-top: 22px;
+    list-style-type: none;
+    text-align: center;
+}
+
+.NavBar-nav-elements ul li a {
+    color: var(--FontColorPrimary);
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.NavBar-nav-elements ul li a.active {
+    color: var(--FontColorSecondary);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@media (min-width: 600px) {
+    .NavBar-menu-icon {
+        display: none;
+    }
+
+    .NavBar-nav-elements {
+        position: static;
+        min-width: 50%;
+        height: inherit;
+        background-color: transparent;
+        transition: none !important;
+        -webkit-transition: none !important;
+        -moz-transition: none !important;
+        -o-transition: none !important;
+    }
+
+    .NavBar-nav-elements ul {
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 25px;
+        list-style-type: none;
+        margin: 0;
+        height: 100%;
+    }
+
+    .NavBar-nav-elements ul li {
+        margin-top: 0;
+    }
+}
+
+@media (hover: hover) {
+    .NavBar-nav-elements ul li a:hover {
+        font-weight: bold;
+    }
+}

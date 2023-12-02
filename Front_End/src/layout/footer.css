@@ -1,0 +1,29 @@
+/* Footer */
+Footer {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+}
+
+Footer>* {
+    height: 20px;
+}
+
+Footer p {
+    color: var(--DarkFontColour);
+}
+
+Footer a {
+    display: block;
+}
+
+Footer img {
+    height: 20px;
+    filter: var(--DarkFontColourFilter);
+}
+
+Footer img:hover {
+    transform: scale(1.5) rotateZ(360deg);
+}

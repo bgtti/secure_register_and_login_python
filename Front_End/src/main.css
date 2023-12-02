@@ -1,0 +1,42 @@
+/* convert hex to CSS filter:  https://codepen.io/sosuke/pen/Pjoqqp  */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --BackgroudPrimary: #0d1618;
+    --BackgroudSecondary: #111c1e;
+    --FontColorPrimary: white;
+    --FontColorSecondary: #9da8a9;
+    --DarkFontColour: #384d4f;
+    --DarkFontColourFilter: invert(28%) sepia(2%) saturate(5258%) hue-rotate(136deg) brightness(88%) contrast(86%);
+
+    font-family: 'Inter', sans-serif;
+    background-color: #0d1618;
+    color: #ffffff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    min-width: 320px;
+    min-height: 100vh;
+    line-height: 1.4;
+}
+
+#root {
+    flex: 1 0 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#root>* {
+    padding: 5px 20px;
+}
+
+#root>div {
+    flex-grow: 1;
+}
