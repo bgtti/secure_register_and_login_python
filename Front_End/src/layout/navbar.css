@@ -8,7 +8,14 @@
 
 .NavBar-logo {
     font-weight: bold;
-    color: var(--DarkFontColour);
+    color: var(--BlueColour);
+    font-size: 1.3em;
+}
+
+.NavBar-logo>span {
+    font-weight: bolder;
+    color: var(--FontColorDarker);
+    letter-spacing: 0.2em;
 }
 
 .NavBar-menu-icon {

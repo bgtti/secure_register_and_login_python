@@ -1,4 +1,3 @@
-/* Footer */
 Footer {
     display: flex;
     gap: 15px;
@@ -12,7 +11,7 @@ Footer>* {
 }
 
 Footer p {
-    color: var(--DarkFontColour);
+    color: var(--FontColorDarker);
 }
 
 Footer a {
@@ -21,9 +20,11 @@ Footer a {
 
 Footer img {
     height: 20px;
-    filter: var(--DarkFontColourFilter);
+    filter: var(--FontColorDarkerFilter);
 }
 
-Footer img:hover {
-    transform: scale(1.5) rotateZ(360deg);
+@media (hover: hover) {
+    Footer img:hover {
+        transform: scale(1.5) rotateZ(360deg);
+    }
 }

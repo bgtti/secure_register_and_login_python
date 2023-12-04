@@ -1,0 +1,8 @@
+.LogIn {
+    display: flex;
+    flex-direction: column;
+}
+
+.LogIn>h2 {
+    margin-bottom: 25px;
+}

@@ -11,9 +11,19 @@ npm install
 npm run dev
 ```
 
+## Run tests
 
+Run Jest tests with the following command:
+```pwsh
+npm run test
+```
 
-# React + Vite
+## Goals
+
+Implement OWASP's top 10.
+Link: https://www.cloudflare.com/en-gb/learning/security/threats/owasp-top-10/
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

@@ -1,17 +1,33 @@
-/* convert hex to CSS filter:  https://codepen.io/sosuke/pen/Pjoqqp  */
+/* Useful links: */
+/* Convert hex to CSS filter:  https://codepen.io/sosuke/pen/Pjoqqp  */
+/* Color-contrast analyzer: https: //color.adobe.com/create/color-contrast-analyzer  */
+
+/* This is the main css file used in the project. Should be imported after a css reset file */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* Font: Inter Tight used for italics only: use html i tag in component */
 
 :root {
     --BackgroudPrimary: #0d1618;
     --BackgroudSecondary: #111c1e;
-    --FontColorPrimary: white;
-    --FontColorSecondary: #9da8a9;
-    --DarkFontColour: #384d4f;
-    --DarkFontColourFilter: invert(28%) sepia(2%) saturate(5258%) hue-rotate(136deg) brightness(88%) contrast(86%);
+    --BackgroundDisabled: #384d4f;
+    --BackgroundInput: #162427;
+    --FontColorInput: #F0F0F0;
+    --FontColorPrimary: #EBEBEB;
+    --FontColorSecondary: #B3B3B3;
+    --FontColorDarker: #3d515c;
+    --FontColorDarkerFilter: invert(24%) sepia(40%) saturate(326%) hue-rotate(157deg) brightness(102%) contrast(85%);
+    --FontColorDark: #0d1618;
+    --BlueColour: #4B83E3;
+    --MiddleBlueColour: #376073;
+    --YellowColor: #DB9A02;
 
+    font-family: 'Inter Tight', sans-serif;
     font-family: 'Inter', sans-serif;
-    background-color: #0d1618;
-    color: #ffffff;
+    background-color: var(--BackgroudPrimary);
+    color: var(--FontColorPrimary);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -39,4 +55,115 @@ body {
 
 #root>div {
     flex-grow: 1;
+}
+
+h2 {
+    font-size: 1.7em;
+    margin: 10px 0;
+}
+
+p,
+label {
+    font-size: 1em;
+}
+
+a {
+    color: var(--BlueColour)
+}
+
+i {
+    font-family: 'Inter Tight', sans-serif;
+    font-style: italic;
+}
+
+button {
+    font-family: 'Inter', sans-serif;
+    font-size: 1em;
+    font-weight: 600;
+    padding: 7px 25px;
+    background-color: var(--BlueColour);
+    border: none;
+    border-radius: 7px;
+    box-shadow: #13202389 0px 7px 29px 0px;
+    color: var(--FontColorDark);
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    button:hover {
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+    }
+}
+
+button:disabled {
+    background-color: var(--BackgroundDisabled);
+    border: 2px solid var(--BackgroudSecondary);
+    color: var(--BackgroudPrimary);
+    box-shadow: none;
+}
+
+input {
+    font-family: 'Inter', sans-serif;
+    font-size: 1em;
+    border: none;
+    border-radius: 7px;
+    padding: 5px 10px;
+    background-color: var(--BackgroundInput);
+    color: var(--FontColorInput);
+}
+
+/* SHARED CLASSES */
+/* Classes that can be used for styling */
+
+/* P-tag classes */
+/*    - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well. */
+/*      (Usage example: SignUp component)*/
+.MAIN-error-message {
+    font-size: 0.9em;
+    color: var(--YellowColor);
+}
+
+/*    - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page. */
+/*      (Usage example: SignUp component)*/
+.MAIN-info-paragraph {
+    color: var(--FontColorSecondary);
+    margin: 15px 0;
+}
+
+/* Form-tag classes */
+/*    - MAIN-form: used in form-tags. For it to work, the form parent must have the following attributes: {
+        display: flex; flex-direction: column;}, and form elements such as label and tags must be wrapped in a div with MAIN-form-display-table class. Error messages do not have to be placed in divs, and can be p tags bellow the div.
+        Also recommended: "form parent">h2 {margin-bottom: 25px;} to style the component's page title
+} */
+/*      (Usage example: SignUp component)*/
+
+.MAIN-form {
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.MAIN-form>* {
+    margin-bottom: 15px;
+    align-self: start;
+}
+
+.MAIN-form>button {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/*    - MAIN-form-display-table: using in divs which contain label&input tag pairs and are children of .MAIN-form */
+/*      (Usage example: SignUp component)*/
+.MAIN-form-display-table {
+    display: grid;
+    grid-template-columns: 2fr 60%;
+    grid-gap: 10px;
+}
+
+@media (min-width: 600px) {
+    .MAIN-form-display-table {
+        grid-template-columns: 200px 300px;
+    }
 }

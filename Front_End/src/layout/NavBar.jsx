@@ -13,7 +13,7 @@ function NavBar() {
         <>
             <nav className="NavBar">
                 <div className="NavBar-logo">
-                    Safe Dev
+                    <span>/</span>SafeDev <span>_</span>
                 </div>
                 <div className="NavBar-menu-icon" onClick={handleShowNavbar}>
                     <img src={MenuIcon} alt="Menu Icon" className={`NavBar-menu-icon-sgv  ${showNavbar && 'active'}`} />
