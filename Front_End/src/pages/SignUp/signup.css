@@ -6,3 +6,7 @@
 .SignUp>h2 {
     margin-bottom: 25px;
 }
+
+.SignUp-star {
+    color: var(--FontColorDarker);
+}

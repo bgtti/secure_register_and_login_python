@@ -3,6 +3,7 @@ from sqlalchemy import event
 from flask_login import UserMixin
 from datetime import datetime
 from uuid import uuid4
+from app.account.constants import INPUT_LENGTH 
 
 # IN THIS FILE: User DB Model
 
@@ -10,15 +11,16 @@ from uuid import uuid4
 def get_uuid():
     return uuid4().hex
 
+# Bcrypt should output a 60-character string, so this was used as maximum password length
+
 class User(UserMixin, db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True, unique=True)
     _uuid = db.Column(db.String(32), unique=True, default=get_uuid)
-    _name = db.Column(db.String(200), nullable=False)
-    _email = db.Column(db.String(320), nullable=False, unique=True)
+    _name = db.Column(db.String(INPUT_LENGTH.name.maxValue), nullable=False)
+    _email = db.Column(db.String(INPUT_LENGTH.email.maxValue), nullable=False, unique=True)
     _password = db.Column(db.String(60), nullable=False)
     _salt = db.Column(db.String(8), nullable=False)
-    _pepper = db.Column(db.String(4), nullable=False)
     _created_at = db.Column(db.DateTime, default=datetime.utcnow)
     _access_level = db.Column(db.String(5), default="user")
     
@@ -61,3 +63,7 @@ class User(UserMixin, db.Model):
     @property
     def access_level(self):
         return self._access_level
+    
+    @property
+    def created_at(self):
+        return self._created_at

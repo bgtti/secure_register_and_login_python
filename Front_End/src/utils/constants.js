@@ -47,6 +47,6 @@ export const INPUT_LENGTH = Object.freeze({
     },
     password: {
         minValue: 8,
-        maxValue: 65
+        maxValue: 60
     }
 })

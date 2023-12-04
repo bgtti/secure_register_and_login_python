@@ -27,6 +27,7 @@
     height: 20px;
     width: auto;
     transition: all 0.3s ease-in;
+    filter: var(--FontColorDarkerFilter);
 }
 
 .NavBar-menu-icon-sgv.active {

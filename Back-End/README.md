@@ -72,8 +72,10 @@ deactivate
 > Create a .env file inside the Back-End folder and add the following information:
 > SECRET_KEY = "your_password"
 > JWT_SECRET_KEY = "your_password"
+> PEPPER = '["str1", "str2", "str3", "str4", "str5", "str6"]'
 > 
 > Replace "your_password" with a password of your choice.
+> Replace "str1"... with random strings that are 1 to 4 characters long
 >
 > <br/><br/>
 
@@ -104,3 +106,20 @@ deactivate
 > <br/><br/>
 
 </details>
+
+## Running tests
+Pytest was used for unit testing.
+To run the tests use the following command in the terminal:
+```pwsh
+pytest
+```
+
+testing examples: https://testdriven.io/blog/flask-pytest/
+
+## Pytho quick fuction testing
+https://www.online-python.com/
+
+# why flas bcript: https://flask-bcrypt.readthedocs.io/en/1.0.1/
+
+# Password handling
+link: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html

@@ -158,7 +158,7 @@ input {
 /*      (Usage example: SignUp component)*/
 .MAIN-form-display-table {
     display: grid;
-    grid-template-columns: 2fr 60%;
+    grid-template-columns: 2fr 3fr;
     grid-gap: 10px;
 }
 

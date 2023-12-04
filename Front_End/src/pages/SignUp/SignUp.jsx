@@ -76,7 +76,7 @@ function SignUp() {
             <h2>Sign Up</h2>
             <form onSubmit={handleSubmit} className='MAIN-form'>
                 <div className="MAIN-form-display-table">
-                    <label htmlFor="name">Name: *</label>
+                    <label htmlFor="name">Name:<span className="SignUp-star">*</span></label>
                     <input
                         aria-invalid={formData.nameIsValid.message === "" ? "false" : "true"}
                         aria-describedby="name-error"
@@ -100,7 +100,7 @@ function SignUp() {
                     )
                 }
                 <div className="MAIN-form-display-table">
-                    <label htmlFor="email">Email: *</label>
+                    <label htmlFor="email">Email:<span className="SignUp-star">*</span></label>
                     <input
                         aria-invalid={formData.emailIsValid.message === "" ? "false" : "true"}
                         aria-describedby="email-error"
@@ -124,7 +124,7 @@ function SignUp() {
                     )
                 }
                 <div className="MAIN-form-display-table">
-                    <label htmlFor="password">Password: *</label>
+                    <label htmlFor="password">Password:<span className="SignUp-star">*</span></label>
                     <input
                         aria-invalid={formData.passwordIsValid.message === "" ? "false" : "true"}
                         aria-describedby="password-error"
@@ -148,7 +148,7 @@ function SignUp() {
                     )
                 }
                 <div className="MAIN-form-display-table">
-                    <label htmlFor="confirmPassword">Confirm Password: *</label>
+                    <label htmlFor="confirmPassword">Confirm Password:<span className="SignUp-star">*</span></label>
                     <input
                         aria-invalid={formData.confirmPasswordIsValid.message === "" ? "false" : "true"}
                         aria-describedby="confirm-password-error"

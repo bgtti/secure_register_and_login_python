@@ -21,13 +21,13 @@ function NavBar() {
                 <div className={`NavBar-nav-elements  ${showNavbar && 'active'}`}>
                     <ul>
                         <li>
-                            <NavLink to="/">Home</NavLink>
+                            <NavLink to="/" onClick={handleShowNavbar}>Home</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/login">Login</NavLink>
+                            <NavLink to="/login" onClick={handleShowNavbar}>Login</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/signup">Signup</NavLink>
+                            <NavLink to="/signup" onClick={handleShowNavbar}>Signup</NavLink>
                         </li>
                     </ul>
                 </div>
