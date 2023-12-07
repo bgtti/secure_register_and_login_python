@@ -1,5 +1,5 @@
 from flask import Flask
-from app.config import Config
+from app.config import Config, TestConfig
 import app.extensions as extensions
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -10,10 +10,11 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    extensions.db.init_app(app)
     extensions.flask_bcrypt.init_app(app)
-    extensions.jwt.init_app(app)
-    extensions.cors.init_app(app)
+    extensions.jwt.init_app(app) #probably no longer needed
+    extensions.cors.init_app(app, supports_credentials=True)
+    extensions.server_session.init_app(app)
+    extensions.db.init_app(app)
 
     from app.models import user
     from flask import current_app
@@ -25,6 +26,7 @@ def create_app(config_class=Config):
 
     @app.route('/test/')
     def test_page():
+        # session['test_data'] = 'Hello, this is a test!'
         return '<h1> Testing the App </h1>'
 
     # ABS_PATH = os.path.dirname(__file__)

@@ -1,4 +1,4 @@
-import unittest
+# import unittest
 from app.account.helpers import is_good_password
 
 def test_is_good_password():
@@ -19,4 +19,5 @@ def test_is_good_password():
     assert is_good_password("password1234") == False
     # Passwords over 15 characters can pass even if containing common passwords
     assert is_good_password("fksbzr§&fws*ilovemikeymouse") == True
+    assert is_good_password("joeTesting067!") == True
 

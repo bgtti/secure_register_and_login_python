@@ -1,0 +1,31 @@
+.Loader {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.822);
+    z-index: 500;
+}
+
+@keyframes spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.Loader-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--FontColorDarker);
+    border-top: 5px solid var(--YellowColor);
+    border-radius: 50%;
+    animation: spinner 1.7s linear infinite;
+}

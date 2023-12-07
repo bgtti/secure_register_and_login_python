@@ -107,6 +107,24 @@ deactivate
 
 </details>
 
+## Docker: redis
+You can install redis or install docker and start a redis container.
+On Windows, I recommend installing docker: https://docs.docker.com/get-docker/
+
+Then run the following command start a redis via docker:
+
+```pwsh
+docker run -p 6379:6379 -it redis/redis-stack:latest
+
+```
+This is necessary to use flask-session.
+More information flask-session: https://flask-session.readthedocs.io/en/latest/interfaces.html
+More information: https://github.com/redis/redis-py
+
+
+
+
+
 ## Running tests
 Pytest was used for unit testing.
 To run the tests use the following command in the terminal:

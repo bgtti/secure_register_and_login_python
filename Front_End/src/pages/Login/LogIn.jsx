@@ -1,17 +1,27 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setLoader } from "../../redux/loader/loaderSlice"
+import { setUser } from "../../redux/user/userSlice";
 import { emailValidation, passwordValidationForLogin } from "../../utils/validation";
 import { INPUT_LENGTH } from "../../utils/constants";
+import api from "../../config/axios"
+import APIURL from "../../config/apiUrls";
 import "./login.css"
 
 function LogIn() {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         email: "",
         emailIsValid: { response: false, message: "" },
         password: "",
         passwordIsValid: { response: false, message: "" },
+        credentialsAreValid: { response: true, message: "" },
     });
 
-    const formIsValid = (formData.emailIsValid.response && formData.passwordIsValid.response);
+    const formIsValid = (formData.emailIsValid.response && formData.passwordIsValid.response && formData.credentialsAreValid.response);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -19,6 +29,12 @@ function LogIn() {
             ...prevData,
             [name]: value,
         }));
+        if (!formData.credentialsAreValid.response) {
+            setFormData((prevData) => ({
+                ...prevData,
+                credentialsAreValid: { response: true, message: "" },
+            }));
+        }
     };
 
     const handleBlur = (e) => {
@@ -41,11 +57,44 @@ function LogIn() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formIsValid) {
-            // Add your form submission logic here, for example, send data to a server
-            console.log('Form submitted:', formData);
-            // Loader should start till server response
-            // Server responds with success: log in user
-            // Server responds with failure, show error page
+            dispatch(setLoader(true));
+            const logInUser = async () => {
+                const requestData = {
+                    "email": formData.email,
+                    "password": formData.password
+                }
+                try {
+                    const response = await api.post(APIURL.LOGIN, requestData);
+                    if (response.status !== 200) {
+                        if (response.status === 401) {
+                            setFormData((prevData) => ({
+                                ...prevData,
+                                credentialsAreValid: { response: false, message: "Error: Invalid credentials." },
+                            }));
+                        } else {
+                            setFormData((prevData) => ({
+                                ...prevData,
+                                credentialsAreValid: { response: false, message: "Error: Please refresh the page and try again." },
+                            }));
+                        }
+                    } else {
+                        const userData = {
+                            id: response.data.user.id,
+                            email: response.data.user.email,
+                            name: response.data.user.name
+                        }
+                        dispatch(setUser(userData))
+                        navigate("/dashboard");
+                    }
+                } catch (error) {
+                    setFormData((prevData) => ({
+                        ...prevData,
+                        credentialsAreValid: { response: false, message: "Error: Please refresh the page and try again." },
+                    }));
+                }
+                dispatch(setLoader(false));
+            }
+            logInUser();
         }
     };
 
@@ -103,6 +152,14 @@ function LogIn() {
                 }
 
                 <button disabled={!formIsValid} type="submit">Log in</button>
+
+                {
+                    formData.credentialsAreValid.message !== "" && (
+                        <p className="MAIN-error-message" id="password-error">
+                            <i>{formData.credentialsAreValid.message}</i>
+                        </p>
+                    )
+                }
             </form>
             <p className="MAIN-info-paragraph">
                 Don't have an account yet? <a href="/signup">Sign up</a> instead.
