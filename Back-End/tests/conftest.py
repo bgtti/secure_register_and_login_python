@@ -1,7 +1,5 @@
 import pytest
-
 from app import create_app
-# from app import create_app, db
 from app.extensions import db 
 from app.config import TestConfig
 
@@ -14,14 +12,6 @@ def app_test():
         db.create_all()
 
     yield app_test
-
-# Clean up db after testing
-# @pytest.fixture(scope='function')
-# def clean_db(app_test):
-#     with app_test.app_context():
-#         db.drop_all()
-#         db.create_all()
-#     yield
 
 # Simulate requests
 @pytest.fixture()

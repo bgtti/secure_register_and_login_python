@@ -1,5 +1,4 @@
 import json
-
 from app.models.user import User
 
 def test_signup_user(client, app_test):
