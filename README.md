@@ -36,3 +36,12 @@ check-sheet: https://go.snyk.io/rs/677-THP-415/images/Python_Cheatsheet_whitepap
 https://snyk.io/plans/
 
 https://www.cloudflare.com/en-gb/learning/security/threats/owasp-top-10/
+
+
+implementing session:
+https://www.youtube.com/watch?v=sBw0O5YTT4Q
+
+testing in flask:
+https://www.youtube.com/watch?v=RLKW7ZMJOf4&t=184s
+
+important: https://stackoverflow.com/a/24689738

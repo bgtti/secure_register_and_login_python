@@ -12,6 +12,7 @@
 :root {
     --BackgroudPrimary: #0d1618;
     --BackgroudSecondary: #111c1e;
+    --BackgroudTertiary: #152325;
     --BackgroundDisabled: #384d4f;
     --BackgroundInput: #162427;
     --FontColorInput: #F0F0F0;
@@ -23,6 +24,7 @@
     --BlueColour: #4B83E3;
     --MiddleBlueColour: #376073;
     --YellowColor: #DB9A02;
+    --RedColor: #aa0000;
 
     font-family: 'Inter Tight', sans-serif;
     font-family: 'Inter', sans-serif;
@@ -59,6 +61,11 @@ body {
 
 h2 {
     font-size: 1.7em;
+    margin: 10px 0;
+}
+
+h3 {
+    font-size: 1.4em;
     margin: 10px 0;
 }
 

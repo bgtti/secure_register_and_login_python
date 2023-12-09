@@ -1,0 +1,137 @@
+.AdminDashboard-UserTable {
+    border-collapse: collapse;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-style: hidden;
+    box-shadow: 0 0 0 2px var(--FontColorDarker);
+}
+
+.AdminDashboard-UserTable>thead>tr>th,
+.AdminDashboard-UserTable>tbody>tr>td {
+    padding: 5px;
+}
+
+.AdminDashboard-UserTable>tbody>tr:nth-of-type(even) {
+    background-color: var(--BackgroudSecondary);
+}
+
+.AdminDashboard-UserTable-icon {
+    height: 30px;
+    cursor: pointer;
+
+}
+
+@media (hover: hover) {
+    .AdminDashboard-UserTable>tbody>tr:hover {
+        background-color: var(--BackgroudTertiary);
+    }
+
+    .AdminDashboard-UserTable-icon:hover {
+        filter: grayscale(70%) drop-shadow(0 0 0.2rem black);
+    }
+}
+
+/* MOBILE/SMALL DEVICES ONLY */
+
+.AdminDashboard-UserTable,
+.AdminDashboard-UserTable>thead,
+.AdminDashboard-UserTable>tbody,
+.AdminDashboard-UserTable>thead>tr,
+.AdminDashboard-UserTable>thead>tr>th,
+.AdminDashboard-UserTable>tbody>tr>td {
+    display: block;
+}
+
+/* Hide table headers (but not display: none;, for accessibility) */
+.AdminDashboard-UserTable>thead>tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+}
+
+.AdminDashboard-UserTable>tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.AdminDashboard-UserTable>tbody>tr {
+    margin: 5px;
+    border: 3px solid var(--BackgroudTertiary);
+    border-radius: 5px;
+}
+
+.AdminDashboard-UserTable>tbody>tr>td {
+    /* Behave  like a "row" */
+    border-bottom: 2px solid var(--BackgroudTertiary);
+    position: relative;
+    display: grid;
+    grid-template-columns: 6em auto
+}
+
+.AdminDashboard-UserTable>tbody>tr>td>div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.AdminDashboard-UserTable-Label {
+    font-weight: bold;
+    padding-right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    color: var(--FontColorSecondary);
+}
+
+
+/* BIG SCREEN */
+@media only screen and (min-width:600px) {
+
+    .AdminDashboard-UserTable,
+    .AdminDashboard-UserTable>thead,
+    .AdminDashboard-UserTable>tbody,
+    .AdminDashboard-UserTable>thead>tr,
+    .AdminDashboard-UserTable>thead>tr>th,
+    .AdminDashboard-UserTable>tbody>tr,
+    .AdminDashboard-UserTable>tbody>tr>td {
+        margin: 0;
+        padding: 0;
+        border: none;
+        display: revert;
+        position: revert;
+    }
+
+    .AdminDashboard-UserTable,
+    .AdminDashboard-UserTable>thead,
+    .AdminDashboard-UserTable>tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .AdminDashboard-UserTable>thead>tr,
+    .AdminDashboard-UserTable>tbody>tr {
+        padding: 5px;
+        display: grid;
+        grid-template-columns: auto repeat(3, 10em);
+        justify-items: stretch;
+        align-items: center;
+        gap: 0 5px;
+        border-bottom: 2px solid var(--FontColorDarker);
+        border-radius: 0;
+    }
+
+    .AdminDashboard-UserTable>thead>tr {
+        background-color: var(--BackgroundInput);
+    }
+
+    .AdminDashboard-UserTable>thead>tr>th {
+        text-align: start;
+        font-weight: bold;
+    }
+
+    .AdminDashboard-UserTable-Label {
+        display: none;
+    }
+}

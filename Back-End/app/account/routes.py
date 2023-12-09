@@ -100,14 +100,20 @@ def login_user():
     email = json_data["email"]
     password = json_data["password"]
 
-    # LOG LOGIN ATTEMPT**********
-
     # Check if user exists
     user = User.query.filter_by(_email=email).first()
 
     if user is None:
         return jsonify({'response':'unauthorized'}), 401
-
+    
+    # Check if the user is blocked
+    if user.has_access_blocked():
+        return jsonify({'response': 'blocked'}), 401
+    
+    # Check if the user is temporarily blocked from logging in:
+    if user.is_login_blocked():
+        remaining_time = max(0, round((user.login_blocked_until - datetime.utcnow()).total_seconds() / 60))
+        return jsonify({f'response': 'temporarily blocked for {remaining_time} minutes'}), 401
     
     date = user.created_at
     pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)] 
@@ -115,8 +121,20 @@ def login_user():
     salted_password = user.salt + password + pepper
 
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
-        #LOG LOGIN ATTEMPT **************
+        # Increment login attempts and block if necessary
+        user.increment_login_attempts()
+        db.session.commit()
+        # Check if the user is now blocked
+        if user.is_login_blocked():
+            remaining_time = max(0, round((user.login_blocked_until - datetime.utcnow()).total_seconds() / 60))
+            return jsonify({f'response': 'temporarily blocked for {remaining_time} minutes'}), 401
+
         return jsonify({'response':'unauthorized'}), 401
+    
+    # Reset login attempts counter upon successful login & set last seen
+    user.reset_login_attempts()
+    user._last_seen = datetime.utcnow()
+    db.session.commit()
     
     session['user_id'] = user.uuid
 
@@ -129,3 +147,10 @@ def login_user():
             
         }
     return jsonify(response_data)
+
+# Log OUT
+@account.route("/logout", methods=["POST"])
+def logout_user():
+    session.pop("user_id")
+    
+    return 200
