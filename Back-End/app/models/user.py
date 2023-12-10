@@ -1,5 +1,5 @@
 from app.extensions import db
-from sqlalchemy import event
+# from sqlalchemy import event
 from flask_login import UserMixin
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -34,12 +34,12 @@ class User(UserMixin, db.Model):
     _login_blocked_until = db.Column(db.DateTime, default=datetime.utcnow)
     
     
-    def __init__(self, email, name, password, salt,**kwargs):
+    def __init__(self, email, name, password, salt, created_at):
         self._email = email
         self._name = name
         self._password = password
         self._salt = salt
-        self._created_at = datetime.utcnow()
+        self._created_at = created_at
     
     def __repr__(self):
         return f"<User: {self.id} {self._name} {self._email}>"

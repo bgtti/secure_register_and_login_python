@@ -141,3 +141,11 @@ https://www.online-python.com/
 
 # Password handling
 link: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+
+save tree to text file: tree /f > tree.txt
+
+# NEXT STEPS:
+https://stackoverflow.com/questions/3759981/get-ip-address-of-visitors-using-flask-for-python
+https://flask-limiter.readthedocs.io/en/stable/
+https://www.silvaneves.org/deleting-old-items-in-sqlalchemy
+https://security.stackexchange.com/questions/222815/should-i-hash-session-ids-before-storing-the-session-contents#:~:text=Regardless%20of%20how%20often%20the,to%20prevent%20session%20fixation%20attacks.

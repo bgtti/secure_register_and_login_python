@@ -4,7 +4,6 @@ EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
 
 # Explanation of the EMAIL_PATTERN:
-# Explanation of the EMAIL_PATTERN:
 # ^: Asserts the start of the string.
 # [^@\s]+: Matches one or more characters that are not '@' or whitespace.
 # @: Matches the '@' character.

@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from app.extensions import flask_bcrypt, db
 from app.account.schemas import sign_up_schema, log_in_schema
-from app.account.salt import generate_salt
+# from app.account.salt import generate_salt
 from app.models.user import User
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 
 
 admin = Blueprint('admin', __name__)

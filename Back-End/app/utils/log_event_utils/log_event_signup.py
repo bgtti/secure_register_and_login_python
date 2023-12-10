@@ -10,42 +10,42 @@ LOG_EVENT_SIGNUP = {
         "type": LOG_EVENT_TYPE["INFO"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "successful signup.",
-        "session_id": REQUIRED,
+        "user_uuid": REQUIRED,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LES_02": {
         "type": LOG_EVENT_TYPE["INFO"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "signup rejected: schema validation failure.",
-        "session_id": NONE,
+        "user_uuid": NONE,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LES_03": {
         "type": LOG_EVENT_TYPE["INFO"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "signup rejected: user already exists.",
-        "session_id": REQUIRED,
+        "user_uuid": REQUIRED,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LES_04": {
         "type": LOG_EVENT_TYPE["WARN"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "signup rejected: weak password",
-        "session_id": NONE,
+        "user_uuid": NONE,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LES_05": {
         "type": LOG_EVENT_TYPE["WARN"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "signup failure: user could not be created.",
-        "session_id": NONE,
+        "user_uuid": NONE,
         "level": LOG_EVENT_LEVEL["ERROR"]
     },
     "LES_06": {
         "type": LOG_EVENT_TYPE["SUSPISCIOUS"],
         "activity": LOG_EVENT_ACTIVITY["signup"],
         "message": "html might have been supplied in form.",
-        "session_id": REQUIRED,
+        "user_uuid": REQUIRED,
         "level": LOG_EVENT_LEVEL["INFO"]
     }
 }

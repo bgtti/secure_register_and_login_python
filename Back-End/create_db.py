@@ -1,7 +1,8 @@
 from flask import current_app
 from app.extensions import db, flask_bcrypt
 from app.models.user import User
-from app.account.salt import generate_salt
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+# from app.account.salt import generate_salt
 import os
 import ast
 from datetime import datetime
@@ -24,9 +25,12 @@ def create_admin_acct():
     super_admin_exists = User.query.get(1)
     if not super_admin_exists:
         # create super admin
+        # date = datetime.utcnow()
+        # pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)]
+        # salt = generate_salt()
         date = datetime.utcnow()
-        pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)]
         salt = generate_salt()
+        pepper = get_pepper(date)
         salted_password = salt + ADMIN_PW + pepper
         hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
         the_super_admin = User(

@@ -1,8 +1,21 @@
 import re
 from app.account.constants import MOST_COMMON_PASSWORDS
-from datetime import datetime
 
 def is_good_password(password):
+    """
+    is_good_password(password: str) -> bool
+    ---------------------------------------
+    Returns:
+        False if password is weak.
+        True if password is strong.
+    ---------------------------------------
+    Example usage:
+    password_to_check = "SecurePassword123"
+    if is_good_password(password_to_check):
+        print("Password is valid!")
+    else:
+        print("Password is invalid.")
+    """
     # Check for sequential repetition
     sequential_repetition_pattern = r"(\S)\1{3,}"  # Matches any character repeated 4 or more times
     if re.search(sequential_repetition_pattern, password):
@@ -14,11 +27,3 @@ def is_good_password(password):
 
     # If the password passes both checks, it is considered valid
     return True
-
-# Example usage
-# password_to_check = "SecurePassword123"
-# if is_good_password(password_to_check):
-#     print("Password is valid!")
-# else:
-#     print("Password is invalid.")
-
