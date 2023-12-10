@@ -1,26 +1,14 @@
-from flask import Blueprint, request, jsonify, session, current_app
-from datetime import timedelta
-
-import jsonschema
-import os
-import ast
-from dotenv import load_dotenv  # getting .env variables
-from app.extensions import flask_bcrypt, db
-from app.account.schemas import sign_up_schema, log_in_schema
-# from app.account.salt import generate_salt
-from app.models.user import User
-from app.account.helpers import is_good_password
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 import logging
-import time
+import jsonschema
+from app.extensions import flask_bcrypt, db
+from app.account.schemas import sign_up_schema, log_in_schema
+from app.account.helpers import is_good_password
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.models.user import User
 
 account = Blueprint("account", __name__)
-
-# PEPPER_STRING_ARRAY = os.getenv("PEPPER") 
-# PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
-
-#logger = current_app.logger
 
 # SIGN UP
 @account.route("/signup", methods=["POST"])
@@ -68,9 +56,7 @@ def signup_user():
     if not is_good_password(password):
         return jsonify({"response": "Weak password."}), 400
 
-    # Not to use same pepper for every user, pepper array has 6 values, and pepper will rotate according to the month the user created the account. If pepper array does not contain 6 values, this will fail.
-    # date = datetime.utcnow()
-    # pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)] 
+    # Not to use same pepper for every user, pepper array has 6 values, and pepper will rotate according to the month the user created the account. If pepper array does not contain 6 values, this will fail. Make sure pepper array is setup correctly in env file.
     date = datetime.utcnow()
     salt = generate_salt()
     pepper = get_pepper(date)
@@ -104,6 +90,7 @@ def signup_user():
 def login_user():
     """
     login_user() -> JsonType
+    ----------------------------------------------------------
     Route with no parameters.
     Sets a session cookie in response.
     Returns Json object containing strings.

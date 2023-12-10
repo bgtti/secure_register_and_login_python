@@ -29,7 +29,6 @@ def create_app(config_class=Config):
 
     @app.route('/test/')
     def test_page():
-        # session['test_data'] = 'Hello, this is a test!'
         return '<h1> Testing the App </h1>'
 
     return app

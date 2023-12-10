@@ -1,18 +1,27 @@
 import os
 import ast
 import random
+import logging
 from datetime import datetime
 from uuid import uuid4
 
-PEPPER_STRING_ARRAY = os.getenv('PEPPER') 
-PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
+# Pepper requires a pepper array set in an env file
+PEPPER_STRING_ARRAY = os.getenv('PEPPER')
+# If it does not exist or it is set up incorrectly, a default version will be used so that the code does not break.
+try:
+    PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
+    if not isinstance(PEPPER_ARRAY, list) or len(PEPPER_ARRAY) != 6:
+        raise ValueError("PEPPER must have exactly 6 values.")
+except (ValueError, SyntaxError, TypeError):
+    logging.error("Error reading PEPPER. Using fallback pepper array.")
+    PEPPER_ARRAY = ["xYz1", "XyZ2", "zXy5", "ZxY9", "7Zyx", "Y8zX"]
 
 # function to get pepper according to account creation date
 def get_pepper(date):
     """
     get_pepper(date: datetime) -> str[4]
     --------------------------------------
-    Required a datetime argument. 
+    Requires a datetime argument. 
     Returns a string defined in the
     PEPPER saved in the env file. 
     --------------------------------------
@@ -33,6 +42,7 @@ def get_pepper(date):
     """
     pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)] 
     return pepper
+
 
 # Function to generate a random 8-character string to salt user passwords
 def generate_salt():
