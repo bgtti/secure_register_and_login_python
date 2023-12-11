@@ -39,14 +39,14 @@ LOG_EVENT_LOGIN = {
     "LEL_06": {
         "type": LOG_EVENT_TYPE["INFO"],
         "activity": LOG_EVENT_ACTIVITY["login"],
-        "message": "login rejected: wrong password. Login attempt number: X",
+        "message": "login rejected: wrong password input more than 3 times.",
         "user_uuid": REQUIRED,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LEL_07": {
         "type": LOG_EVENT_TYPE["WARN"],
         "activity": LOG_EVENT_ACTIVITY["login"],
-        "message": "login rejected: wrong password input more than 5 times. Login attempt number: X",
+        "message": "login rejected: wrong password input 5 times or more.",
         "user_uuid": REQUIRED,
         "level": LOG_EVENT_LEVEL["INFO"]
     },

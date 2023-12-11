@@ -1,6 +1,6 @@
 from app.extensions import  db
 from app.models.log_event import LogEvent
-from app.utils.log_event_utils.constants import LOG_EVENT_ACTIVITIES
+from app.utils.log_event_utils.log_event_activities_all import LOG_EVENT_ACTIVITIES
 
 def log_event(event_activity_name, event_code, user_uuid="none"):
     """

@@ -1,13 +1,9 @@
-from app.utils.log_event_utils.log_event_block_unblock import LOG_EVENT_BLOCK, LOG_EVENT_UNBLOCK
-from app.utils.log_event_utils.log_event_login import LOG_EVENT_LOGIN
-from app.utils.log_event_utils.log_event_signup import LOG_EVENT_SIGNUP
-
 # CREATING NEW LOG ACTIVITIES (event types)
-# 01: place the name of the activity (compatible with the name of the route you want to log) in the LOG_EVENT_ACTIVITY
+# 01: place the name of the activity (compatible with the name of the route you want to log) in the LOG_EVENT_ACTIVITY bellow
 # 02: create a file named log_event + activity. Create the dictionary of dictionaries like in log_event_login.py
-# 03: adapt the LOG_EVENT_ACTIVITIES bellow to include the new activity dictionary
+# 03: adapt the LOG_EVENT_ACTIVITIES in the file log_event_activities_all.py to include the new activity dictionary
 # the function to create logs is in helpers.py and should adapt to the new activity type
-# it is suggested that the constants bellow be used whenever possible to avoid typos
+# it is suggested that the constants bellow be used whenever possible in new activities to avoid typos
 # DO NOT MIX UP LOG_EVENT_ACTIVITIES with LOG_EVENT_ACTIVITY in the imports...
 
 # EVENT LOGS VERSUS OTHER LOGS:
@@ -16,13 +12,6 @@ from app.utils.log_event_utils.log_event_signup import LOG_EVENT_SIGNUP
 # keep this in mind when creating a new log_event
 # log_events are displayed to admins in the FE in the form of user's history and can help flag suspiscious behaviour or answering user's question on why they are encountering some issue (admins can check the activity the user was performing when the error happened)
 # do not track sensitive information in log_events or any other type of logging mechanism
-
-LOG_EVENT_ACTIVITIES = {
-    "LOG_EVENT_BLOCK": LOG_EVENT_BLOCK,
-    "LOG_EVENT_UNBLOCK": LOG_EVENT_UNBLOCK,
-    "LOG_EVENT_LOGIN": LOG_EVENT_LOGIN,
-    "LOG_EVENT_SIGNUP": LOG_EVENT_SIGNUP 
-}
 
 LOG_EVENT_ACTIVITY = {
     "block": "block",
