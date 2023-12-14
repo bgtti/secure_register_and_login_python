@@ -25,7 +25,7 @@ function NavBar() {
     }
     return (
         <>
-            <nav className="NavBar">
+            <nav className="NavBar" role="navigation" aria-labelledby="firstLabel" aria-label="Primary">
                 <div className="NavBar-logo">
                     <span>/</span>SafeDev <span>_</span>
                 </div>

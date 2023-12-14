@@ -104,6 +104,12 @@ deactivate
 > Check out this answer on [StackOverflow ](https://stackoverflow.com/questions/65694813/import-flask-could-not-be-resolved-from-source-pylance#:~:text=This%20happens%20when%20the%20Python,in%20the%20venv%2Fbin%20directory)
 >
 > <br/><br/>
+>
+> Cleaning __pycache__ files: 
+> ```pwsh
+> Get-ChildItem -Recurse -Filter "__pycache__" | Remove-Item -Recurse -Force
+> ```
+>
 
 </details>
 

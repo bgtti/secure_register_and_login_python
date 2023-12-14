@@ -114,7 +114,7 @@
     .AdminDashboard-UserTable>tbody>tr {
         padding: 5px;
         display: grid;
-        grid-template-columns: auto repeat(3, 10em);
+        grid-template-columns: auto repeat(4, 10em);
         justify-items: stretch;
         align-items: center;
         gap: 0 5px;

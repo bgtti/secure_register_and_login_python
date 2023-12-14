@@ -1,0 +1,17 @@
+.ModalUserAction-BtnContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.ModalUserAction-Bold {
+    font-weight: bold;
+}
+
+.ModalUserAction-BtnContainer>* {
+    width: 9em;
+}
+
+.ModalUserAction-ActionBtn {
+    background-color: var(--YellowColor);
+}
