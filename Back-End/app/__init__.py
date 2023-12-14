@@ -11,10 +11,14 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    dictConfig(LOGGING_CONFIG)
+    system_logger = logging.getLogger("system_log")
+
     extensions.flask_bcrypt.init_app(app)
     extensions.cors.init_app(app, supports_credentials=True)
     extensions.server_session.init_app(app)
     extensions.db.init_app(app)
+    extensions.limiter.init_app(app)
 
     from app.models import user
     from flask import current_app
@@ -24,8 +28,7 @@ def create_app(config_class=Config):
     app.register_blueprint(account, url_prefix='/api/account')
     app.register_blueprint(admin, url_prefix='/api/admin')
 
-    dictConfig(LOGGING_CONFIG)
-    system_logger = logging.getLogger("system_log")
+
 
     @app.route('/test/')
     def test_page():

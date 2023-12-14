@@ -1,18 +1,20 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, request
 from datetime import datetime
 import logging
 import jsonschema
-from app.extensions import flask_bcrypt, db
+from app.extensions import flask_bcrypt, db, limiter
 from app.account.schemas import sign_up_schema, log_in_schema
 from app.account.helpers import is_good_password
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.log_event_utils.helpers import log_event
+from app.utils.detect_html.detect_html import check_for_html
 from app.models.user import User
 
 account = Blueprint("account", __name__)
 
 # SIGN UP
 @account.route("/signup", methods=["POST"])
+@limiter.limit("20/day")
 def signup_user():
     """
     signup_user() -> JsonType
@@ -34,18 +36,24 @@ def signup_user():
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
+    name = json_data["name"]
+    email = json_data["email"]
+    password = json_data["password"]
+
+    # Get the client's IP address - if html is found in input, ip address will be logged
+    client_ip = request.remote_addr
+
+    # Check for html in user input
+    html_in_name = check_for_html(name, "signup - name field", client_ip)
+    html_in_email = check_for_html(email, "signup - email field", client_ip)
 
     # Validate the JSON data against the schema
     try:
         jsonschema.validate(instance=json_data, schema=sign_up_schema)
     except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input name: {json_data["name"]} Input email: {json_data["email"]}")
+        logging.info(f"Jsonschema validation error. Input name: {name} Input email: {email}")
         log_event("LOG_EVENT_SIGNUP", "LES_02")
         return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
-    
-    name = json_data["name"]
-    email = json_data["email"]
-    password = json_data["password"]
 
     # Check if user already exists
     user_exists = User.query.filter_by(_email=email).first() is not None
@@ -73,6 +81,7 @@ def signup_user():
         new_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=date)
         db.session.add(new_user)
         db.session.commit()
+        the_session = new_user.session
 
     except Exception as e:
         logging.error(f"User registration failed. Returned 500. Error: {e}")
@@ -82,14 +91,14 @@ def signup_user():
             logging.error(f"Log event error. Error: {e}")
         return jsonify({"response": "There was an error registering user", "error": str(e)}), 500
     
-    #IMPLEMENT: log_event("LOG_EVENT_SIGNUP", "LES_06", new_user.uuid) --- "html might have been supplied in form."
-    
     # create session
-    session["user_id"] = new_user.uuid
+    session["session_id"] = the_session
 
     # log event and system
     logging.info(f"New user created.")
     log_event("LOG_EVENT_SIGNUP", "LES_01", new_user.uuid)
+    if html_in_name or html_in_email:
+        log_event("LOG_EVENT_SIGNUP", "LES_06", new_user.uuid)
     
     response_data ={
             "response":"success",
@@ -121,8 +130,18 @@ def login_user():
                 "email": "john@email.com"}, 
         } 
     """
-    # Get the JSON data from the request body and validate against the schema
+    # Get the JSON data from the request body 
     json_data = request.get_json()
+    email = json_data["email"]
+    password = json_data["password"]
+
+    # Get the client's IP address - if html is found in input, ip address will be logged
+    client_ip = request.remote_addr
+
+    # Check for html in user input
+    html_in_email = check_for_html(email, "login - email field", client_ip)
+
+    # validate Json against the schema
     try:
         jsonschema.validate(instance=json_data, schema=log_in_schema)
     except jsonschema.exceptions.ValidationError as e:
@@ -132,9 +151,6 @@ def login_user():
         except Exception as e:
             logging.error(f"Failed to log event. Error: {e}")
         return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
-    
-    email = json_data["email"]
-    password = json_data["password"]
 
     # Check if user exists
     user = User.query.filter_by(_email=email).first()
@@ -192,25 +208,26 @@ def login_user():
             return jsonify({f"response": "temporarily blocked for {remaining_time} minutes"}), 401
         return jsonify({"response":"unauthorized"}), 401
     
-    # Reset login attempts counter upon successful login & set last seen
+    # Reset login attempts counter upon successful login, set last seen, & create session
     try:
         user.reset_login_attempts()
         user._last_seen = datetime.utcnow()
+        new_session = user.new_session()
         db.session.commit()
     except Exception as e:
         logging.error(f"Login attempt counter could not be reset, function will continue. Error: {e}")
 
-    session["user_id"] = user.uuid
+    session["session_id"] = new_session
 
-    # event only being logged in case user needs help with debugging.
+    # event and system logs
     logging.info("A user logged in.")
     try:
         log_event("LOG_EVENT_LOGIN", "LEL_01", user.uuid)
+        if html_in_email:
+            log_event("LOG_EVENT_LOGIN", "LEL_08", user.uuid)
     except Exception as e:
         logging.error(f"Failed to create event log. Error: {e}")
-
-    # implement: log_event("LOG_EVENT_LOGIN", "LEL_08", user.uuid) -- "html might have been supplied in form."
-
+    
     response_data ={
             "response":"success",
             "user": {
@@ -223,21 +240,35 @@ def login_user():
 # Log OUT
 @account.route("/logout", methods=["POST"])
 def logout_user():
-    session.pop("user_id")
+    session_id = session.get("session_id")
+    if not session_id:
+        return jsonify({"response":"unauthorized"}), 401
+    # Check if user exists
+    try:
+        user = User.query.filter_by(_session=session_id).first()
+        if user is None:
+            logging.error(f"Session_id did not match any user. Session_id: {session_id} Error: {e}")
+        else:
+            user.end_session()
+            db.commit()
+    except Exception as e:
+        logging.error(f"Failed to erase session in db. Error: {e}")
+    
+    session.pop("session_id", None)
     logging.info(f"Successful logout") 
-    return 200
+    return jsonify({"response":"success"}), 200
 
 # get current user
 @account.route("/@me")
 def get_current_user():
-    user_id = session.get("user_id")
-    if not user_id:
+    session_id = session.get("session_id")
+    if not session_id:
         return jsonify({"response":"unauthorized"}), 401
     
-    user = User.query.filter_by(_uuid = user_id).first()
+    user = User.query.filter_by(_uuid = session_id).first()
 
     if user is None:
-        logging.error(f"Session id does not match user: {user_id}")
+        logging.error(f"Session id does not match user: {session_id}")
         return jsonify({"response":"unauthorized"}), 401
 
     response_data ={
