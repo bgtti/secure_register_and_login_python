@@ -38,19 +38,19 @@ function NavBar() {
                             <NavLink to="/" onClick={handleShowNavbar}>Home</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/login" onClick={handleShowNavbar}>Login</NavLink>
+                            <NavLink to="login" onClick={handleShowNavbar}>Login</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/signup" onClick={handleShowNavbar}>Signup</NavLink>
+                            <NavLink to="signup" onClick={handleShowNavbar}>Signup</NavLink>
                         </li>
                         <li>
                             <a href="#!" onClick={() => { logoutUser(); handleShowNavbar(); }}>Logout</a>
                         </li>
                         <li>
-                            <NavLink to="/admin_login" onClick={handleShowNavbar}>ADMIN login</NavLink>
+                            <NavLink to="adminLogin" onClick={handleShowNavbar}>ADMIN login</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/admin_dashboard" onClick={handleShowNavbar}>ADMIN dashboard</NavLink>
+                            <NavLink to="adminArea/dashboard" onClick={handleShowNavbar}>ADMIN dashboard</NavLink>
                         </li>
                     </ul>
                 </div>

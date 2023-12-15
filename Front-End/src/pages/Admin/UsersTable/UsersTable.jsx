@@ -2,7 +2,7 @@ import { useState } from "react";
 import Modal from "../../../components/Modal/Modal";
 import ModalUserAction from "./ModalUserAction";
 import UsersTableRow from "./UsersTableRow";
-import "../admindashboard.css"
+import "./usersTable.css"
 
 const EXAMPLE = [
     {
@@ -65,7 +65,7 @@ function UsersTable() {
                 )
             }
             <h3>Users Table</h3>
-            <table className="AdminDashboard-UserTable" role="table">
+            <table className="UserTable" role="table">
                 <thead role="rowgroup">
                     <tr role="row">
                         <th role="columnheader">Name</th>

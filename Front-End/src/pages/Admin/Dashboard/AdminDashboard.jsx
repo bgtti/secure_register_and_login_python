@@ -1,4 +1,4 @@
-import UsersTable from "./UsersTable/UsersTable";
+import UsersTable from "../UsersTable/UsersTable";
 
 import "./admindashboard.css"
 function AdminDashboard() {
@@ -6,7 +6,7 @@ function AdminDashboard() {
     return (
         <div className="AdminDashboard">
             <h2>Admin Dashboard</h2>
-            <UsersTable></UsersTable>
+            <p>hello</p>
         </div>
     );
 }

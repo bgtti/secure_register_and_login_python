@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import iconUserBlock from "../../../assets/icon_user_block.svg";
 import iconUserDelete from "../../../assets/icon_user_delete.svg";
 import iconUserMore from "../../../assets/icon_user_more.svg";
-import "../admindashboard.css"
+// import "../admindashboard.css"
 
 function UsersTableRow(props) {
     const { selectUserAction, toggleModal, user } = props
@@ -11,33 +11,33 @@ function UsersTableRow(props) {
     return (
         <tr role="row">
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="name">Name:</label>
+                <label className="UserTable-Label" htmlFor="name">Name:</label>
                 {name}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="email">Email:</label>
+                <label className="UserTable-Label" htmlFor="email">Email:</label>
                 {email}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="last-seen">Last seen:</label>
+                <label className="UserTable-Label" htmlFor="last-seen">Last seen:</label>
                 {lastSeen}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="blocked">Blocked:</label>
+                <label className="UserTable-Label" htmlFor="blocked">Blocked:</label>
                 {isBlocked}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="actions">Actions:</label>
-                <div className="AdminDashboard-UserTable-IconsContainer">
+                <label className="UserTable-Label" htmlFor="actions">Actions:</label>
+                <div className="UserTable-IconsContainer">
                     <img
                         alt="More user information"
-                        className="AdminDashboard-UserTable-icon"
+                        className="UserTable-icon"
                         role="button"
                         title="More information"
                         src={iconUserMore} />
                     <img
                         alt="Block user"
-                        className="AdminDashboard-UserTable-icon"
+                        className="UserTable-icon"
                         role="button"
                         title="Block user"
                         src={iconUserBlock}
@@ -45,7 +45,7 @@ function UsersTableRow(props) {
                     />
                     <img
                         alt="Delete user"
-                        className="AdminDashboard-UserTable-icon"
+                        className="UserTable-icon"
                         role="button"
                         title="Delete user"
                         src={iconUserDelete}
