@@ -82,7 +82,8 @@
     }
 
     .NavBar-nav-elements {
-        position: static;
+        width: min-content;
+        position: initial;
         min-width: 50%;
         height: inherit;
         background-color: transparent;

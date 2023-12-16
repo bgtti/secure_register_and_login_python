@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, request
+from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 import logging
 import jsonschema
@@ -153,7 +153,10 @@ def login_user():
         return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
 
     # Check if user exists
-    user = User.query.filter_by(_email=email).first()
+    try:
+        user = User.query.filter_by(_email=email).first()
+    except Exception as e:
+        logging.error(f"Failed to access db. Error: {e}")
 
     if user is None:
         logging.info(f"User not in DB. Input email: {email}")
@@ -209,6 +212,7 @@ def login_user():
         return jsonify({"response":"unauthorized"}), 401
     
     # Reset login attempts counter upon successful login, set last seen, & create session
+    print(user._session)
     try:
         user.reset_login_attempts()
         user._last_seen = datetime.utcnow()
@@ -217,6 +221,8 @@ def login_user():
     except Exception as e:
         logging.error(f"Login attempt counter could not be reset, function will continue. Error: {e}")
 
+    print(user._session)
+    # Set new session:
     session["session_id"] = new_session
 
     # event and system logs
@@ -241,35 +247,38 @@ def login_user():
 @account.route("/logout", methods=["POST"])
 def logout_user():
     session_id = session.get("session_id")
-    if not session_id:
-        return jsonify({"response":"unauthorized"}), 401
-    # Check if user exists
-    try:
-        user = User.query.filter_by(_session=session_id).first()
-        if user is None:
-            logging.error(f"Session_id did not match any user. Session_id: {session_id} Error: {e}")
-        else:
-            user.end_session()
-            db.commit()
-    except Exception as e:
-        logging.error(f"Failed to erase session in db. Error: {e}")
+
+    if session_id is not None:
+        try:
+            user = User.query.filter_by(_session=session_id).first()
+            if user is None:
+                logging.error(f"Session_id did not match any user. Session_id: {session_id}. Error: {e}")
+            else:
+                user.end_session()
+                db.session.commit()
+        except Exception as e:
+            logging.error(f"Failed to erase session in db. Session_id: {session_id}. Error: {e}")
     
-    session.pop("session_id", None)
+    # session.pop("session_id", None)
+    session.clear()
     logging.info(f"Successful logout") 
-    return jsonify({"response":"success"}), 200
+    return jsonify({"response":"success"})
 
 # get current user
 @account.route("/@me")
 def get_current_user():
     session_id = session.get("session_id")
+
     if not session_id:
         return jsonify({"response":"unauthorized"}), 401
     
-    user = User.query.filter_by(_uuid = session_id).first()
-
-    if user is None:
-        logging.error(f"Session id does not match user: {session_id}")
-        return jsonify({"response":"unauthorized"}), 401
+    try:
+        user = User.query.filter_by(_session=session_id).first()
+        if user is None:
+            logging.error(f"Session_id did not match any user. Session_id: {session_id} Error: {e}")
+            return jsonify({"response":"unauthorized"}), 401
+    except Exception as e:
+        logging.error(f"Failed to erase session in db. Error: {e}")
 
     response_data ={
             "response":"success",

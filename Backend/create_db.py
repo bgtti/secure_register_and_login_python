@@ -24,10 +24,6 @@ def create_admin_acct():
     # Check if Super Admin exists in the database, if not, add it:
     super_admin_exists = User.query.get(1)
     if not super_admin_exists:
-        # create super admin
-        # date = datetime.utcnow()
-        # pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)]
-        # salt = generate_salt()
         date = datetime.utcnow()
         salt = generate_salt()
         pepper = get_pepper(date)

@@ -25,7 +25,7 @@ class User(UserMixin, db.Model):
     _password = db.Column(db.String(60), nullable=False)
     _salt = db.Column(db.String(8), nullable=False)
     _created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    _session = db.Column(db.String(32), unique=True, nullable=True, default=get_uuid)
+    _session = db.Column(db.String(32), unique=True, nullable=True, default="")
     _last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     _access_level = db.Column(db.String(5), default="user", nullable=False)
     _is_blocked = db.Column(db.String(5), default="false", nullable=False)
@@ -102,7 +102,8 @@ class User(UserMixin, db.Model):
         return self._login_blocked_until
     
     def new_session(self):
-        self._session = get_uuid()
+        new_session_id = get_uuid()
+        self._session = new_session_id
         return self._session 
     
     def end_session(self):

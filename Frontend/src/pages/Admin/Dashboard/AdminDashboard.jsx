@@ -10,10 +10,22 @@ function AdminDashboard() {
                 <div>
                     <p>10</p>
                     <p>registered users</p>
+                    <p>total</p>
+                </div>
+                <div>
+                    <p>10</p>
+                    <p>new users</p>
+                    <p>this week</p>
+                </div>
+                <div>
+                    <p>10%</p>
+                    <p>user growth</p>
+                    <p>this month</p>
                 </div>
                 <div>
                     <p>10</p>
                     <p>website visitors</p>
+                    <p>this month</p>
                 </div>
             </section>
             <section className="AdminDashboard-Section2">

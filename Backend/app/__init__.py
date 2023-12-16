@@ -5,8 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.config import dictConfig
 
-# consider: login manager
-
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -27,8 +25,6 @@ def create_app(config_class=Config):
     from app.admin.routes import admin
     app.register_blueprint(account, url_prefix='/api/account')
     app.register_blueprint(admin, url_prefix='/api/admin')
-
-
 
     @app.route('/test/')
     def test_page():

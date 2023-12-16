@@ -6,6 +6,10 @@ from app.utils.rate_limit_utils.rate_limit_exceeded import rate_limit_exceeded
 
 load_dotenv()
 
+# set default valued for pepper and secret key:
+    # PEPPER = os.environ.get("PEPPER", "default_pepper")
+    # SECRET_KEY = os.environ.get("SECRET_KEY", "default_secret_key")
+
 # *** APP'S CONFIGURATION ("app")
 class Config:
     PEPPER = os.getenv("PEPPER") # used in account module when handling passwords
@@ -20,7 +24,11 @@ class Config:
     SESSION_TYPE = "redis"
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True #if set to True, you have to set flask.Flask.secret_key, default to be False
-    SESSION_KEY_PREFIX = "session:"
+    SESSION_COOKIE_SECURE = True
+    # SESSION_COOKIE_HTTPONLY=True, ---cookie cannot be read using js
+    SESSION_COOKIE_SAMESITE = "None" #set to Lax in production
+    SESSION_COOKIE_NAME = "_SD_session"
+    SESSION_KEY_PREFIX = "SDsession:"
     SESSION_REDIS = redis.Redis(host="localhost", port=6379, db=0)
 
     # Flask-Limiter
@@ -28,7 +36,7 @@ class Config:
     RATELIMIT_STORAGE_OPTIONS = {}
     RATELIMIT_STRATEGY = "fixed-window"
     RATELIMIT_HEADERS_ENABLED = True
-    RATELIMIT_DEFAULT = ["200 per day", "60 per hour"]
+    RATELIMIT_DEFAULT = "200/day;60/hour"
     RATELIMIT_ON_BREACH_CALLBACK = rate_limit_exceeded
 
 # *** TESTS' CONFIGURATION (tests)
