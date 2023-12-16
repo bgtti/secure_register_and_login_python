@@ -1,0 +1,103 @@
+.AdminDashboard>h3 {
+    margin-top: 0;
+    border-left: 2px solid var(--BlueColour);
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--BackgroudPrimary)) 2;
+    padding: 10px 0 10px 7px;
+    color: var(--FontColorSecondary);
+}
+
+.AdminDashboard>section {
+    margin: 0 0 20px 0;
+}
+
+.AdminDashboard-Section1 {
+    display: flex;
+    gap: 10px;
+}
+
+.AdminDashboard-Section1>div {
+    border-radius: 10px;
+    background-color: var(--BackgroudTertiary);
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.AdminDashboard-Section1>div p:first-child {
+    font-weight: bold;
+    font-size: 1.8em;
+    color: var(--FontColorPrimary);
+}
+
+.AdminDashboard-Section1>div p:last-child {
+    font-size: 0.8em;
+    color: var(--FontColorSecondary);
+}
+
+.AdminDashboard-Section2 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.AdminDashboard-Section2>div {
+    display: grid;
+    grid-template-columns: 5px 1fr 90px;
+    grid-template-rows: repeat(2, min-max(min-content, 50px));
+    row-gap: 5px;
+    grid-row-gap: 5px;
+    column-gap: 5px;
+    grid-column-gap: 5px;
+    padding: 0 7px 0 0;
+    border-radius: 5px;
+    background-color: var(--BackgroudTertiary);
+}
+
+.AdminDashboard-Section2>div>* {
+    align-self: center;
+}
+
+.AdminDashboard-Section2>div>div:first-child {
+    width: 5px;
+    height: 100%;
+    border-radius: 3px 0 0 3px;
+}
+
+.AdminDashboard-Section2>div>div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.AdminDashboard-Suspiscious {
+    background-color: var(--YellowColor);
+}
+
+.AdminDashboard-Warn {
+    background-color: var(--RedColor);
+}
+
+.AdminDashboard-Section2 button {
+    background-color: var(--MiddleBlueColour);
+    height: 2.2em;
+    padding: 5px 15px;
+    font-size: 0.9em !important;
+    margin: 5px 0;
+}
+
+.AdminDashboard-Section2 button>* {
+    font-size: 1em !important;
+    font-weight: normal !important;
+}
+
+@media only screen and (min-width: 900px) {
+    .AdminDashboard-Section2>div {
+        grid-template-columns: 5px 1fr 3fr;
+    }
+
+    .AdminDashboard-Section2>div>div:last-child {
+        transition: ease all .5s;
+        justify-content: flex-start;
+    }
+}

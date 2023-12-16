@@ -1,0 +1,25 @@
+.ModalChangeAccount-BtnContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.ModalChangeAccount-BtnContainer>* {
+    width: 9em;
+}
+
+.ModalChangeAccount-ActionBtn {
+    background-color: var(--YellowColor);
+}
+
+@media screen and (min-width: 600px) {
+    .ModalChangeAccount-BtnContainer {
+        width: auto;
+        display: block;
+    }
+
+    .ModalChangeAccount-ActionBtn {
+        margin-right: 20px;
+    }
+}

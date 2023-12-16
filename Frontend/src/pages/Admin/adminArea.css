@@ -1,7 +1,6 @@
 .AdminArea>nav>ul {
     display: flex;
     gap: 15px;
-    /* background-color: var(--BackgroudPrimary); */
     box-shadow: 0 -3px 0 -1px var(--BlueColour) inset;
 }
 

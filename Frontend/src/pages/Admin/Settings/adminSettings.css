@@ -1,0 +1,29 @@
+.AdminSettings>h3 {
+    margin-top: 0;
+    border-left: 2px solid var(--BlueColour);
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--BackgroudPrimary)) 2;
+    padding: 10px 0 10px 7px;
+    color: var(--FontColorSecondary);
+}
+
+.AdminSettings-Section1>h4 {
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.AdminSettings-Section1>p {
+    margin-bottom: 10px;
+    color: var(--FontColorSecondary);
+}
+
+.AdminSettings-Section1>div {
+    display: flex;
+    gap: 10px;
+}
+
+.AdminSettings-Section1>div>button {
+    font-size: 0.9em !important;
+    width: 11em;
+    padding: 5px;
+}
