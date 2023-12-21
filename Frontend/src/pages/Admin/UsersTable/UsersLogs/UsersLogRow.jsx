@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 function UsersLogRow(props) {
     const { date, type, activity, message } = props.log;
 
@@ -5,19 +6,19 @@ function UsersLogRow(props) {
     return (
         <tr role="row">
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="date">Date:</label>
+                <label className="MAIN-table-label" htmlFor="date">Date:</label>
                 {date}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="type">Type:</label>
+                <label className="MAIN-table-label" htmlFor="type">Type:</label>
                 {type}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="activity">Activity:</label>
+                <label className="MAIN-table-label" htmlFor="activity">Activity:</label>
                 {activity}
             </td>
             <td role="cell">
-                <label className="AdminDashboard-UserTable-Label" htmlFor="message">Message:</label>
+                <label className="MAIN-table-label" htmlFor="message">Message:</label>
                 {message}
             </td>
         </tr>

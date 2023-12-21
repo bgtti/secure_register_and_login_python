@@ -1,16 +1,26 @@
+import PropTypes from 'prop-types';
 import UsersLogRow from "./UsersLogRow"
+import "./usersLogs.css"
+
 function UsersLogs(props) {
-    const { name, email, uuid } = props.user;
+    const { user, setShowUserLogs, selectUserAction } = props;
+    const { name, email, uuid } = user;
     const logs = [{ date: "02/12/23", type: "info", activity: "whatever", message: "logged in" }, { date: "03/12/23", type: "info", activity: "whatever", message: "logged in" }]
+
+    function handleReturn() {
+        selectUserAction("", "");
+        setShowUserLogs(false);
+    }
 
     return (
         <div className="UsersLogs">
+            <button onClick={handleReturn}>Back to Users Table</button>
             <h3>Activity Logs</h3>
             <div>
-                <p>User: {name}</p>
-                <p>Email: {email}</p>
+                <p><b className='UsersLogs-Bold'>User:</b> {name}</p>
+                <p><b className='UsersLogs-Bold'>Email:</b> {email}</p>
             </div>
-            <table className="AdminDashboard-UserTable" role="table">
+            <table className="MAIN-table UsersLogs-Table" role="table">
                 <thead role="rowgroup">
                     <tr role="row">
                         <th role="columnheader">Date</th>
@@ -40,5 +50,7 @@ UsersLogs.propTypes = {
         email: PropTypes.string.isRequired,
         uuid: PropTypes.string.isRequired
     }).isRequired,
+    setShowUserLogs: PropTypes.func.isRequired,
+    selectUserAction: PropTypes.func.isRequired,
 };
 export default UsersLogs;

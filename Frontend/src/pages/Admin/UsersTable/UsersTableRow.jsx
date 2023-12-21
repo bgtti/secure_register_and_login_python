@@ -2,39 +2,40 @@ import PropTypes from 'prop-types';
 import iconUserBlock from "../../../assets/icon_user_block.svg";
 import iconUserDelete from "../../../assets/icon_user_delete.svg";
 import iconUserMore from "../../../assets/icon_user_more.svg";
-// import "../admindashboard.css"
 
 function UsersTableRow(props) {
-    const { selectUserAction, toggleModal, user } = props
+    const { user, toggleModal, setShowUserLogs, selectUserAction } = props
     const { name, email, lastSeen, isBlocked, uuid } = user;
 
     return (
         <tr role="row">
             <td role="cell">
-                <label className="UserTable-Label" htmlFor="name">Name:</label>
+                <label className="MAIN-table-label" htmlFor="name">Name:</label>
                 {name}
             </td>
             <td role="cell">
-                <label className="UserTable-Label" htmlFor="email">Email:</label>
+                <label className="MAIN-table-label" htmlFor="email">Email:</label>
                 {email}
             </td>
             <td role="cell">
-                <label className="UserTable-Label" htmlFor="last-seen">Last seen:</label>
+                <label className="MAIN-table-label" htmlFor="last-seen">Last seen:</label>
                 {lastSeen}
             </td>
             <td role="cell">
-                <label className="UserTable-Label" htmlFor="blocked">Blocked:</label>
+                <label className="MAIN-table-label" htmlFor="blocked">Blocked:</label>
                 {isBlocked}
             </td>
             <td role="cell">
-                <label className="UserTable-Label" htmlFor="actions">Actions:</label>
+                <label className="MAIN-table-label" htmlFor="actions">Actions:</label>
                 <div className="UserTable-IconsContainer">
                     <img
                         alt="More user information"
                         className="UserTable-icon"
                         role="button"
                         title="More information"
-                        src={iconUserMore} />
+                        src={iconUserMore}
+                        onClick={() => { selectUserAction(uuid, "logs"); setShowUserLogs(true) }}
+                    />
                     <img
                         alt="Block user"
                         className="UserTable-icon"
@@ -66,6 +67,7 @@ UsersTableRow.propTypes = {
         uuid: PropTypes.string.isRequired
     }).isRequired,
     toggleModal: PropTypes.func.isRequired,
+    setShowUserLogs: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired
 }
 

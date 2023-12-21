@@ -119,30 +119,38 @@ input {
     color: var(--FontColorInput);
 }
 
-/* SHARED CLASSES */
-/* Classes that can be used for styling */
+/* **********************************************************
+*                                                           *
+*                   SHARED CLASSES                          *
+*                                                           *
+*   Classes that can be used in any component for styling   *
+*                                                           *
+********************************************************** */
 
-/* P-tag classes */
-/*    - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well. */
-/*      (Usage example: SignUp component)*/
+
+/* P-tag classes 
+    - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well.
+    - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page.
+    => Usage example: SignUp component
+*/
 .MAIN-error-message {
     font-size: 0.9em;
     color: var(--YellowColor);
 }
 
-/*    - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page. */
-/*      (Usage example: SignUp component)*/
 .MAIN-info-paragraph {
     color: var(--FontColorSecondary);
     margin: 15px 0;
 }
 
-/* Form-tag classes */
-/*    - MAIN-form: used in form-tags. For it to work, the form parent must have the following attributes: {
+/* Form-tag classes
+    - MAIN-form: used in form-tags. For it to work, the form parent must have the following attributes: {
         display: flex; flex-direction: column;}, and form elements such as label and tags must be wrapped in a div with MAIN-form-display-table class. Error messages do not have to be placed in divs, and can be p tags bellow the div.
         Also recommended: "form parent">h2 {margin-bottom: 25px;} to style the component's page title
-} */
-/*      (Usage example: SignUp component)*/
+    - MAIN-form-display-table: using in divs which contain label&input tag pairs and are children of 
+        .MAIN-form
+    => Usage example: SignUp component
+*/
 
 .MAIN-form {
     align-self: start;
@@ -161,8 +169,6 @@ input {
     margin-bottom: 15px;
 }
 
-/*    - MAIN-form-display-table: using in divs which contain label&input tag pairs and are children of .MAIN-form */
-/*      (Usage example: SignUp component)*/
 .MAIN-form-display-table {
     display: grid;
     grid-template-columns: 2fr 3fr;
@@ -172,5 +178,136 @@ input {
 @media (min-width: 600px) {
     .MAIN-form-display-table {
         grid-template-columns: 200px 300px;
+    }
+}
+
+/* Table-tag classes
+    - MAIN-table: used in table-tags. 
+    - MAIN-table-label: used in label tags inside td-tags. a lable tag should be placed inside td tags with the column's title in them. This will be used in mobile versions. See example in Admin>UsersTable>UsersTableRow component
+    => Usage example: Admin > UsersTable > UsersTable component
+    => Don't forget to adjust grid-template-columns in the component's own css to properly size the columns according to the number of table columns. div
+*/
+
+.MAIN-table {
+    margin-top: 20px !important;
+    border-collapse: collapse;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-style: hidden;
+    box-shadow: 0 0 0 2px var(--FontColorDarker);
+}
+
+.MAIN-table>thead>tr>th,
+.MAIN-table>tbody>tr>td {
+    padding: 5px;
+}
+
+.MAIN-table>tbody>tr:nth-of-type(even) {
+    background-color: var(--BackgroudSecondary);
+}
+
+@media (hover: hover) {
+    .MAIN-table>tbody>tr:hover {
+        background-color: var(--BackgroudTertiary);
+    }
+}
+
+/* TABLE ON MOBILE/SMALL DEVICES ONLY */
+
+.MAIN-table,
+.MAIN-table>thead,
+.MAIN-table>tbody,
+.MAIN-table>thead>tr,
+.MAIN-table>thead>tr>th,
+.MAIN-table>tbody>tr>td {
+    display: block;
+}
+
+/* Hide table headers (but not display: none;, for accessibility) */
+.MAIN-table>thead>tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+}
+
+.MAIN-table>tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.MAIN-table>tbody>tr {
+    margin: 5px;
+    border: 3px solid var(--BackgroudTertiary);
+    border-radius: 5px;
+}
+
+.MAIN-table>tbody>tr>td {
+    /* Make behave  like a "row" */
+    border-bottom: 2px solid var(--BackgroudTertiary);
+    position: relative;
+    display: grid;
+    /* grid-template-columns => adapt in component's own css as needed */
+    grid-template-columns: 6em auto
+}
+
+.MAIN-table-label {
+    font-weight: bold;
+    padding-right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    color: var(--FontColorSecondary);
+}
+
+/* TABLE ON BIG SCREENS */
+@media only screen and (min-width:600px) {
+
+    .MAIN-table,
+    .MAIN-table>thead,
+    .MAIN-table>tbody,
+    .MAIN-table>thead>tr,
+    .MAIN-table>thead>tr>th,
+    .MAIN-table>tbody>tr,
+    .MAIN-table>tbody>tr>td {
+        margin: 0;
+        padding: 0;
+        border: none;
+        display: revert;
+        position: revert;
+    }
+
+    .MAIN-table,
+    .MAIN-table>thead,
+    .MAIN-table>tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .MAIN-table>thead>tr,
+    .MAIN-table>tbody>tr {
+        padding: 5px;
+        display: grid;
+        grid-template-columns: auto repeat(4, 10em);
+        justify-items: stretch;
+        align-items: center;
+        gap: 0 5px;
+        border-bottom: 2px solid var(--FontColorDarker);
+        border-radius: 0;
+    }
+
+    .MAIN-table>thead>tr {
+        background-color: var(--BackgroundInput);
+    }
+
+    .MAIN-table>thead>tr>th {
+        text-align: start;
+        font-weight: bold;
+    }
+
+    .MAIN-table-label {
+        display: none;
     }
 }

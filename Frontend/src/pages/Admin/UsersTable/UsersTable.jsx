@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Modal from "../../../components/Modal/Modal";
 import ModalUserAction from "./ModalUserAction";
+import Loader from "../../../components/Loader";
 import UsersTableRow from "./UsersTableRow";
 import "./usersTable.css"
 
@@ -28,7 +29,10 @@ const EXAMPLE = [
     }
 ]
 
-const USER_ACTIONS = ["delete", "block"]
+const USER_ACTIONS = ["delete", "block", "logs"]
+
+// Lazy load UsersLogs component
+const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
 
 function UsersTable() {
     const users = EXAMPLE
@@ -36,6 +40,7 @@ function UsersTable() {
     const [userSelected, setUserSelected] = useState({ name: "", email: "", uuid: "" })
     const [userAction, setUserAction] = useState("")
     const [modalUserAction, setModalUserAction] = useState(false)
+    const [showUserLogs, setShowUserLogs] = useState(false)
 
     modalUserAction ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
 
@@ -43,10 +48,15 @@ function UsersTable() {
         <ModalUserAction user={userSelected} action={userAction} modalToggler={toggleModal} />
     );
 
-    function selectUserAction(uuid, action) {
-        const user = users.find(user => user.uuid === uuid);
-        user ? setUserSelected(user) : setUserSelected({ name: "", email: "", uuid: "" });
-        USER_ACTIONS.includes(action.toLowerCase()) ? setUserAction(action) : setUserAction("");
+    function selectUserAction(uuid = "", action = "") {
+        if (uuid === "" && action === "") {
+            setUserSelected({ name: "", email: "", uuid: "" });
+            setUserAction("")
+        } else {
+            const user = users.find(user => user.uuid === uuid);
+            user ? setUserSelected(user) : setUserSelected({ name: "", email: "", uuid: "" });
+            USER_ACTIONS.includes(action.toLowerCase()) ? setUserAction(action) : setUserAction("");
+        }
     }
 
     function toggleModal() {
@@ -64,29 +74,45 @@ function UsersTable() {
                         setModalStatus={setModalUserAction} ></Modal>
                 )
             }
-            <h3>Users Table</h3>
-            <table className="UserTable" role="table">
-                <thead role="rowgroup">
-                    <tr role="row">
-                        <th role="columnheader">Name</th>
-                        <th role="columnheader">Email</th>
-                        <th role="columnheader">Last seen</th>
-                        <th role="columnheader">Blocked</th>
-                        <th role="columnheader">Actions</th>
-                    </tr>
-                </thead>
-                <tbody role="rowgroup">
-                    {users && (
-                        users.map((user, index) => (
-                            <UsersTableRow
-                                user={user}
-                                key={index}
-                                selectUserAction={selectUserAction}
-                                toggleModal={toggleModal} />
-                        ))
-                    )}
-                </tbody>
-            </table>
+            <h3>{showUserLogs ? "User Logs" : "Users Table"}</h3>
+            {
+                !showUserLogs && (
+                    <table className="MAIN-table" role="table">
+                        <thead role="rowgroup">
+                            <tr role="row">
+                                <th role="columnheader">Name</th>
+                                <th role="columnheader">Email</th>
+                                <th role="columnheader">Last seen</th>
+                                <th role="columnheader">Blocked</th>
+                                <th role="columnheader">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody role="rowgroup">
+                            {users && (
+                                users.map((user, index) => (
+                                    <UsersTableRow
+                                        user={user}
+                                        key={index}
+                                        toggleModal={toggleModal}
+                                        setShowUserLogs={setShowUserLogs}
+                                        selectUserAction={selectUserAction} />
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                )
+            }
+            {
+                showUserLogs && (
+                    <Suspense fallback={<Loader />}>
+                        <UsersLogs
+                            user={userSelected}
+                            setShowUserLogs={setShowUserLogs}
+                            selectUserAction={selectUserAction}
+                        />
+                    </Suspense>
+                )
+            }
         </div>
     );
 }
