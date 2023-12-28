@@ -57,7 +57,7 @@ class MonthStats(BaseStats):
     __tablename__ = "month_stats"
     id = db.Column(db.Integer, primary_key=True, unique=True)
     _this_month = db.Column(db.Integer, nullable=False, default=get_month)
-    _weekly_stats = db.relationship('WeekStats', backref='year_stats', lazy='dynamic', cascade='all, delete-orphan')
+    # _weekly_stats = db.relationship('WeekStats', backref='year_stats', lazy='dynamic', cascade='all, delete-orphan')
     _year_stats_id = db.Column(db.Integer, db.ForeignKey('year_stats.id'))
     
     def __repr__(self):
@@ -73,7 +73,7 @@ class WeekStats(BaseStats):
     _this_month = db.Column(db.Integer, nullable=False, default=get_month)
     _this_week = db.Column(db.Integer, nullable=False, default=get_week_num)
     _year_stats_id = db.Column(db.Integer, db.ForeignKey('year_stats.id'))
-    _month_stats_id = db.Column(db.Integer, db.ForeignKey('month_stats.id'))
+    # _month_stats_id = db.Column(db.Integer, db.ForeignKey('month_stats.id'))
     
     def __repr__(self):
         return f"<Week Stats {self._this_week}: + {self._new_registrations} - {self._new_deregistrations} registered users>"
@@ -88,11 +88,15 @@ class WeekStats(BaseStats):
     
     def update_month_and_year_stats(self, registration=True):
         if registration:
-            self.month_stats_id._new_registrations += 1
+            # self.month_stats_id._new_registrations += 1
             self.year_stats_id._new_registrations += 1
+            # find month and update registration....
+            # self.year_stats_id._monthly_stats._new_registrations += 1
         else:
-            self.month_stats_id._new_deregistrations += 1
+            # self.month_stats_id._new_deregistrations += 1
             self.year_stats_id._new_deregistrations += 1
+            # find month and update deregistration....
+            #self.year_stats_id._monthly_stats._new_deregistrations += 1
         db.session.commit()
     
     def new_registration(self):
@@ -102,3 +106,72 @@ class WeekStats(BaseStats):
     def new_deregistration(self):
         self._deregistered_this_week += 1
         self.update_month_and_year_stats(registration=False)
+
+
+#####################################################################
+"""
+Statistics to analyse site visitors and users to understand base group geolocation, devices used, and referrer sites. This is important for admins to adapt their content and measure the reach and success of their apps. At the same time, respecting user's privacy and data is very important.
+
+This is the reason no third-party solution was used here, and a lot of care was taken to develop a way of keeping statistics and user data separated, and keeping enough information to be able to analyze site usage while not monitoring the users.
+
+What is measured:
+- General geographical location (why? example: to determine where your server should be located)
+- Size of the device used (why? example: to decide whether to invest more in usability for mobile devices)
+- Referrer site (why? example: to understand if your ad campaign is working)
+- Unique visitors (why? example: to understand if your reach is growing)
+- Registration (signups)/ Deregistration (account deletion) (why? example: measure conversion or churn rate)
+
+How is it measured:
+The most precise would be to use geolocation - that needs user's express permission and many are scared to give it.
+The two other options are cookies and ip addresses. Cookies have received a bad reputation, and are widely being blocked and deleted. IP addresses may suffer from the lack of accuracy, and will likely not yield the exact location (especially when in a public network or using VPNs). Balacing pros and cons, the decision was to us IP addresses (especially due to simplicity) to provide insights on geolocation and unique visitors. Admins should keep in mind the data will not be the most accurate.
+
+IP addresses are anonymized before being stored. This reduces the accuracy of geolocation and unique visitors, but no personal identifiable information is truly stored.
+"""
+
+class VisitorStats(UserMixin, db.Model):
+    __tablename__ = "visitor_stats"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    _ip_address = db.Column(db.String(250), nullable=True)
+    _continent = db.Column(db.String(25), nullable=True)
+    _country = db.Column(db.String(90), nullable=True)
+    _country_code = db.Column(db.String(3), nullable=True)
+    _city = db.Column(db.String(180), nullable=True)
+    _user_agent = db.Column(db.String(200), nullable=True)
+    _os = db.Column(db.String(50), nullable=True)
+    _screen_size = db.Column(db.String(15), nullable=True)
+    _referrer = db.Column(db.String(100), nullable=True)
+    _page_accessed = db.Column(db.String(50), nullable=True)
+    _session_visit = db.Column(db.String(32), nullable=True, default="")
+    _date_accessed = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, ip_address, continent, country, country_code, city, user_agent, os, screen_size , referrer, page_accessed, session_visit, **kwargs):
+        self._ip_address = ip_address
+        self._continent = continent
+        self._country = country
+        self._country_code = country_code
+        self._city = city
+        self._user_agent = user_agent
+        self._os = os
+        self._screen_size = screen_size
+        self._referrer = referrer
+        self._page_accessed = page_accessed
+        self._session_visit = session_visit
+    
+    def __repr__(self):
+        return f"<Visitor Stats {self._ip_address}>"
+    
+    @property
+    def continent(self):
+        return self._continent
+    
+    @property
+    def country(self):
+        return self._country
+    
+    @property
+    def country_code(self):
+        return self._country_code
+    
+    @property
+    def city(self):
+        return self._city

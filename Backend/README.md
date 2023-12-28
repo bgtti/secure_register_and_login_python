@@ -60,6 +60,11 @@ deactivate
 > pip freeze > requirements.txt
 > ```
 >
+>Or:
+> ```pwsh
+> python -m pip freeze > requirements.txt
+> ```
+>
 > <br/><br/>
 
 </details>
