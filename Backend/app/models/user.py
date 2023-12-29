@@ -3,9 +3,12 @@ from app.extensions import db
 from flask_login import UserMixin
 from datetime import datetime, timedelta
 from uuid import uuid4
+import ast
 from app.account.constants import INPUT_LENGTH 
+from app.config import ADMIN_ACCT
 
-# IN THIS FILE: User DB Model
+ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
+ADMIN_PW = ADMIN_DATA[2]
 
 # uuid generation
 def get_uuid():
@@ -15,6 +18,7 @@ def get_uuid():
 # - Bcrypt should output a 60-character string, so this was used as maximum password length
 # - User blockage: the user can be blocked from accessing the account by an admin by setting _is_blocked to true.
 # - The user can also be temporarily blocked for failing to log in too many times, where _login_blocked will be set to true. 
+# - access_level should be either "user" or "admin". Change access_level using make_user_admin
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -137,3 +141,10 @@ class User(UserMixin, db.Model):
     
     def unblock_access(self):
         self._is_blocked = "false" 
+
+    def make_user_admin(self, admin_password):
+        """
+        Default admin password required
+        """
+        if admin_password == ADMIN_PW:
+            self._access_level = "admin" 

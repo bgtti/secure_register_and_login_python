@@ -8,7 +8,9 @@ import requests
 from app.extensions import flask_bcrypt, db, limiter
 from app.models.stats import VisitorStats
 from app.stats.schemas import analytics_schema
-from app.stats.helpers import anonymize_ip
+# from app.stats.helpers import anonymize_ip
+from app.utils.ip_utils.ip_address_validation import get_client_ip
+from app.utils.ip_utils.ip_anonymization import  anonymize_ip
 
 stats = Blueprint("stats", __name__)
 
@@ -49,7 +51,8 @@ def analytics():
     # Check if there is a visitor session and if so, if geolocation already exists
     visitor_session_id = session.get("visitor_session_id")
     needs_geolocation = visitor_session_id is None
-    client_ip = request.remote_addr
+    
+    client_ip = get_client_ip(request)
 
     continent = ""
     country = ""
@@ -65,7 +68,9 @@ def analytics():
                 country_code = visitor_stats.country_code
                 city = visitor_stats.city
             else:
-                needs_geolocation = True
+                # on local expect client_ip to be "127.0.0.1"
+                if client_ip != "127.0.0.1":
+                    needs_geolocation = True
         except Exception as e:
             logging.debug(f"Stats error: Failed to get visitor stats. Visitor session: {visitor_session_id}. Error: {str(e)}")
 
@@ -75,12 +80,13 @@ def analytics():
         session["visitor_session_id"] = visitor_session_id
         # get geolocation from ip-api
         query_url = f"http://ip-api.com/json/{client_ip}?fields=status,message,continent,country,countryCode,city"
+        
         try:
             ip_info_request = requests.get(query_url)
             ip_info = ip_info_request.json()
         except Exception as e:
             logging.debug(f"Stats error: Failed to get geolocation of IP. Error: {str(e)}")
-        if ip_info and ip_info["status"] is "fail":
+        if ip_info and ip_info["status"] == "fail":
             logging.debug(f"Stats error: Geolocation query failed. Message: {ip_info["message"]}")
         elif ip_info:
             continent = ip_info["continent"]

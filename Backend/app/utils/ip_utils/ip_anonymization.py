@@ -3,7 +3,7 @@ import logging
 
 def anonymize_ip(ip_address):
     """
-    anonymize_ip(ip_address: str) -> str
+    anonymize_ip(ip_address: str) -> str | None
     ------------------------------------------------------------
     Returns:
         Anonymized IP as a string if input is a valid IP format.

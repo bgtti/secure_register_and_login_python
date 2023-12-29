@@ -3,17 +3,20 @@ from dotenv import load_dotenv  # getting .env variables
 import redis
 import datetime
 from app.utils.rate_limit_utils.rate_limit_exceeded import rate_limit_exceeded
+from app.config_constants import pepper_array, secret_key, admin_credentials
 
 load_dotenv()
 
-# set default valued for pepper and secret key:
-    # PEPPER = os.environ.get("PEPPER", "default_pepper")
-    # SECRET_KEY = os.environ.get("SECRET_KEY", "default_secret_key")
+# *** SETTINGS CONSTANTS
+PEPPER_STRING_ARRAY = pepper_array(os.getenv('PEPPER'))
+SECRET = secret_key(os.getenv('SECRET_KEY'))
+ADMIN_ACCT = admin_credentials(os.getenv('ADMIN_CREDENTIALS'))
 
-# *** APP'S CONFIGURATION ("app")
+# *** BASE CONFIGURATION: used in development
 class Config:
-    PEPPER = os.getenv("PEPPER") # used in account module when handling passwords
-    SECRET_KEY = os.getenv("SECRET_KEY") # used to protect user session data in flask
+    PEPPER = PEPPER_STRING_ARRAY # used in account module when handling passwords
+    SECRET_KEY = SECRET # used to protect user session data in flask
+    ADMIN_CREDENTIALS = ADMIN_ACCT # used to create admin user
 
     # SQLAlchemy configuration 
     SQLALCHEMY_DATABASE_URI = "sqlite:///admin.db"
@@ -23,10 +26,9 @@ class Config:
     # Flask-Session configuration
     SESSION_TYPE = "redis"
     SESSION_PERMANENT = False
-    SESSION_USE_SIGNER = True #if set to True, you have to set flask.Flask.secret_key, default to be False
+    SESSION_USE_SIGNER = True 
     SESSION_COOKIE_SECURE = True
-    # SESSION_COOKIE_HTTPONLY=True, ---cookie cannot be read using js
-    SESSION_COOKIE_SAMESITE = "None" #set to Lax in production
+    SESSION_COOKIE_SAMESITE = "None" 
     SESSION_COOKIE_NAME = "_SD_session"
     SESSION_KEY_PREFIX = "SDsession:"
     SESSION_REDIS = redis.Redis(host="localhost", port=6379, db=0)
@@ -39,10 +41,23 @@ class Config:
     RATELIMIT_DEFAULT = "200/day;60/hour"
     RATELIMIT_ON_BREACH_CALLBACK = rate_limit_exceeded
 
-# *** TESTS' CONFIGURATION (tests)
+# *** TESTS' CONFIGURATION: used to create app in the tests module
 class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+# *** PRODUCTION CONFIGURATION: set in manage.py when environment is production
+ENV_REDIS_SESSION_HOST = os.getenv('REDIS_SESSION_HOST')
+ENV_REDIS_SESSION_PORT = os.getenv('REDIS_SESSION_PORT')
+ENV_RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI')
+
+class ProductionConfig(Config):
+    TESTING = False
+    SQLALCHEMY_DATABASE_URI = "sqlite:///admin.db"
+    # SESSION_COOKIE_HTTPONLY=True, ---cookie cannot be read using js
+    SESSION_REDIS = redis.Redis(host=ENV_REDIS_SESSION_HOST, port=ENV_REDIS_SESSION_PORT, db=0)
+    SESSION_COOKIE_SAMESITE = "Lax" 
+    RATELIMIT_STORAGE_URI = ENV_RATELIMIT_STORAGE_URI
 
 # *** LOGGING CONFIGURATION (system_logs)
 

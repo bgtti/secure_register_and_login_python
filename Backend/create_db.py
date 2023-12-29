@@ -1,22 +1,16 @@
 from flask import current_app
+import ast
+from datetime import datetime
+from app.config import ADMIN_ACCT
 from app.extensions import db, flask_bcrypt
 from app.models.user import User
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-# from app.account.salt import generate_salt
-import os
-import ast
-from datetime import datetime
-
-# Creates an admin account
-# At this point the admin account is just like any other account
-
-PEPPER_STRING_ARRAY = os.getenv('PEPPER') 
-PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
 
 # Data for Admin Account creation:
-ADMIN_NAME = "Super Admin"
-ADMIN_EMAIL = "super@admin"
-ADMIN_PW = "lad678Ut$G"
+ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
+ADMIN_NAME = ADMIN_DATA[0]
+ADMIN_EMAIL = ADMIN_DATA[1]
+ADMIN_PW = ADMIN_DATA[2]
 
 # TODO: check that admin password is of decent size and content
 
@@ -32,4 +26,5 @@ def create_admin_acct():
         the_super_admin = User(
             name=ADMIN_NAME, email=ADMIN_EMAIL, password=hashed_password, salt=salt, created_at=date)
         db.session.add(the_super_admin)
+        the_super_admin.make_user_admin(ADMIN_PW)
         db.session.commit()
