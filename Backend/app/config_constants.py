@@ -1,6 +1,6 @@
 import ast
-import warnings
-
+from colorama import Fore
+from app.utils.console_warning.print_warning import console_warn
 # The functions in this file are meant to be used in the config file.
 # They check whether the proper key-value pairs exist in an .env file and, if so, if they are set properly. If they are not set or no .env exists, they set defaults to the required values.
 
@@ -30,7 +30,7 @@ def pepper_array(pepper_str_array):
             return DEFAULT_PEPPER
         return pepper_str_array
     else:
-        warnings.warn("Set PEPPER in a .env file before using this app in production.")
+        console_warn("Set PEPPER in a .env file before using this app in production.", "MAGENTA")
         return DEFAULT_PEPPER
 
 def secret_key(key_string):
@@ -50,7 +50,7 @@ def secret_key(key_string):
     if key_string:
         return key_string
     else:
-        warnings.warn("Set SECRET_KEY in a .env file before using this app in production.")
+        console_warn("Set SECRET_KEY in a .env file before using this app in production.", "MAGENTA")
         return "unsafeSecretKey"
 
 def admin_credentials(cred_str_array):
@@ -80,6 +80,6 @@ def admin_credentials(cred_str_array):
             return DEFAULT_CRED
         return cred_str_array
     else:
-        warnings.warn("Set ADMIN_CREDENTIALS in a .env file before using this app in production.")
+        console_warn("Set ADMIN_CREDENTIALS in a .env file before using this app in production.", "MAGENTA")
         return DEFAULT_CRED
 

@@ -6,18 +6,6 @@ from datetime import datetime
 from uuid import uuid4
 from app.config import PEPPER_STRING_ARRAY
 
-# Pepper requires a pepper array set in an env file
-# PEPPER_STRING_ARRAY = os.getenv('PEPPER')
-# If it does not exist or it is set up incorrectly, a default version will be used so that the code does not break.
-# Using the default array can make your code more insecure, since this project is open source and the default array is public.
-# try:
-#     PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
-#     if not isinstance(PEPPER_ARRAY, list) or len(PEPPER_ARRAY) != 6:
-#         raise ValueError("PEPPER must have exactly 6 values.")
-# except (ValueError, SyntaxError, TypeError):
-#     logging.critical("Error reading PEPPER. Using fallback pepper array. Fix PEPPER!")
-#     PEPPER_ARRAY = ["&Yz1", "X$Z2", "z£@5", "3F29", "7*yx", "Y8zp"]
-
 # function to get pepper according to account creation date
 def get_pepper(date):
     """

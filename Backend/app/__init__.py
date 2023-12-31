@@ -4,8 +4,11 @@ import app.extensions as extensions
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.config import dictConfig
+from colorama import init
 
 def create_app(config_class=Config):
+    init(autoreset=True)  # Initialize colorama
+    
     app = Flask(__name__)
     app.config.from_object(config_class)
 
