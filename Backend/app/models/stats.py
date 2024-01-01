@@ -69,7 +69,7 @@ class UserStats(UserMixin, db.Model):
         self._country = country
     
     def __repr__(self):
-        return f"<User stats: {self._new_user} from {self._country}>"
+        return f"<User stats: {self._new_user} from {self._country} in {self._year} week {self._week}>"
     @property
     def year(self):
         return self._year
@@ -130,21 +130,19 @@ class VisitorStats(UserMixin, db.Model):
     _country_code = db.Column(db.String(3), nullable=True)
     _city = db.Column(db.String(180), nullable=True)
     _user_agent = db.Column(db.String(250), nullable=True)
-    _os = db.Column(db.String(50), nullable=True)
     _screen_size = db.Column(db.String(15), nullable=True)
     _referrer = db.Column(db.String(100), nullable=True)
     _page_accessed = db.Column(db.String(50), nullable=True)
     _session_visit = db.Column(db.String(32), nullable=True, default="")
     _date_accessed = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, ip_address, continent, country, country_code, city, user_agent, os, screen_size , referrer, page_accessed, session_visit, **kwargs):
+    def __init__(self, ip_address, continent, country, country_code, city, user_agent, screen_size , referrer, page_accessed, session_visit, **kwargs):
         self._ip_address = self.check_and_hash_ip(ip_address)
         self._continent = continent
         self._country = country
         self._country_code = country_code
         self._city = city
         self._user_agent = user_agent
-        self._os = os
         self._screen_size = screen_size
         self._referrer = referrer
         self._page_accessed = page_accessed
@@ -152,6 +150,10 @@ class VisitorStats(UserMixin, db.Model):
     
     def __repr__(self):
         return f"<Visitor Stats {self._ip_address}>"
+    
+    @property
+    def ip_address(self):
+        return self._ip_address
     
     @property
     def continent(self):
@@ -168,6 +170,30 @@ class VisitorStats(UserMixin, db.Model):
     @property
     def city(self):
         return self._city
+    
+    @property
+    def user_agent(self):
+        return self._user_agent
+    
+    @property
+    def screen_size(self):
+        return self._screen_size
+    
+    @property
+    def referrer(self):
+        return self._referrer
+    
+    @property
+    def page_accessed(self):
+        return self._page_accessed
+    
+    @property
+    def session_visit(self):
+        return self._session_visit
+    
+    @property
+    def date_accessed(self):
+        return self._date_accessed
     
     def check_and_hash_ip(self, ip_address):
         # check if ip is not None or empty before performing operation:

@@ -39,7 +39,7 @@ class User(UserMixin, db.Model):
     _login_blocked_until = db.Column(db.DateTime, default=datetime.utcnow)
     
     
-    def __init__(self, name, email, password, salt, created_at):
+    def __init__(self, name, email, password, salt, created_at, **kwargs):
         self._name = name
         self._email = email
         self._password = password

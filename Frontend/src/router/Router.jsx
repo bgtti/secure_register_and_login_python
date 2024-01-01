@@ -15,6 +15,13 @@ import AdminSettings from "../pages/Admin/Settings/AdminSettings";
 import Footer from "../layout/Footer";
 import ErrorPage from '../pages/ErrorPage/ErrorPage';
 
+//include about page
+//include contact page
+//include privacy policy page
+//include terms and conditions page
+//include cookie policy page
+//include FAQ page
+
 const Router = () => {
     const loaderDisplay = useSelector((state) => state.loader.display);
     return (

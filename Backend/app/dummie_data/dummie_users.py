@@ -1,146 +1,34 @@
 from datetime import datetime, timedelta
 from app.models.user import User
+from app.models.stats import UserStats, VisitorStats
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.console_warning.print_warning import console_warn
 from app.extensions import db, flask_bcrypt
+from sqlalchemy.orm.session import make_transient
 import random
 import string
+import os
+from app.dummie_data.create_files import create_dummie_files
 
-# DUMMIE NAMES
-DUMMIES = ["James Maung", "Mary Zhu", "Robert Lu", "Patricia Khan", "Dorothy", "James Ali", "Mary Kumar", "Robert Singh", "Patricia Devi", "John Zhang", "Jennifer Wang", "Michael dos Santos", "Linda Schmidt", "David Schneider", "Elizabeth Becker", "William Bauer", "Barbara Dubois", "Richard Leroy", "Susan Bruno", "Joseph Ricci", "Jessica Marino", "Thomas Colombo", "Sarah Ferrari", "Jason", "Christopher Bianchi", "Karen Nagy", "Charles Szabó", "Lisa Kovács", "Daniel Jansen", "Nancy Viser", "Matthew Vanderberg", "Betty Almeida", "Anthony Oliveira", "Sandra Carvalho", "Mark Oni", "Melissa", "Margaret Taiwo", "Donald Zabu", "Ashley Simpson", "Steven Tyjani", "Kimberly Smit", "Andrew Badenhorst", "Emily Nel", "Paul van der Merwe", "Donna Asrat", "Joshua Tamesgen", "Michelle Ibrahim", "Kenneth Hassan", "Carol Akil", "Kevin Adel", "Amanda Ahmad", "George", "Brian Abdallah", "Deborah", "Anna Scott", "Nicole Roberts", "Brandon Carter", "Samantha Mitchell", "Brenda", "Benjamin Campbell", "Katherine Rivera", "Shirley", "Samuel Hall", "Christine Baker", "Gregory Nelson", "Helen Adams", "Alexander Green", "Debra Flores", "Patrick Hill", "Rachel Nguyen", "Frank Torres", "Carolyn Scott", "Stephanie O", "Nicholas", "Peter Hernandez", "Raymond Wright", "Janet King", "Jack Allen", "Maria Young", "Dennis Walker", "Kyle Rodriguez", "Catherine Robinson", "Jerry Lewis", "Heather Ramirez", "Tyler Clark", "Diane Sanchez", "Aaron Harris", "Olivia White", "Jose Thompson", "Julie Perez", "Adam Lee", "Joyce Martin", "Nathan Jackson", "Timothy", "Victoria Moore", "Henry Taylor", "Ruth Thomas", "Zachary Anderson", "Virginia Wilson", "Douglas Gonzalez", "Lauren Lopez", "Kelly Martinez", "Christina Davis", "Noah Garcia", "Joan Miller", "Ethan Jones", "Evelyn Brown", "Jeremy Williams", "Judith Johnson", "Walter Smith"]
+try:
+    from app.dummie_data.data_users import user_list
+    from app.dummie_data.data_users_stats import user_stats_list
+    from app.dummie_data.data_users_visitor_stats import visitor_stats_list
+    from app.dummie_data.data_visitor_stats import visitor_stats_random
+except ModuleNotFoundError as e:
+    console_warn("Creating files for base dummie data.", "CYAN")
+    create_dummie_files()
 
-# # --- 2. Instantiate an instance of faker:
-# fake = Faker(locale = "en_GB")
+"""
+The file named dummie_base_data.py (in this module) created the files data_users.py, data_user_stats.py, data_users_visitor_stats.py, and data_visitor_stats.py.
 
-# install faker: https://towardsdatascience.com/how-to-create-fake-data-with-faker-a835e5b7a9d9
-# DUMMIE_ANALYTICS_DATA = [ --> generate with faker https://faker.readthedocs.io/en/master/
-#     {
-#     "ip_address": "...",
-#     "continent": "...",
-#     "country": "...",
-#     "country_code": "...",
-#     "city": "...",
-#     "user_agent": "...",
-#     "os": "...",
-#     "screen_size": "( 0x0 )",
-#     "referrer": "...",
-#     "page_accessed": "...",
-#     "session_visit": "...",
-#     }
-# ]
+In this file, we use the data to add dummie input to the database tables at run time.
+We adapt these files to the current date in which this app is run to make the data look 'fresh'.
 
-DUMMY_PLACES = [
-    ("Africa", "Egypt", "EG", "Cairo"),
-    ("Africa", "Nigeria", "NG", "Lagos"),
-    ("Africa", "South Africa", "ZA", "Cape Town"),
-    ("Africa", "South Africa", "ZA", "Durban"),
-    ("Africa", "South Africa", "ZA", "Johannesburg"),
-    ("Asia", "India", "IN", "Mumbai"),
-    ("Asia", "India", "IN", "Jaipur"),
-    ("Asia", "Indonesia", "ID", "Jakarta"),
-    ("Asia", "Japan", "JP", "Tokio"),
-    ("Asia", "Japan", "JP", "Yokohama"),
-    ("Asia", "Japan", "JP", "Osaka"),
-    ("Europe", "France", "FR", "Paris"),
-    ("Europe", "France", "FR", "Toulouse"),
-    ("Europe", "France", "FR", "Marseille"),
-    ("Europe", "Hungary", "HU", "Budapest"),
-    ("Europe", "Ireland", "IE", "Dublin"),
-    ("Europe", "Italy", "IT", "Milan"),
-    ("Europe", "Italy", "IT", "Rome"),
-    ("Europe", "Germany", "DE", "Berlin"),
-    ("Europe", "Germany", "DE", "Munich"),
-    ("Europe", "Germany", "DE", "Frankfurt"),
-    ("Europe", "Germany", "DE", "Hamburg"),
-    ("Europe", "Germany", "DE", "Cologne"),
-    ("Europe", "Netherlands", "NL", "Amsterdam"),
-    ("Europe", "Netherlands", "NL", "Rotterdam"),
-    ("Europe", "Spain", "ES", "Barcelona"),
-    ("Europe", "Spain", "ES", "Madrid"),
-    ("Europe", "Spain", "ES", "Valencia"),
-    ("Europe", "Portugal", "PT", "Lisbon"),
-    ("Europe", "Portugal", "PT", "Porto"),
-    ("Europe", "United Kingdom", "GB","London"),
-    ("Europe", "United Kingdom", "GB","Liverpool"),
-    ("Europe", "United Kingdom", "GB","Bristol"),
-    ("Europe", "United Kingdom", "GB","Belfast"),
-    ("Europe", "United Kingdom", "GB","Leeds"),
-    ("Europe", "United Kingdom", "GB","Glasgow"),
-    ("North America", "Mexico", "MX","Mexico City"),
-    ("North America", "USA", "US","New York"),
-    ("North America", "USA", "US","San Francisco"),
-    ("North America", "USA", "US","Austin"),
-    ("North America", "USA", "US","Los Angeles"),
-    ("North America", "USA", "US","Chicago"),
-    ("North America", "USA", "US","Seattle"),
-    ("North America", "USA", "US","Portland"),
-    ("North America", "USA", "US","Denver"),
-    ("South America", "Brazil", "BR","Sao Paulo"),
-    ("South America", "Brazil", "BR","Rio de Janeiro"),
-    ("South America", "Brazil", "BR","Fortaleza"),
-    ("South America", "Chile", "CL","Valparaiso"),
-    ("South America", "Colombia", "CO","Bogota"),
-    ("South America", "Uruguay", "UY","Montevideo"),
-    ("Oceania", "Australia", "AU","Sydney"),
-    ("Oceania", "Australia", "AU","Melbourne"),
-]
-
-
-# DUMMY_ANALYTICS_DATA = [
-#     {
-#         "ip_address": fake.ipv4(),
-#         "continent": fake.random_element(elements=("Asia", "Europe", "North America", "South America", "Africa", "Australia")),
-#         "country": fake.country(),
-#         "country_code": fake.country_code(),
-#         "city": fake.city(),
-#     },
-#     {
-#         ....
-#     }
-# ]
-
-
-# def create_localized_faker ():
-#     # US
-#     Faker.seed(0)
-#     for _ in range(5):
-#         fake.city()
-#         fake.country()
-#         fake.country_code()
-
+This is used for testing the app and visualize some data in the font end. 
+"""
 
 # HELPER FUNCTIONS
-def generate_fake_mail(name):
-    """
-    generate_fake_mail(name: str) -> str
-    ---------------------------------------------------------------------------
-    This function takes a name, removes special characters, put it in lowercase,
-    joins first/middle/last names with a . and suffixed it with @fakemail.com
-    ---------------------------------------------------------------------------
-    Example usage:
-    
-    generate_fake_mail("David") -> david@fakemail.com
-    generate_fake_mail("Charles Szabó") -> charles.szabo@fakemail.com
-    generate_fake_mail("João Martinez de Sá Peixoto") -> joao.martinez.de.sa.peixoto@fakemail.com
-    """
-    cleaned_name = "".join(c.lower() if c.isalnum() or c.isspace() else "." for c in name)
-    cleaned_name = " ".join(cleaned_name.split()) # Replace consecutive spaces with a single space
-    cleaned_name = cleaned_name.replace(" ", ".") # Replace spaces with dots
-    fake_email = f"{cleaned_name}@fakemail.com"
-    return fake_email
-
-def generate_fake_str():
-    """
-    generate_fake_str(:void) -> str
-    ---------------------------------------------------------------------------
-    This function takes no arguments and returns a random 8-character string
-    ---------------------------------------------------------------------------
-    Example usage:
-    [if today is the 16th of January 2024]
-    date_obj = generateDateObjt(0, 1) -> datetime of the 1st of Jan 2024
-    date_obj.month -> January
-    """
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
 
 def generate_date_obj(num_months_in_the_past, day_of_month=1):
     """
@@ -224,6 +112,21 @@ def get_date_obj_last_week():
         return get_date_obj_week_num(last_week_of_year, this_year-1)
     else: 
         return get_date_obj_week_num(this_week_num-1, this_year)
+    
+def get_hashed_pw(creation_date, password, salt):
+    """
+    get_hashed_pw(creation_date: datetime, password: str, salt:str) -> str
+    -------------------------------------------------------------------------------------------------------------------
+    This function will return a hashed password.
+    -------------------------------------------------------------------------------------------------------------------
+    Example usage:
+
+    date_today = datetime.now()
+    get_hashed_pw(date_today,"hCI969QW", "de53fGnw") -> '$2b$12$zXlbTPBvcwZ/z5uvj3PQ/.fKs7ncxQ62o1gRQQQd.XQunMsPjXaCC'
+    """
+    pepper = get_pepper(creation_date)
+    salted_password = salt + password + pepper
+    return flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
 
 
 # FAKE DATES
@@ -234,6 +137,7 @@ Why are user creation dates being spread out?
 To be able to visualize data represented from the Stats module as well (visually represented when logging in the admin dashboard).
 """
 TODAY = datetime.utcnow()
+YESTERDAY = TODAY - timedelta(days = 1)
 THIS_YEAR = datetime.now().year
 THIS_MONTH = datetime.now().month
 THIS_WEEK_NUM = datetime.date(datetime.utcnow()).isocalendar()[1]
@@ -245,143 +149,159 @@ DATE_OBJ_THIS_MONTH = generate_date_obj(0,1)
 FAKE_DAYS_OF_MONTH = [1,5,10,15,25] # month_1 to month_5
 
 NUM_FAKE_USERS_PER_PERIOD = {
-    "month_5":5, # creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 5 and day_of_month is FAKE_DAYS_OF_MONTH
-    "month_4":10, # creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 4 and day_of_month is FAKE_DAYS_OF_MONTH
-    "month_3":15,# creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 3 and day_of_month is FAKE_DAYS_OF_MONTH
+    "month_3":10,# creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 3 and day_of_month is FAKE_DAYS_OF_MONTH
     "month_2":20,# creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 3 and day_of_month is FAKE_DAYS_OF_MONTH
     "month_1":25,# creation_date -> generate_date_obj(num_months_in_the_past, day_of_month) where num_months_in_the_past is 2 and day_of_month is FAKE_DAYS_OF_MONTH
-    "this_month":15, # creation_date = DATE_OBJ_THIS_MONTH
-    "last_week":5, # creation_date = DATE_OBJ_LAST_WEEK
-    "this_week":10, # creation_date = DATE_OBJ_THIS_WEEK
+    "month_0":15, # creation_date = DATE_OBJ_THIS_MONTH --->this month
+    "last_week":10, # creation_date = DATE_OBJ_LAST_WEEK
+    "this_week":15, # creation_date = DATE_OBJ_THIS_WEEK
     "today":5, # creation_date = TODAY
 }
 
-# CREATING DUMMIE USERS
 
 def create_dummie_user_accts():
     """
-    Creates 110 dummie users in the db for testing purposes.
+    Creates 100 dummy users in the db for testing purposes.
     This function is called in manage.py (dev environment only).
     """
-    # Check if Dummie users exists in the database, if not, add it:
+    # create_dummie_files()
+    # Check if Dummy users exist in the database; if not, add them:
     dummies_exist = db.session.query(User).get(2)
     if not dummies_exist:
-        console_warn("Adding dummie users to db. This may take a few seconds...", "CYAN")
+
+        console_warn("Adding dummy users to db. This may take a few seconds...", "CYAN")
+
         index = 0
-        for period, num_users in NUM_FAKE_USERS_PER_PERIOD.items(): #.items() returns tuples: [("month_5", 5), ("month_4", 10), ...]
+        the_dates = [] # the_date = (creation_date, the_week, last_seen)
+
+        console_warn("...updating dates in dummie data...", "CYAN")
+
+        for period, num_users in NUM_FAKE_USERS_PER_PERIOD.items():
             if period.startswith("month"):
                 num_months_in_the_past = int(period.split("_")[1])
                 for i in range(num_users):
-                    day_of_month = FAKE_DAYS_OF_MONTH[i % len(FAKE_DAYS_OF_MONTH)] # using the modulo operator (%) to cycle through the values
+                    day_of_month = FAKE_DAYS_OF_MONTH[i % len(FAKE_DAYS_OF_MONTH)]# using the modulo operator (%) to cycle through the values
                     creation_date = generate_date_obj(num_months_in_the_past, day_of_month)
-                    name = DUMMIES[index]
-                    email = generate_fake_mail(name)
-                    password = generate_fake_str()
-                    salt = generate_fake_str()
-                    pepper = get_pepper(creation_date)
-                    salted_password = salt + password + pepper
-                    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
-                    dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
-                    db.session.add(dummie_user)
+                    the_week = datetime.date(creation_date.year, creation_date.month, creation_date.day).isocalendar()[1]
+                    last_seen = YESTERDAY if index % 2 else creation_date # every second user is an active user
+                    the_date = (creation_date, the_week, last_seen)
+
+                    the_dates.append(the_date)
+
                     index += 1
-            elif period == "this_month":
-                for i in range(num_users):
-                    creation_date = DATE_OBJ_THIS_MONTH
-                    name = DUMMIES[index]
-                    email = generate_fake_mail(name)
-                    password = generate_fake_str()
-                    salt = generate_fake_str()
-                    pepper = get_pepper(creation_date)
-                    salted_password = salt + password + pepper
-                    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
-                    dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
-                    db.session.add(dummie_user)
-                    index += 1
+
             elif period == "last_week":
                 for i in range(num_users):
-                    creation_date = DATE_OBJ_LAST_WEEK
-                    name = DUMMIES[index]
-                    email = generate_fake_mail(name)
-                    password = generate_fake_str()
-                    salt = generate_fake_str()
-                    pepper = get_pepper(creation_date)
-                    salted_password = salt + password + pepper
-                    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
-                    dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
-                    db.session.add(dummie_user)
+                    creation_date = get_date_obj_last_week()
+                    the_week = datetime.date(creation_date.year, creation_date.month, creation_date.day).isocalendar()[1]
+                    last_seen = YESTERDAY if index % 2 else creation_date # every second user is an active user
+                    the_date = (creation_date, the_week, last_seen)
+
+                    the_dates.append(the_date)
+
                     index += 1
+
             elif period == "this_week":
                 for i in range(num_users):
                     creation_date = DATE_OBJ_THIS_WEEK
-                    name = DUMMIES[index]
-                    email = generate_fake_mail(name)
-                    password = generate_fake_str()
-                    salt = generate_fake_str()
-                    pepper = get_pepper(creation_date)
-                    salted_password = salt + password + pepper
-                    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
-                    dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
-                    db.session.add(dummie_user)
+                    the_week = datetime.date(creation_date.year, creation_date.month, creation_date.day).isocalendar()[1]
+                    the_date = (creation_date, the_week, creation_date)
+
+                    the_dates.append(the_date)
+
                     index += 1
+
             elif period == "today":
                 for i in range(num_users):
                     creation_date = TODAY
-                    name = DUMMIES[index]
-                    email = generate_fake_mail(name)
-                    password = generate_fake_str()
-                    salt = generate_fake_str()
-                    pepper = get_pepper(creation_date)
-                    salted_password = salt + password + pepper
-                    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode('utf-8')
-                    dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
-                    db.session.add(dummie_user)
+                    the_week = datetime.date(creation_date.year, creation_date.month, creation_date.day).isocalendar()[1]
+                    the_date = (creation_date, the_week, creation_date)
+
+                    the_dates.append(the_date)
+
                     index += 1
-        db.session.commit()
-        console_warn("...110 dummie users successfully added!", "CYAN")
-        # uncomment the bellow to print all users created:
+        
+        the_data_users = []
+        the_data_users_stats = []
+        the_data_users_visitor_stats = []
+        the_data_visitor_stats = []
+
+        for i in range(len(user_list)):
+            user = user_list[i]
+            user['password'] = get_hashed_pw(creation_date, user['password'], user['salt'])
+            user['created_at'] = the_dates[i][0]
+            user['last_seen'] = the_dates[i][2]
+            the_data_users.append(user)
+
+        for i in range(len(user_stats_list)):
+            user_stats = user_stats_list[i]
+            user_stats['year'] = the_dates[i][0].year
+            user_stats['month'] = the_dates[i][0].month
+            user_stats['week'] = the_dates[i][1]
+            the_data_users_stats.append(user_stats)
+        
+        index_j = 0
+
+        for i in range(len(the_dates)):
+            date = the_date = the_dates[i][0]
+
+            for j in range(index_j, index_j+2):
+                visitor_user_stats = visitor_stats_list[j]
+                visitor_user_stats['date_accessed'] = date
+                the_data_users_visitor_stats.append(visitor_user_stats)
+
+                visitor_random = visitor_stats_random[j]
+                visitor_random['date_accessed'] = date
+                the_data_visitor_stats.append(visitor_random)
+                
+            index_j += 2
+
+        console_warn("...updating dummy data files...", "CYAN")
+
+        file_paths = [
+            "data_users.py",
+            "data_users_stats.py",
+            "data_users_visitor_stats.py",
+            "data_visitor_stats.py",
+        ]
+
+        data_to_write = [
+            (the_data_users, 'user_list'),
+            (the_data_users_stats, 'user_stats_list'),
+            (the_data_users_visitor_stats, 'visitor_stats_list'),
+            (the_data_visitor_stats, 'visitor_stats_random'),
+        ]
+        
+        for i in range(len(file_paths)):
+            with open(os.path.join(os.path.dirname(__file__), file_paths[i]), "w", encoding="utf-8") as file:
+                if i != 1:
+                    file.write(f"from datetime import datetime\n")
+                file.write(f"{data_to_write[i][1]} = {data_to_write[i][0]}")
+
+        # dummie_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=creation_date, last_seen=creation_date)
+        # db.session.add_all(dummie_user)
+        # db.session.commit()
+
+        # dummie_visitor = VisitorStats(
+        #                 ip_address="", 
+        #                 continent="",
+        #                 country="",
+        #                 country_code="",
+        #                 city="",
+        #                 user_agent = "",
+        #                 screen_size= ""
+        #                 referrer= ""
+        #                 )
+        # dummie_user_stats = UserStats(year=creation_date.year, month=creation_date.month, week=the_week, new_user=1, country="")
+
+        # # Make the objects transient to allow them to be added to a new session
+        # for user in user_list:
+        #     make_transient(user)
+        # # Add all users to the session and commit
+        # db.session.add_all(user_list)
+        # db.session.commit()
+        console_warn("...100 dummie users successfully added!", "CYAN")
+        print("***************************")
         # users = User.query.all()
         # for user in users:
         #     print(user)
-
-# def set_last_seen():
-#     INDEXES = [1,3,4,]
-
-
-# FUNCTION THAT CREATES ALL DUMMIE DATA
-# def create_dummie_data():
-#     create_dummie_user_accts()
-
-
-
-# create_dummie_user_accts()
-
-# {
-#         "name": "", 
-#         "email": "",
-#         "password": "",
-#         "salt": "", 
-#     }
-
-
-
-# Some dummie data will populate the db of the dev envinroment for testing purposes
-# The datetime stamps were faked for this purpose
-# All user accounts are created in the span of 6 months
-
-
-# def create_dummie_stats():
-#     """
-#     Creates fake stats in the db for testing purposes.
-#     This function is called in manage.py (dev environment only).
-#     """
-#     this_year = datetime.now().year
-#     this_month = datetime.now().month
-#     this_week_num = datetime.date(datetime.utcnow()).isocalendar()[1]
-
-# this_year = datetime.now().year
-# this_week_num = datetime.date(datetime.utcnow()).isocalendar()[1]
-# if this_week_num == 1:
-#     last_week_of_year = datetime(this_year-1, 12, 31).isocalendar()[1]
-#     getDateObjForWeekNum(last_week_of_year, this_year-1)
-# else: 
-#     getDateObjForWeekNum(this_week_num-1, this_year)
