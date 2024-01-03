@@ -70,6 +70,7 @@ class UserStats(UserMixin, db.Model):
     
     def __repr__(self):
         return f"<User stats: {self._new_user} from {self._country} in {self._year} week {self._week}>"
+    
     @property
     def year(self):
         return self._year

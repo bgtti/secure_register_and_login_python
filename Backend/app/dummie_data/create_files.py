@@ -4,6 +4,7 @@ from uuid import uuid4
 import ipaddress
 from app.extensions import faker
 import os
+import json
 
 """
 A dummie user is created based on a list of random names.
@@ -15,13 +16,14 @@ for every user created:
 Also, random visitor stats are created (2x the number of users created). These are meant to simulate random visitors to the website who did not create an account.
 
 The data and functions in this file were used to create the following files:
-    - data_users.py -> will populate the users database
-    - data_user_stats.py -> will populate the user stats database (correlate to users created)
-    - data_users_visitor_stats.py -> will populate the visitor stats database (correlate to users created)
-    - data_visitor_stats.py -> will populate the visitor stats database (correlate to users created)
+    - data_users.json -> will populate the users database
+    - data_user_stats.json -> will populate the user stats database (correlate to users created)
+    - data_users_visitor_stats.json -> will populate the visitor stats database (correlate to users created)
+    - data_visitor_stats.json -> will populate the visitor stats database (correlate to users created)
 
-create_dummie_files()is the function that created these files - and it was called from dummie_users.py once.
-Should you want to make changes to the data (add/delete/modify), you can run the function again by uncommenting it in dummie_users.py
+create_dummie_files() is the function that created these files - and it was called from dummie_users.py once.
+If the json files are deleted and no second db User is found, the files will be re-created if the code runs in development mode.
+Check dummie_users.py (in this directory) to see how the data in this page is called and how the files are used.
 """
 
 # BASE INFORMATION FOR DUMMIE DATA CREATION
@@ -224,41 +226,41 @@ def create_dummie_files():
     for name in dummie_names:
         # dummie user data
         model_user = {
-            "name": name,
-            "email": generate_fake_mail(name),
-            "password": generate_fake_str(),
-            "salt": generate_fake_str(),
-            "created_at": "", # populated at runtime when creating dummie users
-            "session": "", # leave empty
-            "last_seen":"", # populated at runtime when creating dummie users
-            "is_blocked":"false", # most false
+            "_name": name,
+            "_email": generate_fake_mail(name),
+            "_password": generate_fake_str(),
+            "_salt": generate_fake_str(),
+            "_created_at": "", # populated at runtime when creating dummie users
+            "_session": "", # leave empty
+            "_last_seen":"", # populated at runtime when creating dummie users
+            "_is_blocked":"false", # most false
         }
         user_list.append(model_user)
         # dummie user stats data
         random_location_index = random.randint(0,len(dummie_places)-1)
         model_user_stats = {
-            "year": "", # populated at runtime when creating dummie users
-            "month": "", # populated at runtime when creating dummie users
-            "week": "", # populated at runtime when creating dummie users
-            "new_user": 1, # when user created it is 1
-            "country": dummie_places[random_location_index][1]
+            "_year": "", # populated at runtime when creating dummie users
+            "_month": "", # populated at runtime when creating dummie users
+            "_week": "", # populated at runtime when creating dummie users
+            "_new_user": 1, # when user created it is 1
+            "_country": dummie_places[random_location_index][1]
         }
         user_stats_list.append(model_user_stats)
         # dummie visitor stats data (2x per user created)
         random_referrer_index = random.randint(0,len(dummie_referrer)-1) 
         visitor_session_id = get_uuid()
         model_visitor_stats = {
-            "ip_address": fake_anonymize_ip(faker.ipv4()),
-            "continent": dummie_places[random_location_index][0],
-            "country": dummie_places[random_location_index][1],
-            "country_code": dummie_places[random_location_index][2],
-            "city": dummie_places[random_location_index][3],
-            "user_agent": faker.user_agent(),
-            "screen_size": "(0 x 0)",
-            "referrer": dummie_referrer[random_referrer_index],
-            "page_accessed": "home",
-            "session_visit": visitor_session_id,
-            "date_accessed": "" # populated at runtime when creating dummie users
+            "_ip_address": fake_anonymize_ip(faker.ipv4()),
+            "_continent": dummie_places[random_location_index][0],
+            "_country": dummie_places[random_location_index][1],
+            "_country_code": dummie_places[random_location_index][2],
+            "_city": dummie_places[random_location_index][3],
+            "_user_agent": faker.user_agent(),
+            "_screen_size": "(0 x 0)",
+            "_referrer": dummie_referrer[random_referrer_index],
+            "_page_accessed": "home",
+            "_session_visit": visitor_session_id,
+            "_date_accessed": "" # populated at runtime when creating dummie users
         }
         visitor_stats_list.append(model_visitor_stats)
         model_visitor_stats2 = model_visitor_stats.copy()
@@ -270,17 +272,41 @@ def create_dummie_files():
         # dummie visitor stats data (adding some random extra data)
         model_visitor_stats_random = create_dummie_visitor_stats()
         visitor_stats_random.append(model_visitor_stats_random)
-    
-    file_path_1 = os.path.join(os.path.dirname(__file__), "data_users.py")
-    file_path_2 = os.path.join(os.path.dirname(__file__), "data_users_stats.py")
-    file_path_3 = os.path.join(os.path.dirname(__file__), "data_users_visitor_stats.py")
-    file_path_4 = os.path.join(os.path.dirname(__file__), "data_visitor_stats.py")
-    with open(file_path_1, "w") as file:
-        file.write(f"user_list = {user_list}")
-    with open(file_path_2, "w") as file:
-        file.write(f"user_stats_list = {user_stats_list}")
-    with open(file_path_3, "w") as file:
-        file.write(f"visitor_stats_list = {visitor_stats_list}")
-    with open(file_path_4, "w") as file:
-        file.write(f"visitor_stats_random = {visitor_stats_random}")
+        
+    file_paths = [
+            "data_users.json",
+            "data_users_stats.json",
+            "data_users_visitor_stats.json",
+            "data_visitor_stats.json",
+        ]
 
+    data_to_write = [
+        user_list,
+        user_stats_list,
+        visitor_stats_list,
+        visitor_stats_random,
+    ]
+    
+    for i in range(len(file_paths)):
+        with open(os.path.join(os.path.dirname(__file__), file_paths[i]), "w", encoding="utf-8") as file:
+            json.dump(data_to_write[i], file, indent=4)  # Use json.dump to write the data as JSON
+    
+
+# The function above used to create .py files. In case you prefer .py over .json, here are the original bits:
+    # file_paths = [
+    #         "data_users.py",
+    #         "data_users_stats.py",
+    #         "data_users_visitor_stats.py",
+    #         "data_visitor_stats.py",
+    #     ]
+    # data_to_write = [
+    #     (user_list, 'user_list'),
+    #     (user_stats_list, 'user_stats_list'),
+    #     (visitor_stats_list, 'visitor_stats_list'),
+    #     (visitor_stats_random, 'visitor_stats_random'),
+    # ]
+    # for i in range(len(file_paths)):
+    #     with open(os.path.join(os.path.dirname(__file__), file_paths[i]), "w", encoding="utf-8") as file:
+    #         # if i != 1:
+    #         #     file.write(f"import datetime\n")
+    #         file.write(f"{data_to_write[i][1]} = {data_to_write[i][0]}")
