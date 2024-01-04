@@ -2,6 +2,21 @@ import PropTypes from 'prop-types';
 import UsersLogRow from "./UsersLogRow"
 import "./usersLogs.css"
 
+/**
+ * Component returns HTML div with user logs as a table
+ * 
+ * Child component: UserLogRow
+ * 
+ * @visibleName Admin Area: Users' Table: User Logs
+ * @param {object} props
+ * @param {object} props.user 
+ * @param {string} props.user.name
+ * @param {string} props.user.email
+ * @param {string} props.user.uuid
+ * @param {func} props.setShowUserLogs 
+ * @param {func} props.selectUserAction 
+ * @returns {React.ReactElement}
+ */
 function UsersLogs(props) {
     const { user, setShowUserLogs, selectUserAction } = props;
     const { name, email, uuid } = user;

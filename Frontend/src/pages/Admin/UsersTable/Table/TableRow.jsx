@@ -1,9 +1,25 @@
 import PropTypes from 'prop-types';
-import iconUserBlock from "../../../assets/icon_user_block.svg";
-import iconUserDelete from "../../../assets/icon_user_delete.svg";
-import iconUserMore from "../../../assets/icon_user_more.svg";
+import iconUserBlock from "../../../../assets/icon_user_block.svg";
+import iconUserDelete from "../../../../assets/icon_user_delete.svg";
+import iconUserMore from "../../../../assets/icon_user_more.svg";
 
-function UsersTableRow(props) {
+/**
+ * Component returns HTML table row (tr element) with user information and action buttons
+ * 
+ * @visibleName Admin Area: Users' Table: Table: TableRow
+ * @param {object} props
+ * @param {object} props.user 
+ * @param {string} props.user.name
+ * @param {string} props.user.email
+ * @param {string} props.user.lastSeen
+ * @param {string} props.user.isBlocked
+ * @param {string} props.user.uuid
+ * @param {func} props.toggleModal from grandparent (UsersTable)
+ * @param {func} props.setShowUserLogs from grandparent (UsersTable)
+ * @param {func} props.selectUserAction from grandparent (UsersTable)
+ * @returns {React.ReactElement}
+ */
+function TableRow(props) {
     const { user, toggleModal, setShowUserLogs, selectUserAction } = props
     const { name, email, lastSeen, isBlocked, uuid } = user;
 
@@ -58,7 +74,7 @@ function UsersTableRow(props) {
     );
 };
 
-UsersTableRow.propTypes = {
+TableRow.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string.isRequired,
         email: PropTypes.string.isRequired,
@@ -72,4 +88,4 @@ UsersTableRow.propTypes = {
 }
 
 
-export default UsersTableRow;
+export default TableRow;

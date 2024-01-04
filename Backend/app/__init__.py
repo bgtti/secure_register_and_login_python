@@ -24,9 +24,9 @@ def create_app(config_class=Config):
     from app.models import user
     from flask import current_app
 
-    from app.account.routes import account
-    from app.admin.routes import admin
-    from app.stats.routes import stats
+    from app.routes.account.routes import account
+    from app.routes.admin.routes import admin
+    from app.routes.stats.routes import stats
     app.register_blueprint(account, url_prefix='/api/account')
     app.register_blueprint(admin, url_prefix='/api/admin')
     app.register_blueprint(stats, url_prefix='/api/stats')

@@ -290,6 +290,7 @@ input {
     .MAIN-table>tbody>tr {
         padding: 5px;
         display: grid;
+        /* grid-template-columns => adapt in component's own css as needed */
         grid-template-columns: auto repeat(4, 10em);
         justify-items: stretch;
         align-items: center;

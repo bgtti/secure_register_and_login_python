@@ -3,7 +3,27 @@ import Modal from "../../../components/Modal/Modal";
 import ModalChangeAccount from "./ModalChangeAccount";
 import "./adminSettings.css"
 
+/** 
+ * @constant
+ * @type {string[]}
+ * @default 
+ * ["password", "email"]
+*/
 const ACCOUNT_ACTIONS = ["password", "email"]
+
+/**
+ * Component for managing the admin account.
+ * 
+ * Admin user can change password and email in AdminSettings
+ * 
+ * Attention: sensitive data. Admin access only.
+ * 
+ * Component accepts no props.
+ * 
+ * @visibleName Admin Area: Admin Settings
+ * @summary Component which allows admin user to change email and password.
+ * @returns {React.ReactElement}
+ */
 function AdminSettings() {
     const [modalChangeAccount, setModalChangeAccount] = useState(false)
     const [accountAction, setAccountAction] = useState("")

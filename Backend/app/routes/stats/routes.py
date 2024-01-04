@@ -7,7 +7,7 @@ import jsonschema
 import requests
 from app.extensions import flask_bcrypt, db, limiter
 from app.models.stats import VisitorStats
-from app.stats.schemas import analytics_schema
+from app.routes.stats.schemas import analytics_schema
 # from app.stats.helpers import anonymize_ip
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.ip_utils.ip_anonymization import  anonymize_ip

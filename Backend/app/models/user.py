@@ -4,7 +4,7 @@ from flask_login import UserMixin
 from datetime import datetime, timedelta
 from uuid import uuid4
 import ast
-from app.account.constants import INPUT_LENGTH 
+from app.routes.account.constants import INPUT_LENGTH 
 from app.config import ADMIN_ACCT
 
 ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
@@ -148,3 +148,12 @@ class User(UserMixin, db.Model):
         """
         if admin_password == ADMIN_PW:
             self._access_level = "admin" 
+    
+    def serialize_user_table(self):
+        return {
+            "uuid": self._uuid,
+            "name": self._name,
+            "email": self._email,
+            "last_seen": self._last_seen,
+            "is_blocked": self._is_blocked,
+        }

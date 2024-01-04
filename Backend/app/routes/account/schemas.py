@@ -1,4 +1,4 @@
-from app.account.constants import INPUT_LENGTH 
+from app.routes.account.constants import INPUT_LENGTH 
 
 EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])

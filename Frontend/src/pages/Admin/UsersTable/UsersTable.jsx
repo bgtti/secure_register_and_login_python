@@ -1,46 +1,61 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { getAllUsers } from "../../../config/apiHandler/admin.js"
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setLoader } from "../../../redux/loader/loaderSlice"
 import Modal from "../../../components/Modal/Modal";
-import ModalUserAction from "./ModalUserAction";
+import ModalUserAction from "./Modal/ModalUserAction.jsx";
 import Loader from "../../../components/Loader";
-import UsersTableRow from "./UsersTableRow";
+import FilterUsersTable from "./FilterTable/FilterUsersTable.jsx";
+import Table from "./Table/Table.jsx";
 import "./usersTable.css"
 
-const EXAMPLE = [
-    {
-        name: "John Alfred",
-        email: "john@alfred",
-        lastSeen: "14 Dec 2023",
-        isBlocked: "false",
-        uuid: "1234"
-    },
-    {
-        name: "Maria Henrieta Johnson",
-        email: "lala@expl.com",
-        lastSeen: "10 Dec 2023",
-        isBlocked: "false",
-        uuid: "2345"
-    },
-    {
-        name: "Frankenstein",
-        email: "jeu@hh.com",
-        lastSeen: "05 Nov 2023",
-        isBlocked: "true",
-        uuid: "3456"
-    }
-]
-
+/** 
+ * @constant
+ * @type {string[]}
+ * @default 
+ * ["delete", "block", "logs"]
+*/
 const USER_ACTIONS = ["delete", "block", "logs"]
 
-// Lazy load UsersLogs component
 const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
 
+/**
+ * Component for managing the component showing a table of all users, the component showing a user's log, or modal components to delete or block users.
+ * 
+ * UsersTable contains 4 child components: Table (shown by default), TableFilter (shown by default) UsersLogs (lazy loaded, shown if user selects it), Modal (shown if user selects it).
+ * 
+ * Attention: sensitive data. Admin access only.
+ * 
+ * Component passes props to children. Component accepts no props.
+ * 
+ * @todo implement pagination pages
+ * @todo check table size since it is not adapting between width 970 and 600px
+ * 
+ * @visibleName Admin Area: Users' Table
+ * @summary Table with all users. Manages user's log view, modals's display, and table filter.
+ * @returns {React.ReactElement}
+ */
 function UsersTable() {
-    const users = EXAMPLE
-
+    const [users, setUsers] = useState([])
     const [userSelected, setUserSelected] = useState({ name: "", email: "", uuid: "" })
     const [userAction, setUserAction] = useState("")
     const [modalUserAction, setModalUserAction] = useState(false)
     const [showUserLogs, setShowUserLogs] = useState(false)
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // dispatch(setLoader(true))
+        // getAllUsers()
+        //     .then(response => {
+        //         setUsers(response.users);
+        //     })
+        // dispatch(setLoader(false));
+        getUsers()
+
+    }, [])
 
     modalUserAction ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
 
@@ -59,8 +74,31 @@ function UsersTable() {
         }
     }
 
+    /**
+     * Toggles modal block user && modal delete user
+     */
     function toggleModal() {
         setModalUserAction(!modalUserAction);
+    }
+
+    /**
+     * Uses the function getAllUsers to make an api call to fetch user data.
+     * Hover over getAllUsers to see the required parameters.
+     */
+    function getUsers(pageNr = 1, itemsPerPage = 25, orderBy = "last_seen", orderSort = "descending", filterBy = "none") {
+        const data = {
+            page_nr: pageNr,
+            items_per_page: itemsPerPage,
+            order_by: orderBy,
+            order_sort: orderSort,
+            filter_by: filterBy
+        }
+        dispatch(setLoader(true))
+        getAllUsers(data)
+            .then(response => {
+                setUsers(response.users);
+            })
+        dispatch(setLoader(false));
     }
 
     return (
@@ -77,29 +115,22 @@ function UsersTable() {
             <h3>{showUserLogs ? "User Logs" : "Users Table"}</h3>
             {
                 !showUserLogs && (
-                    <table className="MAIN-table" role="table">
-                        <thead role="rowgroup">
-                            <tr role="row">
-                                <th role="columnheader">Name</th>
-                                <th role="columnheader">Email</th>
-                                <th role="columnheader">Last seen</th>
-                                <th role="columnheader">Blocked</th>
-                                <th role="columnheader">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody role="rowgroup">
-                            {users && (
-                                users.map((user, index) => (
-                                    <UsersTableRow
-                                        user={user}
-                                        key={index}
-                                        toggleModal={toggleModal}
-                                        setShowUserLogs={setShowUserLogs}
-                                        selectUserAction={selectUserAction} />
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                    <FilterUsersTable />
+                )
+            }
+            {
+                !showUserLogs && users && (
+                    <Table
+                        users={users}
+                        toggleModal={toggleModal}
+                        setShowUserLogs={setShowUserLogs}
+                        selectUserAction={selectUserAction}
+                    />
+                )
+            }
+            {
+                !users && (
+                    <p>You do not have any users.</p>
                 )
             }
             {

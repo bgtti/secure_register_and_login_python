@@ -1,3 +1,5 @@
+//REPLACE THIS FILE WITH apiEndPoints.js
+
 const SIGNUP = '/api/account/signup';
 const LOGIN = '/api/account/login';
 const LOGOUT = '/api/account/logout';

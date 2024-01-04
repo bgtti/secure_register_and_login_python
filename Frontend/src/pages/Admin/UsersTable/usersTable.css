@@ -22,3 +22,12 @@
         filter: grayscale(70%) drop-shadow(0 0 0.2rem black);
     }
 }
+
+@media only screen and (min-width:600px) {
+
+    .UsersTable-table>thead>tr,
+    .UsersTable-table>tbody>tr {
+        /* grid-template-columns: auto 20em repeat(3, 10em) !important; */
+        grid-template-columns: 10em auto repeat(3, 10em) !important;
+    }
+}

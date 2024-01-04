@@ -1,7 +1,19 @@
 import PropTypes from 'prop-types';
+
+/**
+ * Component returns HTML table rows (tr element) representing a log.
+ * 
+ * @visibleName Admin Area: Users' Table: User Logs: Log Row
+ * @param {object} props
+ * @param {object} props.log 
+ * @param {string} props.log.date
+ * @param {string} props.log.info
+ * @param {string} props.log.activity
+ * @param {string} props.log.message
+ * @returns {React.ReactElement}
+ */
 function UsersLogRow(props) {
     const { date, type, activity, message } = props.log;
-
 
     return (
         <tr role="row">
