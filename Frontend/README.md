@@ -33,3 +33,15 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
 React docstring syntax: https://jsdoc.app/
+
+CHANGE FAVICON:
+
+first delete the file named icon_lock.svg in the public folder and place the file of your desired favicon there.
+
+then, in index.html you will see a link tag. Replace the name in the href with that of the svg of your desired favicon. If you are using another file format, you might want to change the type as well (eg: for a .ico file: type="image/png" href="/favicon.ico")
+
+<pre>
+```
+<link rel="icon" type="image/svg+xml" href="/icon_lock.svg" />
+```
+</pre>
