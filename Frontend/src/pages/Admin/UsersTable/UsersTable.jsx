@@ -7,6 +7,7 @@ import Modal from "../../../components/Modal/Modal";
 import ModalUserAction from "./Modal/ModalUserAction.jsx";
 import Loader from "../../../components/Loader";
 import FilterUsersTable from "./FilterTable/FilterUsersTable.jsx";
+import SearchUser from "./SearchUser/SearchUser.jsx";
 import Table from "./Table/Table.jsx";
 import Pagination from "./Pagination/Pagination.jsx";
 import "./usersTable.css"
@@ -31,8 +32,8 @@ const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
  * 
  * Component passes props to children. Component accepts no props.
  * 
- * @todo implement pagination pages
- * @todo check table size since it is not adapting between width 970 and 600px
+ * @todo implement API call for search user
+ * @todo docstrings for search user
  * 
  * @visibleName Admin Area: Users' Table
  * @summary Table with all users. Manages user's log view, modals's display, and table filter.
@@ -40,11 +41,11 @@ const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
  */
 function UsersTable() {
     const dispatch = useDispatch();
-    // State to store users and pagination:
+    // State to store users, pagination, and filter preferences:
     const [users, setUsers] = useState([])
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const itemsPerPage = 25;
+    const [currentPage, setCurrentPage] = useState(1); //pagination
+    const [totalPages, setTotalPages] = useState(1); //pagination
+    const [filterBy, setFilterBy] = useState("none"); //filter
     // State storing selected user action and modal display (block/delete user or show user's logs):
     const [userSelected, setUserSelected] = useState({ name: "", email: "", uuid: "" })
     const [userAction, setUserAction] = useState("")
@@ -102,9 +103,16 @@ function UsersTable() {
         dispatch(setLoader(true))
         getAllUsers(data)
             .then(response => {
-                setUsers(response.users);
-                setTotalPages(response.totalPages);
-                setCurrentPage(response.currentPage);
+                if (response.data) {
+                    setUsers(response.users);
+                    setCurrentPage(response.currentPage);
+                    setTotalPages(response.totalPages);
+                } else {
+                    setUsers([]);
+                    setCurrentPage(1);
+                    setTotalPages(1);
+                    //perhaps include logic for too many requests
+                }
             })
         dispatch(setLoader(false));
     }
@@ -133,26 +141,55 @@ function UsersTable() {
             }
             <h3>{showUserLogs ? "User Logs" : "Users Table"}</h3>
             {
-                !showUserLogs && users && (
+                !showUserLogs && (
                     <>
-                        <FilterUsersTable />
-                        <Table
-                            users={users}
-                            toggleModal={toggleModal}
-                            setShowUserLogs={setShowUserLogs}
-                            selectUserAction={selectUserAction}
-                        />
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            handlePageChange={handlePageChange}
-                        />
+                        {
+                            ((users && users.length >= 0) || ((!users || users.length === 0) && (filterBy !== "none"))) && (
+                                <div className="UsersTable-btnFilters">
+                                    <FilterUsersTable
+                                        getUsers={getUsers}
+                                        setFilterBy={setFilterBy}
+                                        filterBy={filterBy}
+                                    />
+                                    <SearchUser />
+                                </div>
+                            )
+                        }
+                        {
+                            users && users.length > 0 && (
+                                <>
+                                    <Table
+                                        users={users}
+                                        toggleModal={toggleModal}
+                                        setShowUserLogs={setShowUserLogs}
+                                        selectUserAction={selectUserAction}
+                                    />
+                                    {
+                                        totalPages > 1 && (
+                                            <Pagination
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                handlePageChange={handlePageChange}
+                                            />
+                                        )
+                                    }
+                                </>
+                            )
+                        }
+                        {
+                            (!users || users.length === 0) && (
+                                <p className="UsersTable-noTable">
+                                    {
+                                        (filterBy !== "none") ? (
+                                            "No users found. Please reset the filter and try again."
+                                        ) : (
+                                            "You do not have any users yet."
+                                        )
+                                    }
+                                </p>
+                            )
+                        }
                     </>
-                )
-            }
-            {
-                !users && (
-                    <p>You do not have any users.</p>
                 )
             }
             {

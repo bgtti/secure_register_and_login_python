@@ -17,8 +17,6 @@
 }
 
 .Pagination>div>button {
-    background-color: var(--MiddleBlueColour);
-    height: 2.2em;
     min-width: 7em;
     padding: 5px;
     font-size: 0.9em !important;

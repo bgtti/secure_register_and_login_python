@@ -6,28 +6,60 @@
     color: var(--FontColorSecondary);
 }
 
-.UserTable-IconsContainer {
+/* Hide table options & hide search btn container */
+
+.UsersTable-btnFilters {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.UserTable-icon {
-    height: 30px;
-    cursor: pointer;
+/* The bellow applies to filterUsersTable and SearchUser */
 
+.UsersTableFilters-btn,
+.UsersTableFilters-form>button {
+    padding: 5px 10px;
+    font-size: 0.9em !important;
 }
 
-@media (hover: hover) {
-    .UserTable-icon:hover {
-        filter: grayscale(70%) drop-shadow(0 0 0.2rem black);
+.UsersTableFilters-btn {
+    height: 2.2em;
+    min-width: 12em;
+    padding: 5px 10px;
+    font-size: 0.9em !important;
+}
+
+.UsersTableFilters-btn-selected {
+    background-color: var(--MiddleBlueColour);
+    margin: 0 !important;
+    border-bottom-left-radius: 0;
+}
+
+.UsersTableFilters-form {
+    padding: 10px 0 5px 10px !important;
+    border-left: 3px solid var(--FontColorDarker);
+    padding-left: 5px;
+    border-image: linear-gradient(180deg, var(--MiddleBlueColour), #1e292e, var(--BackgroudPrimary)) 2;
+}
+
+.UsersTableFilters-form>div {
+    grid-template-columns: minmax(0.5em, 10em) minmax(0.5em, 15em);
+}
+
+.UsersTableFilters-form>button {
+    min-width: 10em;
+    height: 1.9em;
+    margin: 5px 0 !important;
+}
+
+@media (max-width: 310px) {
+    .UsersTableFilters-form>div {
+        display: flex;
+        flex-direction: column;
     }
 }
 
-@media only screen and (min-width:600px) {
-
-    .UsersTable-table>thead>tr,
-    .UsersTable-table>tbody>tr {
-        /* grid-template-columns: auto 20em repeat(3, 10em) !important; */
-        grid-template-columns: 10em auto repeat(3, 10em) !important;
-    }
+/* P-tag saying no table to display */
+.UsersTable-noTable {
+    margin: 20px 0;
 }

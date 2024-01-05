@@ -43,10 +43,10 @@ function TableRow(props) {
             </td>
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="actions">Actions:</label>
-                <div className="UserTable-IconsContainer">
+                <div className="Table-IconsContainer">
                     <img
                         alt="More user information"
-                        className="UserTable-icon"
+                        className="Table-icon"
                         role="button"
                         title="More information"
                         src={iconUserMore}
@@ -54,7 +54,7 @@ function TableRow(props) {
                     />
                     <img
                         alt="Block user"
-                        className="UserTable-icon"
+                        className="Table-icon"
                         role="button"
                         title="Block user"
                         src={iconUserBlock}
@@ -62,7 +62,7 @@ function TableRow(props) {
                     />
                     <img
                         alt="Delete user"
-                        className="UserTable-icon"
+                        className="Table-icon"
                         role="button"
                         title="Delete user"
                         src={iconUserDelete}

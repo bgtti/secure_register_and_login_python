@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import TableRow from './TableRow.jsx';
-import "../usersTable.css"
+import "./table.css"
 
 /**
  * Component returns HTML table for showing a table with all users
@@ -37,7 +37,7 @@ function Table(props) {
     const { users, toggleModal, setShowUserLogs, selectUserAction } = props
 
     return (
-        <table className="MAIN-table UsersTable-table" role="table">
+        <table className="MAIN-table Table" role="table">
             <thead role="rowgroup">
                 <tr role="row">
                     <th role="columnheader">Name</th>

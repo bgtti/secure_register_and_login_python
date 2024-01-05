@@ -89,24 +89,30 @@ export function getAllUsers(data = {}) {
                 return {
                     users: javaScriptifiedUserFields,
                     totalPages: response.data.total_pages,
-                    currentPage: response.data.current_page
-                }
-            } else if (response.status === 200 && response.data.users.length === 0) {
-                return {
-                    users: [],
-                    totalPages: response.data.total_pages,
-                    currentPage: response.data.current_page
+                    currentPage: response.data.current_page,
+                    data: true,
+                    // itemsPerPage: response.data.query.items_per_page,
+                    // orderedBy: response.data.query.ordered_by,
+                    // orderSort: response.data.query.order_sort,
+                    // filterBy: response.data.query.filter_by,
                 }
             } else {
                 return {
                     users: [],
-                    totalPages: null,
-                    currentPage: null
+                    totalPages: 1,
+                    currentPage: 1,
+                    data: false
                 }
             }
         }
         catch (error) {
             console.error('Error fetching users:', error);
+            return {
+                users: [],
+                totalPages: 1,
+                currentPage: 1,
+                data: false
+            }
         }
     }
 

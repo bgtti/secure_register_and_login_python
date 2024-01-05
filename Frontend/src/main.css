@@ -70,7 +70,11 @@ h3 {
 }
 
 p,
-label {
+label,
+button,
+select,
+input {
+    font-family: 'Inter', sans-serif;
     font-size: 1em;
 }
 
@@ -84,8 +88,6 @@ i {
 }
 
 button {
-    font-family: 'Inter', sans-serif;
-    font-size: 1em;
     font-weight: 600;
     padding: 7px 25px;
     background-color: var(--BlueColour);
@@ -109,9 +111,8 @@ button:disabled {
     box-shadow: none;
 }
 
-input {
-    font-family: 'Inter', sans-serif;
-    font-size: 1em;
+input,
+select {
     border: none;
     border-radius: 7px;
     padding: 5px 10px;
@@ -171,12 +172,14 @@ input {
 
 .MAIN-form-display-table {
     display: grid;
+    /* grid-template-columns => adapt in component's own css as needed */
     grid-template-columns: 2fr 3fr;
     grid-gap: 10px;
 }
 
 @media (min-width: 600px) {
     .MAIN-form-display-table {
+        /* grid-template-columns => adapt in component's own css as needed */
         grid-template-columns: 200px 300px;
     }
 }

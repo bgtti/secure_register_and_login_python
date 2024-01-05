@@ -16,11 +16,14 @@ function Pagination(props) {
     return (
         <div className="Pagination">
             <p>Page {currentPage} of {totalPages}</p>
-            <div>
-                <button onClick={() => handlePageChange(currentPage - 1)}> &lt; Previous</button>
-                <button onClick={() => handlePageChange(currentPage + 1)}>Next &gt;</button>
-            </div>
-
+            {
+                totalPages > 1 && (
+                    <div>
+                        <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}> &lt; Previous</button>
+                        <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next &gt;</button>
+                    </div>
+                )
+            }
         </div>
     )
 }
