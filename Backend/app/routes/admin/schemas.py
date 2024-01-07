@@ -1,3 +1,5 @@
+from app.utils.constants.account_constants import INPUT_LENGTH
+
 admin_users_table_schema = {
     "type": "object",
     "title": "Users table pagination", 
@@ -29,6 +31,16 @@ admin_users_table_schema = {
             "type": "string",
             "enum": ["none", "is_blocked"],
             },
+        "search_by": {
+            "description": "The parameter to use when searching a user. If no user is searched, use 'none'. Deafults to 'none'.",
+            "type": "string",
+            "enum": ["none", "name", "email"],
+            },
+        "search_word": {
+            "description": "User's search input.",
+            "type": "string",
+            "maxLength": INPUT_LENGTH['email']['maxValue'], # because email longer than name
+            }
     },
     "additionalProperties": False,
     "required": ["page_nr"]

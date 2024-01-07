@@ -2,12 +2,14 @@ from flask import Blueprint, request, jsonify, session
 import logging
 import jsonschema
 from sqlalchemy import desc, asc
+from sqlalchemy_utils import escape_like
 from app.extensions import flask_bcrypt, db
 from app.routes.account.schemas import sign_up_schema, log_in_schema
 from app.routes.admin.schemas import admin_users_table_schema
 # from app.account.salt import generate_salt
 from app.models.user import User
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.detect_html.detect_html import check_for_html
 
 
 admin = Blueprint('admin', __name__)
@@ -70,7 +72,9 @@ def admin_users_table():
                 "items_per_page": 25,
                 "order_sort": "descending",
                 "ordered_by": "_last_seen",
-                "page_nr": 1
+                "page_nr": 1,
+                "search_by": "email",
+                "search_word": "frank",
             },
             "users": [
                 {
@@ -91,7 +95,7 @@ def admin_users_table():
     try:
         jsonschema.validate(instance=json_data, schema=admin_users_table_schema)
     except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input page_nr: {json_data["page_nr"]}, items_per_page: {json_data["items_per_page"]}, order_by: {json_data["order_by"]}, order_sort: {json_data["order_sort"]}, filter_by: {json_data["filter_by"]}")
+        logging.info(f"Jsonschema validation error. Input page_nr: {json_data["page_nr"]}, items_per_page: {json_data["items_per_page"]}, order_by: {json_data["order_by"]}, order_sort: {json_data["order_sort"]}, filter_by: {json_data["filter_by"]}, search_by: {json_data["search_by"]}, search_word: {json_data["search_word"]}")
         return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
     
     # setting defaults to optional arguments:
@@ -100,8 +104,19 @@ def admin_users_table():
     order_by = json_data.get("order_by", "last_seen")
     order_sort = json_data.get("order_sort", "descending")
     filter_by = json_data.get("filter_by", "none")
+    search_by = json_data.get("search_by", "none")
+    search_word = json_data.get("search_word", "")
 
     order_by = "_" + order_by
+
+    # Check if search is valid
+    if not search_word:
+        search_by = "none"
+    else:
+        # Check for html in user input
+        html_in_input = check_for_html(search_word, "admin_users_table - search_word field")
+        if html_in_input:
+            logging.warning(f"Admin input may include html. Possible vulnerability? Input in user search: {search_word}")
 
     # Determine the ordering based on user input
     ordering = User.__dict__.get(order_by, None)
@@ -112,33 +127,22 @@ def admin_users_table():
         ordering = ordering.desc()
     else:
         ordering = ordering.asc()
-    
-    # Handle different filter conditions
-    try:
-        if filter_by == "none":
-            users = User.query.order_by(ordering).paginate(
-                page=page_nr, per_page=items_per_page, error_out=False
-            )
-        elif filter_by == "is_blocked":
-            users = (
-                User.query.filter_by(_is_blocked="true")
-                .order_by(ordering)
-                .paginate(page=page_nr, per_page=items_per_page, error_out=False)
-            )
-        else:
-            return jsonify({"response": "Invalid filter condition."}), 400
-    except Exception as e:
-        logging.error(f"User table could not be retrieved. Error: {e}")
-        return jsonify({"response": "Error retrieving user table.", "error": str(e)}), 500
 
-    
-    # Getting db pages according to specifications of order_by, order_sort, and filter_by
+    # Dynamic filtering conditions - possible values for (filter_by, search_by)
+    filter_conditions = {
+        ("none","none"): User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("none", "email"): User.query.filter(User._email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("none","name",): User.query.filter(User._name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked","none"): User.query.filter_by(_is_blocked="true").order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked", "email"): User.query.filter(User._is_blocked == "true", User._email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked", "name"): User.query.filter(User._is_blocked == "true", User._name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+    }
+
     try:
-        if order_by == "last_seen" and order_sort == "descending" and filter_by == "none":
-            users = User.query.order_by(desc(User.last_seen)).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        users = filter_conditions.get((filter_by, search_by), ("none","none"))
     except Exception as e:
         logging.error(f"User table could not be retrieved. Error: {e}")
-    
+
     if not users.items:
         return jsonify({"response": "Requested page out of range"}), 404
     
@@ -152,8 +156,12 @@ def admin_users_table():
                 "items_per_page": items_per_page,
                 "ordered_by": order_by,
                 "order_sort": order_sort,
-                "filter_by": filter_by
+                "filter_by": filter_by,
+                "search_by": search_by,
+                "search_word": search_word,
             }
         }
     
     return jsonify(response_data)
+
+

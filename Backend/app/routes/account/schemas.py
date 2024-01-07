@@ -1,20 +1,4 @@
-from app.routes.account.constants import INPUT_LENGTH 
-
-EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
-PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
-
-# Explanation of the EMAIL_PATTERN:
-# ^: Asserts the start of the string.
-# [^@\s]+: Matches one or more characters that are not '@' or whitespace.
-# @: Matches the '@' character.
-# [^@\s]+: Matches one or more characters that are not '@' or whitespace.
-# $: Asserts the end of the string.
-
-# Explanation of the PASSWORD_PATTERN:
-# ^: Asserts the start of the string.
-# [\s\S]: Matches any character, including whitespace (ASCII and Unicode).
-# {%d,%d}: Specifies the minimum and maximum length based on your constants.
-# $: Asserts the end of the string.
+from app.utils.constants.account_constants import INPUT_LENGTH, EMAIL_PATTERN, PASSWORD_PATTERN
 
 sign_up_schema = {
     "type": "object",

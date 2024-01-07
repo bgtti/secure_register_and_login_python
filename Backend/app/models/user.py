@@ -1,11 +1,10 @@
-from app.extensions import db
-# from sqlalchemy import event
 from flask_login import UserMixin
+import ast
 from datetime import datetime, timedelta
 from uuid import uuid4
-import ast
-from app.routes.account.constants import INPUT_LENGTH 
+from app.extensions import db
 from app.config import ADMIN_ACCT
+from app.utils.constants.account_constants import INPUT_LENGTH
 
 ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
 ADMIN_PW = ADMIN_DATA[2]

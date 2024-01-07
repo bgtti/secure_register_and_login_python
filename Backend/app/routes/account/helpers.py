@@ -1,5 +1,5 @@
 import re
-from app.routes.account.constants import MOST_COMMON_PASSWORDS
+from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
 
 def is_good_password(password):
     """
