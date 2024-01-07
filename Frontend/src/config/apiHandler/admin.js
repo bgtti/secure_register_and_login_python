@@ -1,5 +1,6 @@
 import api from "../axios";
 import apiEndpoints from "../apiEndPoints";
+import INPUT_LENGTH from "../../utils/constants";
 
 /**
  * Function makes api call to retrieve an array of users (number of users = items_per_page).
@@ -8,6 +9,8 @@ import apiEndpoints from "../apiEndPoints";
  * 
  * Given wrong parameters defaults will be used (it will not return an error).
  * 
+ * Sends the key 'data' as a boolean to indicate whether there is response data or not.
+ * 
  * @todo UPDATE THIS DOCSTRING
  * @param {object} data 
  * @param {number} [data.page_nr = 1] integer, must be positive
@@ -15,6 +18,8 @@ import apiEndpoints from "../apiEndPoints";
  * @param {string} [data.order_by = "last_seen"] enum: ["last_seen", "name", "email", "created_at"]
  * @param {string} [data.order_sort = "descending"] enum: ["descending", "ascending"]
  * @param {string} [data.filter_by = "none"] enum: ["none", "is_blocked"]
+ * @param {string} [data.search_by = "none"] enum: ["none", "name", "email"]
+ * @param {string} [data.search_word  = ""] no longer than maximum email length
  * @returns {object}
  * 
  * @example
@@ -39,13 +44,7 @@ import apiEndpoints from "../apiEndPoints";
  *  ]
  *  total_pages: 3,
  *  current_page: 1,
- *  query: {
- *    page_nr: 1,
- *    items_per_page: 25,
- *    ordered_by: "name",
- *    order_sort: "descending",
- *    filter_by: "none"
- *  }
+ *  data: true,
  * }
  */
 export function getAllUsers(data = {}) {
@@ -53,19 +52,26 @@ export function getAllUsers(data = {}) {
     const ORDER = ["last_seen", "name", "email", "created_at"]
     const SORT = ["descending", "ascending"]
     const FILTER = ["none", "is_blocked"]
+    const SEARCH_BY = ["none", "name", "email"]
+    const SEARCH_WORD_MAX_LENGTH = INPUT_LENGTH.email.maxValue
 
+    // validate data - if validation fails, defaults are set
     let pageNr = (data.page_nr && Number.isInteger(data.page_nr) && data.page_nr >= 1) ? data.page_nr : 1;
     let itemsPerPage = (data.items_per_page && Number.isInteger(data.items_per_page) && data.items_per_page >= 5 && data.items_per_page <= 50 && data.items_per_page % 5 === 0) ? data.items_per_page : 25;
     let orderBy = (data.order_by && ORDER.includes(data.order_by)) ? data.order_by : "last_seen";
     let orderSort = (data.order_sort && SORT.includes(data.order_sort)) ? data.order_sort : "descending";
-    let filterBy = (data.filter_by && FILTER.includes(data.filter_by)) ? data.filter_by : "none"
+    let filterBy = (data.filter_by && FILTER.includes(data.filter_by)) ? data.filter_by : "none";
+    let search_by = (data.search_by && SEARCH_BY.includes(data.search_by)) ? data.search_by : "none";
+    let search_word = (data.search_word && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word.length : "";
 
     let requestData = {
         "page_nr": pageNr,
         "items_per_page": itemsPerPage,
         "order_by": orderBy,
         "order_sort": orderSort,
-        "filter_by": filterBy
+        "filter_by": filterBy,
+        "search_by": search_by,
+        "search_word": search_word
     }
 
     const getData = async () => {
@@ -91,10 +97,6 @@ export function getAllUsers(data = {}) {
                     totalPages: response.data.total_pages,
                     currentPage: response.data.current_page,
                     data: true,
-                    // itemsPerPage: response.data.query.items_per_page,
-                    // orderedBy: response.data.query.ordered_by,
-                    // orderSort: response.data.query.order_sort,
-                    // filterBy: response.data.query.filter_by,
                 }
             } else {
                 return {
