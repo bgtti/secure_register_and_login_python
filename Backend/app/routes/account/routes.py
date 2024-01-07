@@ -6,7 +6,7 @@ from app.extensions import flask_bcrypt, db, limiter
 from app.routes.account.schemas import sign_up_schema, log_in_schema
 from app.routes.account.helpers import is_good_password
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-from app.utils.log_event_utils.helpers import log_event
+from app.utils.log_event_utils.log import log_event
 from app.utils.detect_html.detect_html import check_for_html
 from app.models.user import User
 

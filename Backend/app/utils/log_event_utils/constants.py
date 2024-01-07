@@ -17,7 +17,8 @@ LOG_EVENT_ACTIVITY = {
     "block": "block",
     "unblock":"unblock",
     "signup":"signup",
-    "login": "login"
+    "login": "login",
+    "delete_user":"delete_user"
 }
 
 # session_id should be either required or not. Use the following constants:

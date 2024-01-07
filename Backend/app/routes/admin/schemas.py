@@ -45,3 +45,37 @@ admin_users_table_schema = {
     "additionalProperties": False,
     "required": ["page_nr"]
 }
+
+admin_delete_user_schema = {
+    "type": "object",
+    "title": "Users table pagination", 
+    "properties": {
+        "user_uuid": {
+            "description": "Uuid of user to delete.",
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+            }
+    },
+    "additionalProperties": False,
+    "required": ["user_uuid"]
+}
+
+admin_block_and_unblock_user_schema = {
+    "type": "object",
+    "title": "Users table pagination", 
+    "properties": {
+        "user_uuid": {
+            "description": "Uuid of user to block/unblock.",
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+            },
+        "block": {
+            "description": "Set to true if user should be blocked or false to unblock.",
+            "type": "boolean",
+            }
+    },
+    "additionalProperties": False,
+    "required": ["user_uuid", "block"]
+}

@@ -2,14 +2,17 @@ from flask import Blueprint, request, jsonify, session
 import logging
 import jsonschema
 from sqlalchemy import desc, asc
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
 from app.extensions import flask_bcrypt, db
 from app.routes.account.schemas import sign_up_schema, log_in_schema
-from app.routes.admin.schemas import admin_users_table_schema
+from app.routes.admin.schemas import admin_users_table_schema, admin_delete_user_schema, admin_block_and_unblock_user_schema
 # from app.account.salt import generate_salt
 from app.models.user import User
+from app.models.stats import UserStats
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.detect_html.detect_html import check_for_html
+from app.utils.log_event_utils.log import log_event
 
 
 admin = Blueprint('admin', __name__)
@@ -165,3 +168,156 @@ def admin_users_table():
     return jsonify(response_data)
 
 
+
+# USERS TABLE DELETE ----------- SET COOKIE 
+@admin.route("/restricted_area/users/delete", methods=["POST"])
+def admin_delete_user():
+    """
+    admin_delete_user() -> JsonType
+    ----------------------------------------------------------
+    Route to delete a user by UUID.
+    Takes a JSON payload with the following parameters:
+    - "user_uuid": User's UUID to be deleted.
+
+    Returns a JSON object with a "response" field:
+    - If deletion is successful: {"response": "success"}
+    - If the UUID is not found: {"response": "User not found"}
+    - If an error occurs during deletion: {"response": "Error deleting user", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "uuid": "3f61108854cd4b5886401080d681dd96"
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "User not found"}
+    {"response": "Error deleting user", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # validate Json against the schema
+    try:
+        jsonschema.validate(instance=json_data, schema=admin_delete_user_schema)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}")
+        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
+
+    # Get UUID from JSON payload
+    user_uuid = json_data["user_uuid"]
+
+    try:
+        user = User.query.filter_by(_uuid=user_uuid).first()
+
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            logging.info("User deleted successfully by admin.")
+            log_event("LOG_EVENT_DELETE_USER","LEDU_01",user_uuid)
+
+            try:
+                new_user_stats = UserStats(new_user=-1,country="")
+                db.session.add(new_user_stats)
+                db.session.commit()
+            except Exception as e:
+                logging.error(f"Admin deleted user but error prevented UserStats entry: {e}")
+
+            # returns success even if stats could not be registered
+            return jsonify({"response": "success"})
+        else:
+            # User not found
+            return jsonify({"response": "User not found"}), 404
+
+    except IntegrityError as e:
+        # Handle database integrity error (e.g., foreign key constraint)
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented user deletion: {e}")
+        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+
+    except Exception as e:
+        # Handle other exceptions
+        logging.error(f"Error prevented user deletion: {e}")
+        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+    
+# USERS TABLE BLOCK/UNBLOCK ----------- SET COOKIE
+@admin.route("/restricted_area/users/block_unblock", methods=["POST"])
+def block_unblock_user():
+    """
+    block_unblock_user() -> JsonType
+    ----------------------------------------------------------
+    Route to block or unblock a user by UUID.
+    Takes a JSON payload with the following parameters:
+    - "user_uuid": Uuid of the user to block/unblock.
+    - "block": Set to true if the user should be blocked, false to unblock.
+
+    Returns a JSON object with a "response" field:
+    - If blocking/unblocking is successful: {"response": "success"}
+    - If the UUID is not found: {"response": "User not found"}
+    - If an error occurs during the operation: {"response": "Error blocking/unblocking user", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "user_uuid": "3f61108854cd4b5886401080d681dd96",
+        "block": true
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "User not found"}
+    {"response": "Error blocking/unblocking user", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Validate Json against the schema
+    try:
+        jsonschema.validate(instance=json_data, schema=admin_block_and_unblock_user_schema)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}. Input clock: {json_data["block"]}.")
+        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
+
+    # Get Uuuid and block status from JSON payload
+    user_uuid = json_data["user_uuid"]
+    block_status = json_data["block"]
+
+    try:
+        user = User.query.filter_by(_uuid=user_uuid).first()
+
+        if user:
+
+            if block_status:
+                user.block_access()
+                log_event("LOG_EVENT_BLOCK","LEB_01",user_uuid)
+            else:
+                user.unblock_access()
+                log_event("LOG_EVENT_UNBLOCK","LEU_01",user_uuid)
+
+            db.session.commit()
+            logging.info(f"User successfully set to blocked={block_status} by admin.") 
+            return jsonify({"response": "success"})
+        else:
+            logging.info(f"User could not be set to blocked={block_status}, 404 not found.") 
+            return jsonify({"response": "User not found"}), 404
+        
+    except IntegrityError as e:
+        # Handle database integrity error (e.g., foreign key constraint)
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented user block/unblock: {e}")
+        if block_status:
+            log_event("LOG_EVENT_BLOCK","LEB_02",user_uuid)
+        else:
+            log_event("LOG_EVENT_UNBLOCK","LEU_02",user_uuid)
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+    
+    except Exception as e:
+        logging.error(f"Error prevented user block/unblock: {e}")
+        if block_status:
+            log_event("LOG_EVENT_BLOCK","LEB_02",user_uuid)
+        else:
+            log_event("LOG_EVENT_UNBLOCK","LEU_02",user_uuid)
+        return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
