@@ -1,6 +1,6 @@
 import api from "../axios";
 import apiEndpoints from "../apiEndPoints";
-import INPUT_LENGTH from "../../utils/constants";
+import { INPUT_LENGTH } from "../../utils/constants";
 
 /**
  * Function makes api call to retrieve an array of users (number of users = items_per_page).
@@ -56,13 +56,17 @@ export function getAllUsers(data = {}) {
     const SEARCH_WORD_MAX_LENGTH = INPUT_LENGTH.email.maxValue
 
     // validate data - if validation fails, defaults are set
-    let pageNr = (data.page_nr && Number.isInteger(data.page_nr) && data.page_nr >= 1) ? data.page_nr : 1;
-    let itemsPerPage = (data.items_per_page && Number.isInteger(data.items_per_page) && data.items_per_page >= 5 && data.items_per_page <= 50 && data.items_per_page % 5 === 0) ? data.items_per_page : 25;
+    let pageNr = parseInt(data.page_nr);
+    pageNr = (data.page_nr && Number.isInteger(pageNr) && pageNr >= 1) ? pageNr : 1;
+
+    let itemsPerPage = parseInt(data.items_per_page);
+    itemsPerPage = (data.items_per_page && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : 25;
+
     let orderBy = (data.order_by && ORDER.includes(data.order_by)) ? data.order_by : "last_seen";
     let orderSort = (data.order_sort && SORT.includes(data.order_sort)) ? data.order_sort : "descending";
     let filterBy = (data.filter_by && FILTER.includes(data.filter_by)) ? data.filter_by : "none";
     let search_by = (data.search_by && SEARCH_BY.includes(data.search_by)) ? data.search_by : "none";
-    let search_word = (data.search_word && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word.length : "";
+    let search_word = (data.search_word && (typeof data.search_word === "string") && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word.length : "";
 
     let requestData = {
         "page_nr": pageNr,
@@ -118,5 +122,5 @@ export function getAllUsers(data = {}) {
         }
     }
 
-    return getData()
+    return getData();
 }

@@ -1,8 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useRef } from "react";
 import { getAllUsers } from "../../../config/apiHandler/admin.js"
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoader } from "../../../redux/loader/loaderSlice"
+import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import Modal from "../../../components/Modal/Modal";
 import ModalUserAction from "./Modal/ModalUserAction.jsx";
 import Loader from "../../../components/Loader";
@@ -41,12 +42,32 @@ const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
  */
 function UsersTable() {
     const dispatch = useDispatch();
-    // State to store users, pagination, and filter preferences:
-    const [users, setUsers] = useState([])
-    const [currentPage, setCurrentPage] = useState(1); //pagination
-    const [totalPages, setTotalPages] = useState(1); //pagination
+
+    // Only set state if component is mounted
+    // const componentIsMounted = useRef(false);
+    const isComponentMounted = useIsComponentMounted();
+
+    // The following state is used to store users and pagination. The values are set from the response in the API request either at component mount (through the useEffect) or requests through the Pagination, FilterUsersTable, and SearchUser components which call the getUsers function (defined bellow) when called by admin users through click events.
+    const [users, setUsers] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1); // display this page of results
+    const [totalPages, setTotalPages] = useState(1); // the total amount of pages of results
+
+    // The following items (tableOptions) are controlled by the FilterUsersTable component. Only specific (enum) values are allowed. Check the component for more information on allowed values. 
+    const [tableOptions, setTableOptions] = useState({
+        itemsPerPage: "25",
+        orderBy: "last_seen",
+        orderSort: "descending",
+        filterBy: "none"
+    })
     const [filterBy, setFilterBy] = useState("none"); //filter
-    // State storing selected user action and modal display (block/delete user or show user's logs):
+
+    // The following items (searchOptions) are controlled by the by the SearchUser component. Only specific values are allowed for 'searchBy'. Check the component for more information
+    const [searchOptions, setSearchOptions] = useState({
+        searchBy: "none",
+        searchWord: ""
+    })
+
+    // The following state is used for storing selected user action and modal display (block/delete user or show user's logs). They are set from the Table component.
     const [userSelected, setUserSelected] = useState({ name: "", email: "", uuid: "" })
     const [userAction, setUserAction] = useState("")
     const [modalUserAction, setModalUserAction] = useState(false)
@@ -54,17 +75,19 @@ function UsersTable() {
 
     //Pulling the first page of user data when page loads:
     useEffect(() => {
-        getUsers()
+        // getUsers()
     }, [])
 
-    //Setting up the modal content and managing user action triggered by click events in child components:
+    // Setting up the modal content and managing user action triggered by click events in child components:
     modalUserAction ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
     const modalUserActionContent = modalUserAction && userAction !== "" && (
         <ModalUserAction user={userSelected} action={userAction} modalToggler={toggleModal} />
     );
 
+    // Docstrings are used in the functions which can be accessed from child components - so developers can check what they do on mouse hover.
+
     /**
-     * Defines the userAction and userSelected states in UsersTable component
+     * Defines the userAction and userSelected states in UsersTable component.
      * Should be combined with setShowUserLogs (to show/hide UsersLogs component) or toggleModal (to show/hide block user or delete user modals)
      * @param {string} uuid the uuid of the selected user
      * @param {string} action must be member of the constant USER_ACTIONS ("delete", "block", "logs")
@@ -89,32 +112,52 @@ function UsersTable() {
     }
 
     /**
-     * Uses the function getAllUsers to make an api call to fetch user data.
-     * Hover over getAllUsers to see the required parameters.
+     * Uses the function getAllUsers (from apiHandler) to make an api call to fetch user data. If component is mounted, will update the state, showing the users in table format.
+     * 
+     * Make sure the necessary state in UsersTable is updated before calling this function (consider using flushSync if necessary): tableOptions & searchOptions.
+     * 
+     * This function takes the optional parameter of page number, and will use the state to send the required parameters of the getAllUsers.
+     * 
+     * Hover over getAllUsers to see its required parameters.
+     * 
+     * @param {number} [pageNr = 1] integer, must be positive
+     * @returns {void} 
+     * @example
+     * //Input example:
+     * getUsers() => will get the first page of the users table, according to the options saved in tableOptions & searchOptions state.
      */
-    function getUsers(pageNr = 1, itemsPerPage = 25, orderBy = "last_seen", orderSort = "descending", filterBy = "none") {
+    function getUsers(pageNr = 1) {
         const data = {
             page_nr: pageNr,
-            items_per_page: itemsPerPage,
-            order_by: orderBy,
-            order_sort: orderSort,
-            filter_by: filterBy
+            items_per_page: tableOptions.itemsPerPage,
+            order_by: tableOptions.orderBy,
+            order_sort: tableOptions.orderSort,
+            filter_by: tableOptions.filterBy,
+            searchBy: searchOptions.searchBy,
+            searchWord: searchOptions.searchWord
         }
         dispatch(setLoader(true))
         getAllUsers(data)
             .then(response => {
-                if (response.data) {
-                    setUsers(response.users);
-                    setCurrentPage(response.currentPage);
-                    setTotalPages(response.totalPages);
-                } else {
-                    setUsers([]);
-                    setCurrentPage(1);
-                    setTotalPages(1);
-                    //perhaps include logic for too many requests
+                if (isComponentMounted()) {
+                    if (response.data) {
+                        setUsers(response.users);
+                        setCurrentPage(response.currentPage);
+                        setTotalPages(response.totalPages);
+                    } else {
+                        setUsers([]);
+                        setCurrentPage(1);
+                        setTotalPages(1);
+                        //perhaps include logic for too many requests
+                    }
                 }
             })
-        dispatch(setLoader(false));
+            .catch(error => {
+                console.warn("getUsers (in UsersTable) encountered an error", error);
+            })
+            .finally(() => {
+                dispatch(setLoader(false));
+            })
     }
 
     /**
@@ -148,10 +191,14 @@ function UsersTable() {
                                 <div className="UsersTable-btnFilters">
                                     <FilterUsersTable
                                         getUsers={getUsers}
-                                        setFilterBy={setFilterBy}
-                                        filterBy={filterBy}
+                                        tableOptions={tableOptions}
+                                        setTableOptions={setTableOptions}
                                     />
-                                    <SearchUser />
+                                    <SearchUser
+                                        getUsers={getUsers}
+                                        searchOptions={searchOptions}
+                                        setSearchOptions={setSearchOptions}
+                                    />
                                 </div>
                             )
                         }

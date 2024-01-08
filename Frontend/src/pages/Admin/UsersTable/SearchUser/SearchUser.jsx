@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { flushSync } from 'react-dom';
 import PropTypes from 'prop-types'
 import { nameValidation, emailValidation } from "../../../../utils/validation"
 import "../usersTable.css"
@@ -12,7 +13,7 @@ import "../usersTable.css"
  * @default 
  * ["name", "email"]
 */
-const SEARCH_BY = ["name", "email"];
+const SEARCH_BY = ["name", "email", "none"];
 
 /*******************  THE COMPONENT  ********************/
 
@@ -20,26 +21,25 @@ const SEARCH_BY = ["name", "email"];
  * Component that enables searching for a user
  * 
  * @param {object} props
- * @param {func} props.somefunc //DEFINE
+ * @param {func} props.getUsers function from parent that manages api call
+ * @param {function} props.setSearchOptions updates props.tableOptions
+ * @param {object} props.searchOptions state in parent
+ * @param {string} props.searchOptions.searchBy string 
+ * @param {string} props.searchOptions.searchWord string 
  * @returns {React.ReactElement}
  */
 function SearchUser(props) {
-    //import function to query results
+    const { searchOptions, setSearchOptions } = props
 
     const [showOptions, setShowOptions] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+
     const [formData, setFormData] = useState({
-        searchBy: "name",
-        searchInput: "",
-        errorMessage: ""
+        searchBy: searchOptions.searchBy,
+        searchWord: searchOptions.searchWord
     });
     function toggleShowOptions() {
         setShowOptions(!showOptions);
-        if (formData.message !== "") {
-            setFormData((prevData) => ({
-                ...prevData,
-                errorMessage: "",
-            }));
-        }
     }
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -47,32 +47,29 @@ function SearchUser(props) {
             ...prevData,
             [name]: value,
         }));
-        if (formData.message !== "") {
-            setFormData((prevData) => ({
-                ...prevData,
-                errorMessage: "",
-            }));
-        }
     };
     const handleSubmit = (e) => {
         e.preventDefault();
         let searchBy = (formData.searchBy && SEARCH_BY.includes(formData.searchBy)) ? formData.searchBy : false;
-        let searchInput;
+        let searchWord;
         if (searchBy) {
-            searchBy === "email" ? searchInput = emailValidation(formData.searchInput) : searchInput = nameValidation(formData.searchInput);
+            searchBy === "email" ? searchWord = emailValidation(formData.searchWord) : searchWord = nameValidation(formData.searchWord);
         }
 
-        let formIsValid = searchBy && searchInput.response;
+        let formIsValid = searchBy && searchWord.response;
+        let stateChanged = JSON.stringify(searchOptions) !== JSON.stringify(formData)
 
-        if (formIsValid) {
-            // query results
+        if (formIsValid && stateChanged) {
+            setErrorMessage("")
+            flushSync(() => {
+                setSearchOptions({ ...formData })
+            })
+            getUsers();
             setShowOptions(false);
+        } else if (formIsValid && !stateChanged) {
+            setErrorMessage("Oops, no changes detected. Check your input and try again.")
         } else {
-            setFormData((prevData) => ({
-                ...prevData,
-                errorMessage: (formData.searchBy === "email" ? "Invalid email input." : "Invalid name input.")
-            }));
-            console.warn("You are trying to submit invalid data.");
+            setErrorMessage((formData.searchBy === "email" ? "Invalid email input." : "Invalid name input."))
         }
     };
 
@@ -95,13 +92,13 @@ function SearchUser(props) {
                             </select>
                         </div>
                         <div className="MAIN-form-display-table">
-                            <label htmlFor="searchInput">Filter:</label>
+                            <label htmlFor="searchInput">Search word:</label>
                             <input type="text" name="searchInput" id="searchInput" onChange={handleChange} />
                         </div>
                         {
-                            formData.errorMessage !== "" && (
+                            errorMessage !== "" && (
                                 <p className="MAIN-error-message">
-                                    <i>{formData.errorMessage}</i>
+                                    <i>{errorMessage}</i>
                                 </p>
                             )
                         }
@@ -113,6 +110,13 @@ function SearchUser(props) {
     )
 }
 
-SearchUser.propTypes = {}
+SearchUser.propTypes = {
+    getUsers: PropTypes.func.isRequired,
+    setSearchOptions: PropTypes.func.isRequired,
+    searchOptions: PropTypes.shape({
+        searchBy: PropTypes.string,
+        searchWord: PropTypes.string
+    })
+};
 
-export default SearchUser
+export default SearchUser;

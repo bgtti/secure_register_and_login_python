@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { flushSync } from 'react-dom';
 import PropTypes from 'prop-types';
 import "../usersTable.css"
 
@@ -59,24 +60,31 @@ const FILTER_BY = {
 /*******************  THE COMPONENT  ********************/
 
 /**
- * Component that enables filtering the user's table
+ * Component that enables filtering the user's table.
+ * Will validate user input before changing the parent's state tableOptions.
  * 
  * @param {object} props
  * @param {func} props.getUsers function from parent that manages api call
- * @param {func} props.setFilterBy updates state in parent
- * @param {string} props.filterBy state in parent 
+ * @param {function} props.setTableOptions updates props.tableOptions
+ * @param {object} props.tableOptions state in parent
+ * @param {string} props.tableOptions.itemsPerPage string containing int
+ * @param {string} props.tableOptions.orderBy string 
+ * @param {string} props.tableOptions.orderSort string 
+ * @param {string} props.tableOptions.filterBy string 
+ *
  * @returns {React.ReactElement}
  */
 function FilterUsersTable(props) {
-    const { getUsers, setFilterBy, filterBy } = props
+    const { getUsers, tableOptions, setTableOptions } = props
 
     const [showOptions, setShowOptions] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const [formData, setFormData] = useState({
-        itemsPerPage: "25",
-        orderBy: "last_seen",
-        orderSort: "descending",
-        filterBy: { filterBy },
+        itemsPerPage: tableOptions.itemsPerPage,
+        orderBy: tableOptions.orderBy,
+        orderSort: tableOptions.orderSort,
+        filterBy: tableOptions.filterBy
     });
 
     function toggleShowOptions() {
@@ -100,14 +108,20 @@ function FilterUsersTable(props) {
         let filter = (formData.filterBy && formData.filterBy in FILTER_BY) ? formData.filterBy : false;
 
         let formIsValid = itemsPerPage && orderBy && orderSort && filter
+        let stateChanged = JSON.stringify(tableOptions) !== JSON.stringify(formData)
 
-        if (formIsValid) {
-            setFilterBy(filter)
-            getUsers(1, itemsPerPage, orderBy, orderSort, filter);
+        if (formIsValid && stateChanged) {
+            setErrorMessage("")
+            flushSync(() => {
+                setTableOptions({ ...formData })
+            })
+            getUsers();
+            setShowOptions(false);
+        } else if (formIsValid && !stateChanged) {
+            setErrorMessage("Oops, no changes detected. Change selection and try again.")
         } else {
-            console.warn("You are trying to submit invalid data.");
+            setErrorMessage("An error occurred. Change selection and try again.")
         }
-        setShowOptions(false);
     };
 
     return (
@@ -158,6 +172,13 @@ function FilterUsersTable(props) {
                                 }
                             </select>
                         </div>
+                        {
+                            errorMessage !== "" && (
+                                <p className="MAIN-error-message">
+                                    <i>{errorMessage}</i>
+                                </p>
+                            )
+                        }
                         <button type="submit">Apply selection</button>
                     </form>
                 )
@@ -168,8 +189,14 @@ function FilterUsersTable(props) {
 
 FilterUsersTable.propTypes = {
     getUsers: PropTypes.func.isRequired,
-    setFilterBy: PropTypes.func.isRequired,
-    filterBy: PropTypes.string.isRequired,
+    setTableOptions: PropTypes.func.isRequired,
+    tableOptions: PropTypes.shape({
+        itemsPerPage: PropTypes.string,
+        orderBy: PropTypes.string,
+        orderSort: PropTypes.string,
+        filterBy: PropTypes.string,
+        tableOptionsChanged: PropTypes.bool
+    })
 };
 
 export default FilterUsersTable;
