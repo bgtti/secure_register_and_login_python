@@ -46,7 +46,7 @@ admin_users_table_schema = {
     "required": ["page_nr"]
 }
 
-admin_delete_user_schema = {
+admin_user_logs_schema = {
     "type": "object",
     "title": "Users table pagination", 
     "properties": {
@@ -55,10 +55,15 @@ admin_delete_user_schema = {
             "type": "string",
             "minLength": 32,
             "maxLength": 32
-            }
+            },
+        "page_nr": {
+            "description": "Page number as int > 0",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
     },
     "additionalProperties": False,
-    "required": ["user_uuid"]
+    "required": ["user_uuid", "page_nr"]
 }
 
 admin_block_and_unblock_user_schema = {
@@ -79,3 +84,20 @@ admin_block_and_unblock_user_schema = {
     "additionalProperties": False,
     "required": ["user_uuid", "block"]
 }
+
+admin_delete_user_schema = {
+    "type": "object",
+    "title": "Users table pagination", 
+    "properties": {
+        "user_uuid": {
+            "description": "Uuid of user to delete.",
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+            }
+    },
+    "additionalProperties": False,
+    "required": ["user_uuid"]
+}
+
+

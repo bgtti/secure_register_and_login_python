@@ -8,6 +8,7 @@ from app.models.stats import UserStats, VisitorStats
 from app.utils.salt_and_pepper.helpers import get_pepper
 from app.utils.console_warning.print_warning import console_warn
 from app.dummie_data.create_files import create_dummie_files
+from app.dummie_data.dummie_logs import create_dummie_logs
 
 """
 The file named dummie_base_data.py (in this module) created the files data_users.json, data_user_stats.json, data_users_visitor_stats.json, and data_visitor_stats.json.
@@ -67,18 +68,13 @@ def get_date_from_week_num(week_num, year):
     date_obj_2 = get_date_from_week_num(52, 2023) -> datetime of the 4th of December 2024
     date_obj_2.month -> December
     """
-    first_day_of_year = datetime(year, 1, 1) # first day of year
-    starting_day_of_week = 0  # 0 is Monday, 1 is Tuesday, and so on
-    # Calculate the difference between the current day of the week and the starting day
-    days_until_start_of_week = (first_day_of_year.weekday() - starting_day_of_week) % 7
-    # Subtract the difference to get the first day of the first week of the year
-    first_day_of_first_week = first_day_of_year - timedelta(days=days_until_start_of_week)
-    # Calculate the difference between the desired week and the first week of the year
-    weeks_difference = week_num - first_day_of_year.isocalendar()[1]
-    # Calculate the date by adding the difference in weeks to the first day of the first week of the year
-    desired_date = first_day_of_first_week + timedelta(weeks=weeks_difference)
+    if week_num < 10:
+        string_date = f"{year}-0{week_num}-"
+    else:
+        string_date = f"{year}-{week_num}-"
+    date = datetime.strptime(string_date + "1", "%Y-%W-%w") # 1 & %w tells parser to pick the monday in that week
 
-    return desired_date
+    return date
 
 def get_date_obj_last_week():
     """
@@ -146,7 +142,6 @@ NUM_FAKE_USERS_PER_PERIOD = {
     "this_week":15, # creation_date = DATE_OBJ_THIS_WEEK
     "today":5, # creation_date = TODAY
 }
-
 
 def create_dummie_user_accts():
     """
@@ -286,6 +281,9 @@ def create_dummie_user_accts():
         db.session.execute(insert(VisitorStats), the_data_visitor_stats)
 
         db.session.commit()
+
+        console_warn("...adding some dummie logs to db...", "CYAN")
+        create_dummie_logs()
 
         console_warn("100 users created successfully!", "CYAN")
         print()

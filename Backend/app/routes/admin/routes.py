@@ -6,9 +6,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
 from app.extensions import flask_bcrypt, db
 from app.routes.account.schemas import sign_up_schema, log_in_schema
-from app.routes.admin.schemas import admin_users_table_schema, admin_delete_user_schema, admin_block_and_unblock_user_schema
+from app.routes.admin.schemas import admin_users_table_schema, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
 # from app.account.salt import generate_salt
 from app.models.user import User
+from app.models.log_event import LogEvent
 from app.models.stats import UserStats
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.detect_html.detect_html import check_for_html
@@ -168,81 +169,91 @@ def admin_users_table():
     return jsonify(response_data)
 
 
-
-# USERS TABLE DELETE ----------- SET COOKIE 
-@admin.route("/restricted_area/users/delete", methods=["POST"])
-def admin_delete_user():
+# USERS TABLE LOGS ----------- SET COOKIE 
+@admin.route("/restricted_area/users/user_logs", methods=["POST"])
+def admin_user_logs():
     """
-    admin_delete_user() -> JsonType
+    admin_user_logs() -> JsonType
     ----------------------------------------------------------
-    Route to delete a user by UUID.
+    Route to get a user's logs.
     Takes a JSON payload with the following parameters:
-    - "user_uuid": User's UUID to be deleted.
+    - "user_uuid": User's uuid to be queried.
+    - "page_nr": int used for pagination.
 
-    Returns a JSON object with a "response" field:
-    - If deletion is successful: {"response": "success"}
-    - If the UUID is not found: {"response": "User not found"}
-    - If an error occurs during deletion: {"response": "Error deleting user", "error": "Details of the error"}
-
+    Returns a JSON object with a "response" field. Logs and other information only sent if response is 200.
     ----------------------------------------------------------
     Request example:
     json_payload = {
-        "uuid": "3f61108854cd4b5886401080d681dd96"
+        "user_uuid": "3f61108854cd4b5886401080d681dd96",
+        "page_nr": 1
     }
     ----------------------------------------------------------
     Response examples:
-    {"response": "success"}
-    {"response": "User not found"}
-    {"response": "Error deleting user", "error": "Details of the error"}
+
+    {"response": "Requested page out of range"}
+
+    {"response":"success",
+            "logs": {
+                "user_uuid": "3f61108854cd4b5886401080d681dd96",
+                "created_at": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "type": "INFO",
+                "activity": "login",
+                "message": "login rejected: user is blocked."
+                },
+                ...
+            "total_pages": 2,
+            "current_page": 1,
+            "query":{
+                "page_nr": 1,
+                "items_per_page": 25,
+                "ordered_by": "created_at",
+                "order_sort": "descending",
+            }
+    }
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
 
     # validate Json against the schema
     try:
-        jsonschema.validate(instance=json_data, schema=admin_delete_user_schema)
+        jsonschema.validate(instance=json_data, schema=admin_user_logs_schema)
     except jsonschema.exceptions.ValidationError as e:
         logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}")
         return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
 
-    # Get UUID from JSON payload
+    # Get info from JSON payload
     user_uuid = json_data["user_uuid"]
+    page_nr = json_data["page_nr"]
 
     try:
-        user = User.query.filter_by(_uuid=user_uuid).first()
-
-        if user:
-            db.session.delete(user)
-            db.session.commit()
-            logging.info("User deleted successfully by admin.")
-            log_event("LOG_EVENT_DELETE_USER","LEDU_01",user_uuid)
-
-            try:
-                new_user_stats = UserStats(new_user=-1,country="")
-                db.session.add(new_user_stats)
-                db.session.commit()
-            except Exception as e:
-                logging.error(f"Admin deleted user but error prevented UserStats entry: {e}")
-
-            # returns success even if stats could not be registered
-            return jsonify({"response": "success"})
-        else:
-            # User not found
-            return jsonify({"response": "User not found"}), 404
-
-    except IntegrityError as e:
-        # Handle database integrity error (e.g., foreign key constraint)
-        db.session.rollback()
-        logging.error(f"DB integrity error prevented user deletion: {e}")
-        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
-
+        user_logs = LogEvent.query.filter_by(_user_uuid=user_uuid).order_by(LogEvent._created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
+        if not user_logs.items:
+            return jsonify({"response": "Requested page out of range"}), 404
+        # print(user_logs)
+        # random_log = db.session.query(LogEvent).get(1)
+        # print(random_log.user_uuid)
     except Exception as e:
         # Handle other exceptions
-        logging.error(f"Error prevented user deletion: {e}")
-        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        logging.error(f"Error prevented eventLogs to be queried: {e}")
+        return jsonify({"response": "Error prevented logs from being queried"}), 500
     
+    response_data ={
+            "response":"success",
+            "logs": [log.serialize_user_logs() for log in user_logs.items],
+            "total_pages": user_logs.pages,
+            "current_page": user_logs.page,
+            "query":{
+                "page_nr": page_nr,
+                "items_per_page": 25,
+                "ordered_by": "created_at",
+                "order_sort": "descending",
+            }
+        }
+    
+    return jsonify(response_data)
+    # return jsonify({"success":"200"})
+
+
 # USERS TABLE BLOCK/UNBLOCK ----------- SET COOKIE
 @admin.route("/restricted_area/users/block_unblock", methods=["POST"])
 def block_unblock_user():
@@ -321,3 +332,79 @@ def block_unblock_user():
         else:
             log_event("LOG_EVENT_UNBLOCK","LEU_02",user_uuid)
         return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
+    
+
+# USERS TABLE DELETE ----------- SET COOKIE 
+@admin.route("/restricted_area/users/delete", methods=["POST"])
+def admin_delete_user():
+    """
+    admin_delete_user() -> JsonType
+    ----------------------------------------------------------
+    Route to delete a user by UUID.
+    Takes a JSON payload with the following parameters:
+    - "user_uuid": User's UUID to be deleted.
+
+    Returns a JSON object with a "response" field:
+    - If deletion is successful: {"response": "success"}
+    - If the UUID is not found: {"response": "User not found"}
+    - If an error occurs during deletion: {"response": "Error deleting user", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "uuid": "3f61108854cd4b5886401080d681dd96"
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "User not found"}
+    {"response": "Error deleting user", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # validate Json against the schema
+    try:
+        jsonschema.validate(instance=json_data, schema=admin_delete_user_schema)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}")
+        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
+
+    # Get UUID from JSON payload
+    user_uuid = json_data["user_uuid"]
+
+    try:
+        user = User.query.filter_by(_uuid=user_uuid).first()
+
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            logging.info("User deleted successfully by admin.")
+            log_event("LOG_EVENT_DELETE_USER","LEDU_01",user_uuid)
+
+            try:
+                new_user_stats = UserStats(new_user=-1,country="")
+                db.session.add(new_user_stats)
+                db.session.commit()
+            except Exception as e:
+                logging.error(f"Admin deleted user but error prevented UserStats entry: {e}")
+
+            # returns success even if stats could not be registered
+            return jsonify({"response": "success"})
+        else:
+            # User not found
+            return jsonify({"response": "User not found"}), 404
+
+    except IntegrityError as e:
+        # Handle database integrity error (e.g., foreign key constraint)
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented user deletion: {e}")
+        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+
+    except Exception as e:
+        # Handle other exceptions
+        logging.error(f"Error prevented user deletion: {e}")
+        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+    

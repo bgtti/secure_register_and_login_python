@@ -28,9 +28,9 @@ LOG_EVENT_SIGNUP = {
         "level": LOG_EVENT_LEVEL["INFO"]
     },
     "LES_04": {
-        "type": LOG_EVENT_TYPE["WARN"],
+        "type": LOG_EVENT_TYPE["WARN"], 
         "activity": LOG_EVENT_ACTIVITY["signup"],
-        "message": "signup rejected: weak password",
+        "message": "signup rejected: weak password. Frontend validation failed?",
         "user_uuid": NONE,
         "level": LOG_EVENT_LEVEL["INFO"]
     },
