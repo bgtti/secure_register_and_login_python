@@ -66,7 +66,7 @@ export function getAllUsers(data = {}) {
     let orderSort = (data.order_sort && SORT.includes(data.order_sort)) ? data.order_sort : "descending";
     let filterBy = (data.filter_by && FILTER.includes(data.filter_by)) ? data.filter_by : "none";
     let search_by = (data.search_by && SEARCH_BY.includes(data.search_by)) ? data.search_by : "none";
-    let search_word = (data.search_word && (typeof data.search_word === "string") && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word.length : "";
+    let search_word = (data.search_word && (typeof data.search_word === "string") && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word : "";
 
     let requestData = {
         "page_nr": pageNr,
@@ -123,4 +123,99 @@ export function getAllUsers(data = {}) {
     }
 
     return getData();
-}
+};
+
+/**
+ * Function makes api call to block or unblock a particular user.
+ * 
+ * @param {string} uuid 
+ * @param {boolean} block false to unblock & true to block
+ * @returns {object} success as a boolean
+ * @example
+ * Example return if response 200:
+ * {success: true}
+ * Example return if response not 200:
+ * {success: false}
+ */
+export function blockOrUnblockUser(uuid, block) {
+    let the_uuid = (uuid && (typeof uuid === "string") && uuid.length === 32) ? uuid : "";
+    let is_block = (typeof block === "boolean") ? block : "";
+
+    if (the_uuid === "" || is_block === "") {
+        return console.warn("Invalid input. Cannot block or unblock user.")
+    }
+
+    let requestData = {
+        "user_uuid": the_uuid,
+        "block": is_block
+    }
+
+    const getData = async () => {
+        try {
+            const response = await api.post(apiEndpoints.adminBlockUnblockUser, requestData)
+            if (response.status === 200) {
+                return {
+                    success: true
+                }
+            } else {
+                return {
+                    success: false
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error blocking/unblocking user:', error);
+            return {
+                success: false
+            }
+        }
+    }
+
+    return getData();
+};
+
+/**
+ * Function makes api call to delete a particular user.
+ * 
+ * @param {string} uuid 
+ * @returns {object} success as a boolean
+ * @example
+ * Example return if response 200:
+ * {success: true}
+ * Example return if response not 200:
+ * {success: false}
+ */
+export function deleteUser(uuid) {
+    let the_uuid = (uuid && (typeof uuid === "string") && uuid.length === 32) ? uuid : "";
+
+    if (the_uuid === "") {
+        return console.warn("Invalid input. Cannot delete user.")
+    }
+
+    let requestData = {
+        "user_uuid": the_uuid
+    }
+
+    const getData = async () => {
+        try {
+            const response = await api.post(apiEndpoints.adminDeleteUser, requestData)
+            if (response.status === 200) {
+                return {
+                    success: true
+                }
+            } else {
+                return {
+                    success: false
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error deleting user:', error);
+            return {
+                success: false
+            }
+        }
+    }
+
+    return getData();
+};

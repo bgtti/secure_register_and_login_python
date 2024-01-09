@@ -58,7 +58,7 @@ function TableRow(props) {
                         role="button"
                         title="Block user"
                         src={iconUserBlock}
-                        onClick={() => { selectUserAction(uuid, "block"); toggleModal() }}
+                        onClick={() => { selectUserAction(uuid, (isBlocked === "false" ? "block" : "unblock")); toggleModal() }}
                     />
                     <img
                         alt="Delete user"

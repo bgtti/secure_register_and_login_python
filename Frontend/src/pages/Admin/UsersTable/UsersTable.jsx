@@ -20,7 +20,7 @@ import "./usersTable.css"
  * @default 
  * ["delete", "block", "logs"]
 */
-const USER_ACTIONS = ["delete", "block", "logs"]
+const USER_ACTIONS = ["delete", "block", "unblock", "logs"]
 
 const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
 
@@ -75,7 +75,7 @@ function UsersTable() {
 
     //Pulling the first page of user data when page loads:
     useEffect(() => {
-        // getUsers()
+        getUsers()
     }, [])
 
     // Setting up the modal content and managing user action triggered by click events in child components:
@@ -158,7 +158,7 @@ function UsersTable() {
             .finally(() => {
                 dispatch(setLoader(false));
             })
-    }
+    };
 
     /**
      * Accepts desired page as an argument and requests users for that page, setting users state in UsersTable.
