@@ -64,7 +64,6 @@ const FILTER_BY = {
  * Will validate user input before changing the parent's state tableOptions.
  * 
  * @param {object} props
- * @param {func} props.getUsers function from parent that manages api call
  * @param {function} props.setTableOptions updates props.tableOptions
  * @param {object} props.tableOptions state in parent
  * @param {string} props.tableOptions.itemsPerPage string containing int
@@ -75,7 +74,7 @@ const FILTER_BY = {
  * @returns {React.ReactElement}
  */
 function FilterUsersTable(props) {
-    const { getUsers, tableOptions, setTableOptions } = props
+    const { tableOptions, setTableOptions } = props
 
     const [showOptions, setShowOptions] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -112,16 +111,13 @@ function FilterUsersTable(props) {
 
         if (formIsValid && stateChanged) {
             setErrorMessage("")
-            flushSync(() => {
-                setTableOptions({ ...formData })
-            })
-            getUsers();
+            setTableOptions({ ...formData })
             setShowOptions(false);
-        } else if (formIsValid && !stateChanged) {
-            setErrorMessage("Oops, no changes detected. Change selection and try again.")
         } else {
-            setErrorMessage("An error occurred. Change selection and try again.")
-        }
+            (formIsValid && !stateChanged) ?
+                setErrorMessage("Oops, no changes detected. Change selection and try again.") :
+                setErrorMessage("An error occurred. Change selection and try again.")
+        };
     };
 
     return (
@@ -188,7 +184,6 @@ function FilterUsersTable(props) {
 };
 
 FilterUsersTable.propTypes = {
-    getUsers: PropTypes.func.isRequired,
     setTableOptions: PropTypes.func.isRequired,
     tableOptions: PropTypes.shape({
         itemsPerPage: PropTypes.string,

@@ -44,7 +44,6 @@ function UsersTable() {
     const dispatch = useDispatch();
 
     // Only set state if component is mounted
-    // const componentIsMounted = useRef(false);
     const isComponentMounted = useIsComponentMounted();
 
     // The following state is used to store users and pagination. The values are set from the response in the API request either at component mount (through the useEffect) or requests through the Pagination, FilterUsersTable, and SearchUser components which call the getUsers function (defined bellow) when called by admin users through click events.
@@ -59,7 +58,6 @@ function UsersTable() {
         orderSort: "descending",
         filterBy: "none"
     })
-    const [filterBy, setFilterBy] = useState("none"); //filter
 
     // The following items (searchOptions) are controlled by the by the SearchUser component. Only specific values are allowed for 'searchBy'. Check the component for more information
     const [searchOptions, setSearchOptions] = useState({
@@ -73,18 +71,16 @@ function UsersTable() {
     const [modalUserAction, setModalUserAction] = useState(false)
     const [showUserLogs, setShowUserLogs] = useState(false)
 
-    //Pulling the first page of user data when page loads:
+    //Pulling new user data when :
     useEffect(() => {
-        getUsers()
-    }, [])
+        getUsers();
+    }, [searchOptions, tableOptions])
 
     // Setting up the modal content and managing user action triggered by click events in child components:
     modalUserAction ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
     const modalUserActionContent = modalUserAction && userAction !== "" && (
         <ModalUserAction user={userSelected} action={userAction} modalToggler={toggleModal} />
     );
-
-    // Docstrings are used in the functions which can be accessed from child components - so developers can check what they do on mouse hover.
 
     /**
      * Defines the userAction and userSelected states in UsersTable component.
@@ -114,11 +110,9 @@ function UsersTable() {
     /**
      * Uses the function getAllUsers (from apiHandler) to make an api call to fetch user data. If component is mounted, will update the state, showing the users in table format.
      * 
-     * Make sure the necessary state in UsersTable is updated before calling this function (consider using flushSync if necessary): tableOptions & searchOptions.
+     * This function is currently being called when the following state updates: tableOptions & searchOptions.
      * 
      * This function takes the optional parameter of page number, and will use the state to send the required parameters of the getAllUsers.
-     * 
-     * Hover over getAllUsers to see its required parameters.
      * 
      * @param {number} [pageNr = 1] integer, must be positive
      * @returns {void} 
@@ -127,14 +121,19 @@ function UsersTable() {
      * getUsers() => will get the first page of the users table, according to the options saved in tableOptions & searchOptions state.
      */
     function getUsers(pageNr = 1) {
+        //check data consistency
+        let searchByIsConsistent = ((searchOptions.searchWord === "" && searchOptions.searchBy === "none") || (searchOptions.searchWord !== "" && searchOptions.searchBy !== "none"));
+        if (!searchByIsConsistent) {
+            console.warn(`Data inconsistency: searchBy = ${searchOptions.searchBy} & searchWord = ${searchOptions.searchWord}`)
+        }
         const data = {
             page_nr: pageNr,
             items_per_page: tableOptions.itemsPerPage,
             order_by: tableOptions.orderBy,
             order_sort: tableOptions.orderSort,
             filter_by: tableOptions.filterBy,
-            searchBy: searchOptions.searchBy,
-            searchWord: searchOptions.searchWord
+            searchBy: searchOptions.searchWord === "" ? "none" : searchOptions.searchBy,
+            searchWord: searchOptions.searchBy === "none" ? "" : searchOptions.searchWord
         }
         dispatch(setLoader(true))
         getAllUsers(data)
@@ -187,18 +186,36 @@ function UsersTable() {
                 !showUserLogs && (
                     <>
                         {
-                            ((users && users.length >= 0) || ((!users || users.length === 0) && (filterBy !== "none"))) && (
-                                <div className="UsersTable-btnFilters">
-                                    <FilterUsersTable
-                                        getUsers={getUsers}
-                                        tableOptions={tableOptions}
-                                        setTableOptions={setTableOptions}
-                                    />
-                                    <SearchUser
-                                        getUsers={getUsers}
-                                        searchOptions={searchOptions}
-                                        setSearchOptions={setSearchOptions}
-                                    />
+                            ((users && users.length >= 0) || ((!users || users.length === 0) && (tableOptions.filterBy !== "none"))) && (
+                                <div className="UsersTable-containerFilters">
+                                    <div className="UsersTable-btnFilters">
+                                        <FilterUsersTable
+                                            tableOptions={tableOptions}
+                                            setTableOptions={setTableOptions}
+                                        />
+                                        <SearchUser
+                                            searchOptions={searchOptions}
+                                            setSearchOptions={setSearchOptions}
+                                        />
+                                    </div>
+                                    <div className="UsersTable-filterInfo">
+                                        <p><b>Current filters being applied:</b></p>
+                                        {
+                                            tableOptions.filterBy !== "none" && (
+                                                <p>Filtering blocked users only.</p>
+                                            )
+                                        }
+                                        {
+                                            searchOptions.searchBy !== "none" && searchOptions.searchWord !== "" && (
+                                                <p>Filtering by {searchOptions.searchBy} with search keyword. </p>
+                                            )
+                                        }
+                                        {
+                                            tableOptions.filterBy === "none" && (searchOptions.searchWord === "" || searchOptions.searchBy === "none") && (
+                                                <p>No filters active. Showing result for all users.</p>
+                                            )
+                                        }
+                                    </div>
                                 </div>
                             )
                         }
@@ -227,7 +244,7 @@ function UsersTable() {
                             (!users || users.length === 0) && (
                                 <p className="UsersTable-noTable">
                                     {
-                                        (filterBy !== "none") ? (
+                                        (tableOptions.filterBy !== "none") ? (
                                             "No users found. Please reset the filter and try again."
                                         ) : (
                                             "You do not have any users yet."

@@ -21,7 +21,6 @@ const SEARCH_BY = ["name", "email", "none"];
  * Component that enables searching for a user
  * 
  * @param {object} props
- * @param {func} props.getUsers function from parent that manages api call
  * @param {function} props.setSearchOptions updates props.tableOptions
  * @param {object} props.searchOptions state in parent
  * @param {string} props.searchOptions.searchBy string 
@@ -38,6 +37,7 @@ function SearchUser(props) {
         searchBy: searchOptions.searchBy,
         searchWord: searchOptions.searchWord
     });
+
     function toggleShowOptions() {
         setShowOptions(!showOptions);
     }
@@ -48,28 +48,40 @@ function SearchUser(props) {
             [name]: value,
         }));
     };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         let searchBy = (formData.searchBy && SEARCH_BY.includes(formData.searchBy)) ? formData.searchBy : false;
         let searchWord;
-        if (searchBy) {
+        let formIsValid;
+        let currentForm = { ...formData };
+
+        if (searchBy && searchBy !== "none") {
             searchBy === "email" ? searchWord = emailValidation(formData.searchWord) : searchWord = nameValidation(formData.searchWord);
+            formIsValid = searchBy && searchWord.response;
+        } else if (searchBy && searchBy === "none") {
+            if (formData.searchWord !== "") {
+                currentForm = {
+                    searchBy: "none",
+                    searchWord: ""
+                };
+                setFormData({ ...currentForm });
+            };
+            formIsValid = true;
+        } else {
+            formIsValid = false;
         }
 
-        let formIsValid = searchBy && searchWord.response;
-        let stateChanged = JSON.stringify(searchOptions) !== JSON.stringify(formData)
+        let stateChanged = JSON.stringify(searchOptions) !== JSON.stringify(currentForm)
 
         if (formIsValid && stateChanged) {
             setErrorMessage("")
-            flushSync(() => {
-                setSearchOptions({ ...formData })
-            })
-            getUsers();
+            setSearchOptions({ ...currentForm })
             setShowOptions(false);
-        } else if (formIsValid && !stateChanged) {
-            setErrorMessage("Oops, no changes detected. Check your input and try again.")
         } else {
-            setErrorMessage((formData.searchBy === "email" ? "Invalid email input." : "Invalid name input."))
+            (formIsValid && !stateChanged) ?
+                setErrorMessage("Oops, no changes detected. Check your input and try again.") :
+                setErrorMessage((formData.searchBy === "email" ? "Invalid email input." : "Invalid name input."))
         }
     };
 
@@ -80,7 +92,7 @@ function SearchUser(props) {
             </button>
             {
                 showOptions && (
-                    <form action="" className="MAIN-form UsersTableFilters-form" onSubmit={handleSubmit}>
+                    <form className="MAIN-form UsersTableFilters-form" onSubmit={handleSubmit}>
                         <div className="MAIN-form-display-table">
                             <label htmlFor="searchBy">Search by:</label>
                             <select name="searchBy" id="searchBy" defaultValue={formData.searchBy} onChange={handleChange}>
@@ -92,8 +104,8 @@ function SearchUser(props) {
                             </select>
                         </div>
                         <div className="MAIN-form-display-table">
-                            <label htmlFor="searchInput">Search word:</label>
-                            <input type="text" name="searchInput" id="searchInput" onChange={handleChange} />
+                            <label htmlFor="searchWord">Search word:</label>
+                            <input type="text" name="searchWord" id="searchWord" onChange={handleChange} value={formData.searchWord} />
                         </div>
                         {
                             errorMessage !== "" && (
@@ -111,7 +123,6 @@ function SearchUser(props) {
 }
 
 SearchUser.propTypes = {
-    getUsers: PropTypes.func.isRequired,
     setSearchOptions: PropTypes.func.isRequired,
     searchOptions: PropTypes.shape({
         searchBy: PropTypes.string,

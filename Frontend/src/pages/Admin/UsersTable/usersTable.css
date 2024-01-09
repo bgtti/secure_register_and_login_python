@@ -7,11 +7,40 @@
 }
 
 /* Hide table options & hide search btn container */
-
-.UsersTable-btnFilters {
+.UsersTable-containerFilters {
     display: flex;
     flex-direction: column;
+    gap: 5px;
+}
+
+@media (min-width: 600px) {
+    .UsersTable-containerFilters {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 0;
+    }
+}
+
+.UsersTable-btnFilters,
+.UsersTable-filterInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.UsersTable-btnFilters {
     gap: 10px;
+}
+
+.UsersTable-filterInfo {
+    gap: 5px;
+}
+
+.UsersTable-filterInfo>p {
+    color: var(--FontColorDarker);
+}
+
+.UsersTable-filterInfo>p>b {
+    font-weight: bold;
 }
 
 /* The bellow applies to filterUsersTable and SearchUser */
