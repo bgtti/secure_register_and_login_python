@@ -26,12 +26,12 @@ function Pagination(props) {
             }
         </div>
     )
-}
+};
 
 Pagination.propTypes = {
     currentPage: PropTypes.number.isRequired,
     totalPages: PropTypes.number.isRequired,
     handlePageChange: PropTypes.func.isRequired,
-}
+};
 
-export default Pagination
+export default Pagination;

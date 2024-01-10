@@ -71,7 +71,7 @@ function UsersTable() {
     const [modalUserAction, setModalUserAction] = useState(false)
     const [showUserLogs, setShowUserLogs] = useState(false)
 
-    //Pulling new user data when :
+    //Pulling new user data when user changes tableOptions or searches:
     useEffect(() => {
         getUsers();
     }, [searchOptions, tableOptions])
@@ -127,11 +127,11 @@ function UsersTable() {
             console.warn(`Data inconsistency: searchBy = ${searchOptions.searchBy} & searchWord = ${searchOptions.searchWord}`)
         }
         const data = {
-            page_nr: pageNr,
-            items_per_page: tableOptions.itemsPerPage,
-            order_by: tableOptions.orderBy,
-            order_sort: tableOptions.orderSort,
-            filter_by: tableOptions.filterBy,
+            pageNr: pageNr,
+            itemsPerPage: tableOptions.itemsPerPage,
+            orderBy: tableOptions.orderBy,
+            orderSort: tableOptions.orderSort,
+            filterBy: tableOptions.filterBy,
             searchBy: searchOptions.searchWord === "" ? "none" : searchOptions.searchBy,
             searchWord: searchOptions.searchBy === "none" ? "" : searchOptions.searchWord
         }
@@ -244,7 +244,7 @@ function UsersTable() {
                             (!users || users.length === 0) && (
                                 <p className="UsersTable-noTable">
                                     {
-                                        (tableOptions.filterBy !== "none") ? (
+                                        (tableOptions.filterBy !== "none" || tableOptions.searchBy !== "none") ? (
                                             "No users found. Please reset the filter and try again."
                                         ) : (
                                             "You do not have any users yet."

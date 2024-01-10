@@ -3,7 +3,7 @@ import apiEndpoints from "../apiEndPoints";
 import { INPUT_LENGTH } from "../../utils/constants";
 
 /**
- * Function makes api call to retrieve an array of users (number of users = items_per_page).
+ * Function makes api call to retrieve an array of users (number of users retrieved = itemsPerPage).
  * 
  * Pagination is expected to handle the returned data.
  * 
@@ -11,15 +11,14 @@ import { INPUT_LENGTH } from "../../utils/constants";
  * 
  * Sends the key 'data' as a boolean to indicate whether there is response data or not.
  * 
- * @todo UPDATE THIS DOCSTRING
  * @param {object} data 
- * @param {number} [data.page_nr = 1] integer, must be positive
- * @param {number} [data.items_per_page = 25] integer between 5 and 50, must be multiple of 5
- * @param {string} [data.order_by = "last_seen"] enum: ["last_seen", "name", "email", "created_at"]
- * @param {string} [data.order_sort = "descending"] enum: ["descending", "ascending"]
- * @param {string} [data.filter_by = "none"] enum: ["none", "is_blocked"]
- * @param {string} [data.search_by = "none"] enum: ["none", "name", "email"]
- * @param {string} [data.search_word  = ""] no longer than maximum email length
+ * @param {number} [data.pageNr = 1] integer, must be positive
+ * @param {number} [data.itemsPerPage = 25] integer between 5 and 50, must be multiple of 5
+ * @param {string} [data.orderBy = "last_seen"] enum: ["last_seen", "name", "email", "created_at"]
+ * @param {string} [data.orderSort = "descending"] enum: ["descending", "ascending"]
+ * @param {string} [data.filterBy = "none"] enum: ["none", "is_blocked"]
+ * @param {string} [data.searchBy = "none"] enum: ["none", "name", "email"]
+ * @param {string} [data.searchWord  = ""] no longer than maximum email length
  * @returns {object}
  * 
  * @example
@@ -29,10 +28,10 @@ import { INPUT_LENGTH } from "../../utils/constants";
  *     order_by: "name"
  * }
  * 
- * //Response example:
+ * //Original API response:
  * {
- *  response: "success"
- *  users: [
+ *  "response": "success"
+ *  "users": [
  *      {
  *        uuid: "3f61108854cd4b5886401080d681dd96",
  *        name: "Josy",
@@ -42,9 +41,26 @@ import { INPUT_LENGTH } from "../../utils/constants";
  *      },
  *      ...
  *  ]
- *  total_pages: 3,
- *  current_page: 1,
- *  data: true,
+ *  "total_pages": 3,
+ *  "current_page": 1,
+ *  "query": {...}
+ * }
+ * 
+ * // Response from getAllUsers:
+ * {
+ *  users: [
+ *      {
+ *        uuid: "3f61108854cd4b5886401080d681dd96",
+ *        name: "Josy",
+ *        email: "josy@example.com",
+ *        lastSeen: "25 Jan 2024",
+ *        isBlocked: "false"
+ *      },
+ *      ...
+ *  ]
+ *  totalPages: 3,
+ *  currentPage: 1,
+ *  data: true
  * }
  */
 export function getAllUsers(data = {}) {
@@ -56,17 +72,17 @@ export function getAllUsers(data = {}) {
     const SEARCH_WORD_MAX_LENGTH = INPUT_LENGTH.email.maxValue
 
     // validate data - if validation fails, defaults are set
-    let pageNr = parseInt(data.page_nr);
-    pageNr = (data.page_nr && Number.isInteger(pageNr) && pageNr >= 1) ? pageNr : 1;
+    let pageNr = parseInt(data.pageNr);
+    pageNr = (data.pageNr && Number.isInteger(pageNr) && pageNr >= 1) ? pageNr : 1;
 
-    let itemsPerPage = parseInt(data.items_per_page);
-    itemsPerPage = (data.items_per_page && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : 25;
+    let itemsPerPage = parseInt(data.itemsPerPage);
+    itemsPerPage = (data.itemsPerPage && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : 25;
 
-    let orderBy = (data.order_by && ORDER.includes(data.order_by)) ? data.order_by : "last_seen";
-    let orderSort = (data.order_sort && SORT.includes(data.order_sort)) ? data.order_sort : "descending";
-    let filterBy = (data.filter_by && FILTER.includes(data.filter_by)) ? data.filter_by : "none";
-    let search_by = (data.search_by && SEARCH_BY.includes(data.search_by)) ? data.search_by : "none";
-    let search_word = (data.search_word && (typeof data.search_word === "string") && data.search_word.length <= SEARCH_WORD_MAX_LENGTH) ? data.search_word : "";
+    let orderBy = (data.orderBy && ORDER.includes(data.orderBy)) ? data.orderBy : "last_seen";
+    let orderSort = (data.orderSort && SORT.includes(data.orderSort)) ? data.orderSort : "descending";
+    let filterBy = (data.filterBy && FILTER.includes(data.filterBy)) ? data.filterBy : "none";
+    let searchBy = (data.searchBy && SEARCH_BY.includes(data.searchBy)) ? data.searchBy : "none";
+    let search_word = (data.searchWord && (typeof data.searchWord === "string") && data.searchWord.length <= SEARCH_WORD_MAX_LENGTH) ? data.searchWord : "";
 
     let requestData = {
         "page_nr": pageNr,
@@ -74,8 +90,15 @@ export function getAllUsers(data = {}) {
         "order_by": orderBy,
         "order_sort": orderSort,
         "filter_by": filterBy,
-        "search_by": search_by,
+        "search_by": searchBy,
         "search_word": search_word
+    }
+
+    const emptyObj = {
+        users: [],
+        totalPages: 1,
+        currentPage: 1,
+        data: false
     }
 
     const getData = async () => {
@@ -103,27 +126,136 @@ export function getAllUsers(data = {}) {
                     data: true,
                 }
             } else {
-                return {
-                    users: [],
-                    totalPages: 1,
-                    currentPage: 1,
-                    data: false
-                }
+                return emptyObj
             }
         }
         catch (error) {
             console.error('Error fetching users:', error);
-            return {
-                users: [],
-                totalPages: 1,
-                currentPage: 1,
-                data: false
-            }
+            return emptyObj
         }
     }
 
     return getData();
 };
+
+/**
+ * Function makes api call to retrieve an array of logs for a particular user.
+ * 
+ * Pagination is expected to handle the returned data.
+ * 
+ * Given an invalid uuid or error response, will return an empty object.
+ * 
+ * Sends the key 'data' as a boolean to indicate whether there is response data or not.
+ * 
+ * @param {number} PageNr integer, must be positive
+ * @param {string} uuid 
+ * @returns {object}
+ * 
+ * @example
+ * //Usage:
+ * getUserLogs(1, "6f93fab8681a435a96794cfd69170cfd")
+ * 
+ * //Original API response:
+ * {
+ *    "current_page": 1,
+ *    "logs": [
+ *        {
+ *            "activity": "signup",
+ *            "created_at": "Tue, 09 Jan 2024 21:07:38 GMT",
+ *            "message": "successful signup.",
+ *            "type": "INFO",
+ *            "user_uuid": "6f93fab8681a435a96794cfd69170cfd"
+ *        },
+ *        ...
+ *    ],
+ *    "query": {
+ *        "items_per_page": 25,
+ *        "order_sort": "descending",
+ *        "ordered_by": "created_at",
+ *        "page_nr": 1
+ *    },
+ *    "response": "success",
+ *    "total_pages": 1
+ * }
+ * 
+ * //Response from getUserLogs:
+ * {
+ *  currentPage: 1,
+ *  totalPages: 1,
+ *  data: true,
+ *  logs: [
+ *       {
+ *            "activity": "signup",
+ *            "createdAt": "09 Jan 2024",
+ *            "message": "successful signup.",
+ *            "type": "INFO",
+ *            "userUuid": "6f93fab8681a435a96794cfd69170cfd"
+ *        },
+ *        ...
+ *  ]
+ * }
+ */
+export function getUserLogs(pageNr, userUuid) {
+    let thePageNum = parseInt(pageNr);
+    thePageNum = (pageNr && Number.isInteger(thePageNum) && thePageNum >= 1) ? thePageNum : 1;
+    let theUuid = (userUuid && (typeof userUuid === "string") && userUuid.length === 32) ? userUuid : "";
+
+    const emptyObj = {
+        logs: [],
+        totalPages: 1,
+        currentPage: 1,
+        data: false
+    }
+
+    if (theUuid === "") {
+        console.warn("No uuid provided to get user logs.")
+        return emptyObj
+    }
+
+    let requestData = {
+        "page_nr": thePageNum,
+        "user_uuid": theUuid,
+    }
+
+    const getData = async () => {
+        try {
+            const response = await api.post(apiEndpoints.adminGetUserLogs, requestData)
+            if (response.status === 200 && response.data.logs.length > 0) {
+                const javaScriptifiedUserFields = response.data.logs.map(log => {
+                    const { user_uuid: uuid, created_at: createdAt, ...rest } = log;
+                    // Format lastSeen date
+                    const formattedCreatedAt = new Date(createdAt).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    });
+                    return {
+                        ...rest,
+                        createdAt: formattedCreatedAt,
+                        uuid,
+                    };
+                });
+                return {
+                    logs: javaScriptifiedUserFields,
+                    totalPages: response.data.total_pages,
+                    currentPage: response.data.current_page,
+                    data: true,
+                }
+            } else {
+                return emptyObj
+            }
+        }
+        catch (error) {
+            console.error('Error fetching logs:', error);
+            return emptyObj
+        }
+    }
+
+    return getData();
+};
+
+
+
 
 /**
  * Function makes api call to block or unblock a particular user.

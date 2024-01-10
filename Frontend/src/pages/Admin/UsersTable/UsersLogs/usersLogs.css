@@ -1,5 +1,10 @@
-.UsersLogs-Bold {
+.UsersLogs-bold {
     font-weight: bold;
+}
+
+.UsersLogs-noLogs {
+    margin-top: 10px;
+    color: var(--FontColorDarker);
 }
 
 /* BIG SCREEN */

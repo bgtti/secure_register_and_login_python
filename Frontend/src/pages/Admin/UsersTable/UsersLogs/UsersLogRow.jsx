@@ -6,20 +6,21 @@ import PropTypes from 'prop-types';
  * @visibleName Admin Area: Users' Table: User Logs: Log Row
  * @param {object} props
  * @param {object} props.log 
- * @param {string} props.log.date
- * @param {string} props.log.info
+ * @param {string} props.log.createdAt
+ * @param {string} props.log.type
  * @param {string} props.log.activity
  * @param {string} props.log.message
  * @returns {React.ReactElement}
  */
 function UsersLogRow(props) {
-    const { date, type, activity, message } = props.log;
+    const { log } = props;
+    const { createdAt, type, activity, message } = log;
 
     return (
         <tr role="row">
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="date">Date:</label>
-                {date}
+                {createdAt}
             </td>
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="type">Type:</label>
@@ -38,7 +39,7 @@ function UsersLogRow(props) {
 };
 UsersLogRow.propTypes = {
     log: PropTypes.shape({
-        date: PropTypes.string.isRequired,
+        createdAt: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
         activity: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
