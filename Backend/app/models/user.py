@@ -140,6 +140,8 @@ class User(UserMixin, db.Model):
         return self._is_blocked == "true" 
     
     def block_access(self):
+        if self.access_level == "admin":
+            raise ValueError("Admins cannot be blocked.")
         self._is_blocked = "true" 
     
     def unblock_access(self):

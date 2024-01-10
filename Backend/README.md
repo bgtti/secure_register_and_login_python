@@ -163,3 +163,10 @@ https://stackoverflow.com/questions/3759981/get-ip-address-of-visitors-using-fla
 https://flask-limiter.readthedocs.io/en/stable/
 https://www.silvaneves.org/deleting-old-items-in-sqlalchemy
 https://security.stackexchange.com/questions/222815/should-i-hash-session-ids-before-storing-the-session-contents#:~:text=Regardless%20of%20how%20often%20the,to%20prevent%20session%20fixation%20attacks.
+
+# error that happens when using the program at midnight:
+PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: '...\\Backend\\app\\system_logs\\log.txt' -> '...\\Backend\\app\\system_logs\\log.txt.2024-01-09'
+
+This error occurs when the logging system attempts to rotate the log file, but it's unable to do so because another process (possibly your application or some other process) is still holding a reference to the file.
+
+//setting log delay to True now. consider using a library like loguru

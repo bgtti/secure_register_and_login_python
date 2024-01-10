@@ -88,7 +88,7 @@ LOGGING_CONFIG = {
             "interval": 1, # This specifies that the rotation interval is 1 day
             "backupCount": 90,  # Logs will be kept for 90 days.
             "encoding": "utf-8",
-            "delay": False,
+            "delay": True, # Consider setting delay to True to to allow any other processes writing to the log file to finish and release their references
             "formatter": "standard",
         },
         "console": {
@@ -97,7 +97,7 @@ LOGGING_CONFIG = {
                 # "formatter": "standard",
             },
     },
-    'root': {
+    "root": {
             'level': 'DEBUG',
             'handlers': ['file', 'console'],
         },

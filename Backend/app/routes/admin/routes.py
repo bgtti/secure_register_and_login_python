@@ -152,7 +152,7 @@ def admin_users_table():
     
     response_data ={
             "response":"success",
-            "users": [user.serialize_user_table() for user in users.items],
+            "users": [user.serialize_user_table() for user in users.items if user.id != 1],
             "total_pages": users.pages,
             "current_page": users.page,
             "query":{
@@ -226,12 +226,9 @@ def admin_user_logs():
     page_nr = json_data["page_nr"]
 
     try:
-        user_logs = LogEvent.query.filter_by(_user_uuid=user_uuid).order_by(LogEvent._created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
+        user_logs = LogEvent.query.filter_by(user_uuid=user_uuid).order_by(LogEvent._created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
         if not user_logs.items:
             return jsonify({"response": "Requested page out of range"}), 404
-        # print(user_logs)
-        # random_log = db.session.query(LogEvent).get(1)
-        # print(random_log.user_uuid)
     except Exception as e:
         # Handle other exceptions
         logging.error(f"Error prevented eventLogs to be queried: {e}")
@@ -251,7 +248,6 @@ def admin_user_logs():
         }
     
     return jsonify(response_data)
-    # return jsonify({"success":"200"})
 
 
 # USERS TABLE BLOCK/UNBLOCK ----------- SET COOKIE
@@ -377,6 +373,10 @@ def admin_delete_user():
         user = User.query.filter_by(_uuid=user_uuid).first()
 
         if user:
+            if user.id == 1:
+                logging.warning(f"Blocked attempt to delete admin user.")
+                return jsonify({"response": "Action forbidden to all users. Check the request parameters."}), 403
+        
             db.session.delete(user)
             db.session.commit()
             logging.info("User deleted successfully by admin.")
@@ -392,18 +392,15 @@ def admin_delete_user():
             # returns success even if stats could not be registered
             return jsonify({"response": "success"})
         else:
-            # User not found
             return jsonify({"response": "User not found"}), 404
 
     except IntegrityError as e:
-        # Handle database integrity error (e.g., foreign key constraint)
         db.session.rollback()
         logging.error(f"DB integrity error prevented user deletion: {e}")
         log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
 
     except Exception as e:
-        # Handle other exceptions
         logging.error(f"Error prevented user deletion: {e}")
         log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500

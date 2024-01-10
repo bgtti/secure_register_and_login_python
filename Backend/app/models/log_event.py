@@ -1,6 +1,7 @@
-from app.extensions import db
+from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
 from datetime import datetime
+from app.extensions import db
 
 # TODO: create function to delete old logs on a schedule
 
@@ -65,46 +66,61 @@ class LogEvent(UserMixin, db.Model):
     def level(self):
         return self._level
     
-    @level.setter
-    def level(self, value):
-        self._level = value
+    # @level.setter
+    # def level(self, value):
+    #     self._level = value
     
     @property
     def type(self):
         return self._type
     
-    @type.setter
-    def type(self, value):
-        self._type = value
+    # @type.setter
+    # def type(self, value):
+    #     self._type = value
 
     @property
     def activity(self):
         return self._activity
     
-    @activity.setter
-    def activity(self, value):
-        self._activity = value
+    # @activity.setter
+    # def activity(self, value):
+    #     self._activity = value
 
     @property
     def message(self):
         return self._message
     
-    @message.setter
-    def message(self, value):
-        self._message = value
+    # @message.setter
+    # def message(self, value):
+    #     self._message = value
 
-    @property
+    # @property
+    # def user_uuid(self):
+    #     return self._user_uuid
+    
+    # @user_uuid.setter
+    # def user_uuid(self, value):
+    #     self._user_uuid = value
+
+    # if a getter and setter method is needed as well, encapsulate it in the hybrid property:
+    # @hybrid_property
+    # def user_uuid(self, value=None):
+    #     if value is not None:
+    #         self._user_uuid = value
+    #     return self._user_uuid
+    
+    @hybrid_property
     def user_uuid(self):
         return self._user_uuid
     
-    @user_uuid.setter
-    def user_uuid(self, value):
-        self._user_uuid = value
+    @user_uuid.expression
+    def user_uuid(cls):
+        return cls._user_uuid
     
     @property
     def created_at(self):
         return self._created_at
     
-    @created_at.setter
-    def created_at(self, value):
-        self._created_at = value
+    # @created_at.setter
+    # def created_at(self, value):
+    #     self._created_at = value
