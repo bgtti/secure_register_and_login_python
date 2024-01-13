@@ -222,7 +222,7 @@ export function getUserLogs(pageNr, userUuid) {
             const response = await api.post(apiEndpoints.adminGetUserLogs, requestData)
             if (response.status === 200 && response.data.logs.length > 0) {
                 const javaScriptifiedUserFields = response.data.logs.map(log => {
-                    const { user_uuid: uuid, created_at: createdAt, ...rest } = log;
+                    const { user_uuid: userUuid, created_at: createdAt, ...rest } = log;
                     // Format lastSeen date
                     const formattedCreatedAt = new Date(createdAt).toLocaleDateString('en-GB', {
                         day: 'numeric',
@@ -232,7 +232,7 @@ export function getUserLogs(pageNr, userUuid) {
                     return {
                         ...rest,
                         createdAt: formattedCreatedAt,
-                        uuid,
+                        userUuid,
                     };
                 });
                 return {

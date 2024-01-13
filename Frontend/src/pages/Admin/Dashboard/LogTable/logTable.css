@@ -1,0 +1,21 @@
+.LogTable-spanNoBtn {
+    color: var(--FontColorDarker);
+    font-size: 0.9em;
+}
+
+.LogTable-viewBtn {
+    background-color: var(--MiddleBlueColour);
+    height: 2.2em;
+    padding: 5px 15px;
+    font-size: 0.9em !important;
+    margin: 5px 0;
+}
+
+/* BIG SCREEN */
+@media only screen and (min-width:600px) {
+
+    .LogTable>thead>tr,
+    .LogTable>tbody>tr {
+        grid-template-columns: 7em repeat(2, 8em) minmax(10em, auto) 4em !important;
+    }
+}
