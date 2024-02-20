@@ -3,6 +3,7 @@ from colorama import Fore
 from app.utils.console_warning.print_warning import console_warn
 # The functions in this file are meant to be used in the config file.
 # They check whether the proper key-value pairs exist in an .env file and, if so, if they are set properly. If they are not set or no .env exists, they set defaults to the required values.
+# They print a warning in the terminal about missing data in the .env
 
 def pepper_array(pepper_str_array):
     """
@@ -68,7 +69,7 @@ def admin_credentials(cred_str_array):
     Example usage:
 
     in config.py:
-    ADMIN_ACCT = pepper_array(os.getenv('ADMIN_CREDENTIALS))
+    ADMIN_ACCT = admin_credentials(os.getenv('ADMIN_CREDENTIALS))
     """
     DEFAULT_CRED = '["Super Admin", "super@admin", "lad678Ut$G"]'
     if cred_str_array:
@@ -83,3 +84,63 @@ def admin_credentials(cred_str_array):
         console_warn("Set ADMIN_CREDENTIALS in a .env file before using this app in production.", "MAGENTA")
         return DEFAULT_CRED
 
+def user_id_salt(id_salt):
+    """
+    user_id_salt(id_salt: str) -> int
+    ---------------------------------------------------------
+    Checks whether there is an env variable USER_ID_SALT 
+    and, if so, if it is formatted correctly. 
+    USER_ID_SALT should be a string with 3 ints:
+    '123'.
+
+    Returns:
+        The argument as int, if valid or a default string int if not
+    ---------------------------------------------------------
+    Example usage:
+
+    in config.py:
+    USER_ID_SALT = user_id_salt(os.getenv('USER_ID_SALT))
+    """
+    DEFAULT_CRED = 203
+    if id_salt:
+        if id_salt.isnumeric():
+            try:
+                id_salt_int = int(id_salt)
+                if id_salt_int > 99 and id_salt_int < 1000:
+                    return id_salt_int
+                else:
+                    raise ValueError("USER_ID_SALT must be a 3-digit integer string.")
+            except (ValueError, SyntaxError, TypeError):
+                return DEFAULT_CRED
+    else:
+        console_warn("Set USER_ID_SALT in a .env file before using this app in production.", "MAGENTA")
+        return DEFAULT_CRED
+    
+def email_credentials(email_address, password):
+    """
+    email_credentials(email_addres: str, password: str) -> obj
+    ---------------------------------------------------------
+    Checks whether there is an env variable EMAIL_ADDRESS and EMAIL_PASSWORD. 
+    When these variables are set, email functionality can be used.
+
+    Returns:
+        Object with dummie credentials
+    ---------------------------------------------------------
+    Example usage:
+
+    in config.py:
+    EMAIL_CREDENTIALS = email_credentials(os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_PASSWORD'))
+    """
+    EMAIL_CREDENTIALS = {
+        "email_address": "email@example.com",
+        "email_password": "email_password",
+        "email_set": False
+    }
+    if email_address and password:
+        EMAIL_CREDENTIALS["email_address"] = email_address
+        EMAIL_CREDENTIALS["email_password"] = password
+        EMAIL_CREDENTIALS["email_set"] = True
+        return EMAIL_CREDENTIALS
+    else:
+        console_warn("Set EMAIL_ADDRESS and EMAIL_PASSWORD in a .env file before using this app in production.", "MAGENTA")
+        return EMAIL_CREDENTIALS

@@ -48,5 +48,15 @@ export const INPUT_LENGTH = Object.freeze({
     password: {
         minValue: 8,
         maxValue: 60
+    },
+    contactMessage: {
+        minValue: 1,
+        maxValue: 300
     }
 })
+
+export const USER_ACCESS_TYPES = [
+    "user",
+    "admin",
+    "super_admin"
+]

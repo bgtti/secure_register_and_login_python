@@ -226,41 +226,40 @@ def create_dummie_files():
     for name in dummie_names:
         # dummie user data
         model_user = {
-            "_name": name,
-            "_email": generate_fake_mail(name),
-            "_password": generate_fake_str(),
-            "_salt": generate_fake_str(),
-            "_created_at": "", # populated at runtime when creating dummie users
-            "_session": "", # leave empty
-            "_last_seen":"", # populated at runtime when creating dummie users
-            "_is_blocked":"false", # most false
+            "name": name,
+            "email": generate_fake_mail(name),
+            "password": generate_fake_str(),
+            "salt": generate_fake_str(),
+            "created_at": "", # populated at runtime when creating dummie users
+            # "session": "", # leave empty
+            "last_seen":"", # populated at runtime when creating dummie users
         }
         user_list.append(model_user)
         # dummie user stats data
         random_location_index = random.randint(0,len(dummie_places)-1)
         model_user_stats = {
-            "_year": "", # populated at runtime when creating dummie users
-            "_month": "", # populated at runtime when creating dummie users
-            "_week": "", # populated at runtime when creating dummie users
-            "_new_user": 1, # when user created it is 1
-            "_country": dummie_places[random_location_index][1]
+            "year": "", # populated at runtime when creating dummie users
+            "month": "", # populated at runtime when creating dummie users
+            "week": "", # populated at runtime when creating dummie users
+            "new_user": 1, # when user created it is 1
+            "country": dummie_places[random_location_index][1]
         }
         user_stats_list.append(model_user_stats)
         # dummie visitor stats data (2x per user created)
         random_referrer_index = random.randint(0,len(dummie_referrer)-1) 
         visitor_session_id = get_uuid()
         model_visitor_stats = {
-            "_ip_address": fake_anonymize_ip(faker.ipv4()),
-            "_continent": dummie_places[random_location_index][0],
-            "_country": dummie_places[random_location_index][1],
-            "_country_code": dummie_places[random_location_index][2],
-            "_city": dummie_places[random_location_index][3],
-            "_user_agent": faker.user_agent(),
-            "_screen_size": "(0 x 0)",
-            "_referrer": dummie_referrer[random_referrer_index],
-            "_page_accessed": "home",
-            "_session_visit": visitor_session_id,
-            "_date_accessed": "" # populated at runtime when creating dummie users
+            "ip_address": fake_anonymize_ip(faker.ipv4()),
+            "continent": dummie_places[random_location_index][0],
+            "country": dummie_places[random_location_index][1],
+            "country_code": dummie_places[random_location_index][2],
+            "city": dummie_places[random_location_index][3],
+            "user_agent": faker.user_agent(),
+            "screen_size": "(0 x 0)",
+            "referrer": dummie_referrer[random_referrer_index],
+            "page_accessed": "home",
+            "session_visit": visitor_session_id,
+            "date_accessed": "" # populated at runtime when creating dummie users
         }
         visitor_stats_list.append(model_visitor_stats)
         model_visitor_stats2 = model_visitor_stats.copy()

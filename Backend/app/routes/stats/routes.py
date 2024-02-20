@@ -61,7 +61,7 @@ def analytics():
 
     if needs_geolocation is False:
         try:
-            visitor_stats = VisitorStats.query.filter_by(_session_visit=visitor_session_id).first()
+            visitor_stats = VisitorStats.query.filter_by(session_visit=visitor_session_id).first()
             if visitor_stats is not None:
                 continent = visitor_stats.continent
                 country = visitor_stats.country

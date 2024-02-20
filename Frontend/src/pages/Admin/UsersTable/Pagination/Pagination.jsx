@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import "./Pagination.css"
+import "./pagination.css"
 
 /**
  * Component for displaying pagination at the bottom of a table component

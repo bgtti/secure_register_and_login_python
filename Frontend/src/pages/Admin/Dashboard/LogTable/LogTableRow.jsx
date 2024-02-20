@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
  */
 function LogTableRow(props) {
     const { log } = props;
-    const { createdAt, type, activity, message, userUuid } = log;
+    const { createdAt, type, activity, message, userId } = log;
 
     return (
         <tr role="row">
@@ -40,9 +40,9 @@ function LogTableRow(props) {
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="action">Action:</label>
                 {
-                    userUuid === "" ?
+                    userId === 0 ?
                         (
-                            <span className="LogTable-spanNoBtn">no uuid</span>
+                            <span className="LogTable-spanNoBtn">no id</span>
                         ) :
                         (
                             <button className="LogTable-viewBtn" onClick={() => { console.log("get the particular user's logs") }}>view</button>

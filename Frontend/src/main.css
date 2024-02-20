@@ -4,10 +4,54 @@
 
 /* This is the main css file used in the project. Should be imported after a css reset file */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap'); */
+
+/* Fonts */
+/* Support: Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+/* If you also want to include support for older browsers refer to: https: //gwfh.mranftl.com/fonts/inter?subsets=latin*/
+
+/* Font: Inter (base font) */
+@font-face {
+    font-display: swap;
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: url('./assets/fonts/inter-v13-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-display: swap;
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    src: url('./assets/fonts/inter-v13-latin-600.woff2') format('woff2');
+}
 
 /* Font: Inter Tight used for italics only: use html i tag in component */
+@font-face {
+    font-display: swap;
+    font-family: 'Inter Tight';
+    font-style: italic;
+    font-weight: 300;
+    src: url('./assets/fonts/inter-tight-v7-latin-300italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-display: swap;
+    font-family: 'Inter Tight';
+    font-style: italic;
+    font-weight: 400;
+    src: url('./assets/fonts/inter-tight-v7-latin-italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-display: swap;
+    font-family: 'Inter Tight';
+    font-style: italic;
+    font-weight: 600;
+    src: url('./assets/fonts/inter-tight-v7-latin-600italic.woff2') format('woff2');
+}
 
 :root {
     --BackgroudPrimary: #0d1618;
@@ -73,7 +117,8 @@ p,
 label,
 button,
 select,
-input {
+input,
+textarea {
     font-family: 'Inter', sans-serif;
     font-size: 1em;
 }
@@ -112,7 +157,8 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
     border: none;
     border-radius: 7px;
     padding: 5px 10px;
@@ -170,6 +216,14 @@ select {
     margin-bottom: 15px;
 }
 
+.MAIN-form-star {
+    /* Used on the star denoting a required field, example: 
+    <span className="MAIN-form-star">*</span>
+     */
+
+    color: var(--FontColorDarker);
+}
+
 .MAIN-form-display-table {
     display: grid;
     /* grid-template-columns => adapt in component's own css as needed */
@@ -194,9 +248,9 @@ select {
 .MAIN-table {
     margin-top: 20px !important;
     border-collapse: collapse;
-    border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
+    border-radius: 5px;
     border-style: hidden;
     box-shadow: 0 0 0 2px var(--FontColorDarker);
 }
@@ -314,4 +368,15 @@ select {
     .MAIN-table-label {
         display: none;
     }
+}
+
+/* HONEYPOT FIELDS */
+.MAIN-NO-HUN {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    z-index: -1;
 }

@@ -14,9 +14,9 @@
 }
 
 .Modal-Container {
-    border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
+    border-radius: 5px;
     padding: 20px 25px;
     background-color: var(--BackgroudSecondary);
 }

@@ -14,7 +14,7 @@ import "./table.css"
  * @param {string} props.users[].email
  * @param {string} props.users[].lastSeen
  * @param {string} props.users[].isBlocked
- * @param {string} props.users[].uuid
+ * @param {number} props.users[].id
  * @param {func} props.toggleModal function passed on to child
  * @param {func} props.setShowUserLogs function passed on to child
  * @param {func} props.selectUserAction function passed on to child
@@ -28,7 +28,7 @@ import "./table.css"
         email: "john@alfred",
         lastSeen: "14 Dec 2023",
         isBlocked: "false",
-        uuid: "1234"
+        id: 1234
     },
     ...
 ]
@@ -68,7 +68,7 @@ Table.propTypes = {
         email: PropTypes.string.isRequired,
         lastSeen: PropTypes.string.isRequired,
         isBlocked: PropTypes.string.isRequired,
-        uuid: PropTypes.string.isRequired
+        id: PropTypes.number.isRequired
     })).isRequired,
     toggleModal: PropTypes.func.isRequired,
     setShowUserLogs: PropTypes.func.isRequired,

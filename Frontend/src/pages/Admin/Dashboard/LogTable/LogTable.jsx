@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { getUserLogs } from "../../../../config/apiHandler/admin"
+import { getUserLogs } from "../../../../config/apiHandler/admin/user_logs.js"
 import LogTableRow from "./LogTableRow"
 // import Pagination from "../Pagination/Pagination.jsx";
-import "./LogTable.css"
+import "./logTable.css"
 
 /**
  * Component returns HTML div with logs as a table
@@ -32,21 +32,21 @@ function LogTable(props) {
             "createdAt": "09 Jan 2024",
             "message": "successful signup.",
             "type": "INFO",
-            "userUuid": "74d60546c71543b1b8a0743e9871a351"
+            "userId": 12345
         },
         {
             "activity": "login",
             "createdAt": "09 Jan 2024",
             "message": "successful login.",
             "type": "INFO",
-            "userUuid": "74d60546c71543b1b8a0743e9871a351"
+            "userId": 12345
         },
         {
             "activity": "signup",
             "createdAt": "09 Jan 2024",
             "message": "problem",
             "type": "SUSPISCIOUS",
-            "userUuid": ""
+            "userId": 0
         }
     ]);
     const [curPage, setCurPage] = useState([]);

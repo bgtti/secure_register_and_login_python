@@ -50,11 +50,10 @@ admin_user_logs_schema = {
     "type": "object",
     "title": "Users table pagination", 
     "properties": {
-        "user_uuid": {
-            "description": "Uuid of user to delete.",
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 32
+        "user_id": {
+            "description": "Id of user to delete.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
             },
         "page_nr": {
             "description": "Page number as int > 0",
@@ -63,18 +62,17 @@ admin_user_logs_schema = {
             },
     },
     "additionalProperties": False,
-    "required": ["user_uuid", "page_nr"]
+    "required": ["user_id", "page_nr"]
 }
 
 admin_block_and_unblock_user_schema = {
     "type": "object",
     "title": "Users table pagination", 
     "properties": {
-        "user_uuid": {
-            "description": "Uuid of user to block/unblock.",
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 32
+        "user_id": {
+            "description": "Id of user to block/unblock.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
             },
         "block": {
             "description": "Set to true if user should be blocked or false to unblock.",
@@ -82,22 +80,21 @@ admin_block_and_unblock_user_schema = {
             }
     },
     "additionalProperties": False,
-    "required": ["user_uuid", "block"]
+    "required": ["user_id", "block"]
 }
 
 admin_delete_user_schema = {
     "type": "object",
     "title": "Users table pagination", 
     "properties": {
-        "user_uuid": {
-            "description": "Uuid of user to delete.",
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 32
+        "user_id": {
+            "description": "Id of user to delete.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
             }
     },
     "additionalProperties": False,
-    "required": ["user_uuid"]
+    "required": ["user_id"]
 }
 
 

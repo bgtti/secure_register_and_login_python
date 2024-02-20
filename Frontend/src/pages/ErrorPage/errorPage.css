@@ -1,0 +1,7 @@
+.ErrorPage-Section1>h3 {
+    font-weight: bold;
+}
+
+.ErrorPage-Section2 {
+    color: var(--FontColorSecondary);
+}

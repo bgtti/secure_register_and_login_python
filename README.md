@@ -45,3 +45,5 @@ testing in flask:
 https://www.youtube.com/watch?v=RLKW7ZMJOf4&t=184s
 
 important: https://stackoverflow.com/a/24689738
+
+third-party-cookie issue localhost: https://web.dev/articles/how-to-use-local-https

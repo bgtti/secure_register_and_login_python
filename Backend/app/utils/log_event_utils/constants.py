@@ -1,27 +1,4 @@
-# CREATING NEW LOG ACTIVITIES (event types)
-# 01: place the name of the activity (compatible with the name of the route you want to log) in the LOG_EVENT_ACTIVITY bellow
-# 02: create a file named log_event + activity. Create the dictionary of dictionaries like in log_event_login.py
-# 03: adapt the LOG_EVENT_ACTIVITIES in the file log_event_activities_all.py to include the new activity dictionary
-# the function to create logs is in helpers.py and should adapt to the new activity type
-# it is suggested that the constants bellow be used whenever possible in new activities to avoid typos
-# DO NOT MIX UP LOG_EVENT_ACTIVITIES with LOG_EVENT_ACTIVITY in the imports...
-
-# EVENT LOGS VERSUS OTHER LOGS:
-# event logs are saved to an SQL database. These are easy to view and work with, but database errors happen.
-# this is why activity events are logged to the database but another logging system is used to log... well, the system and its errors.
-# keep this in mind when creating a new log_event
-# log_events are displayed to admins in the FE in the form of user's history and can help flag suspiscious behaviour or answering user's question on why they are encountering some issue (admins can check the activity the user was performing when the error happened)
-# do not track sensitive information in log_events or any other type of logging mechanism
-
-LOG_EVENT_ACTIVITY = {
-    "block": "block",
-    "unblock":"unblock",
-    "signup":"signup",
-    "login": "login",
-    "delete_user":"delete_user"
-}
-
-# session_id should be either required or not. Use the following constants:
+# user_id should be either required or not. Use the following constants:
 REQUIRED = "REQUIRED"
 NONE = "none"
 

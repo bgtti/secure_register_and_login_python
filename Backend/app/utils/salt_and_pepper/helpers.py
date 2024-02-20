@@ -1,7 +1,6 @@
 import os
 import ast
 import random
-import logging
 from datetime import datetime
 from uuid import uuid4
 from app.config import PEPPER_STRING_ARRAY

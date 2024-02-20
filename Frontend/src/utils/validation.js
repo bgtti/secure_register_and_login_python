@@ -81,6 +81,7 @@ export function passwordValidation(password) {
     }
 }
 
+
 /**
  * Function that validates a user's password input for login
  * 

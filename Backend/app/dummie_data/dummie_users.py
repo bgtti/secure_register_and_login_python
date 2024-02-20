@@ -237,16 +237,16 @@ def create_dummie_user_accts():
 
         for i in range(len(user_list)):
             user = user_list[i]
-            user['_password'] = get_hashed_pw(creation_date, user['_password'], user['_salt'])
-            user['_created_at'] = the_dates[i][0]
-            user['_last_seen'] = the_dates[i][2]
+            user['password'] = get_hashed_pw(creation_date, user['password'], user['salt'])
+            user['created_at'] = the_dates[i][0]
+            user['last_seen'] = the_dates[i][2]
             the_data_users.append(user)
 
         for i in range(len(user_stats_list)):
             user_stats = user_stats_list[i]
-            user_stats['_year'] = the_dates[i][0].year
-            user_stats['_month'] = the_dates[i][0].month
-            user_stats['_week'] = the_dates[i][1]
+            user_stats['year'] = the_dates[i][0].year
+            user_stats['month'] = the_dates[i][0].month
+            user_stats['week'] = the_dates[i][1]
             the_data_users_stats.append(user_stats)
         
         index_j = 0
@@ -256,11 +256,11 @@ def create_dummie_user_accts():
 
             for j in range(index_j, index_j+2):
                 visitor_user_stats = visitor_stats_list[j]
-                visitor_user_stats['_date_accessed'] = date
+                visitor_user_stats['date_accessed'] = date
                 the_data_users_visitor_stats.append(visitor_user_stats)
 
                 visitor_random = visitor_stats_random[j]
-                visitor_random['_date_accessed'] = date
+                visitor_random['date_accessed'] = date
                 the_data_visitor_stats.append(visitor_random)
                 
             index_j += 2

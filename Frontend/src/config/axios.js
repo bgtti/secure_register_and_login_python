@@ -1,43 +1,66 @@
-import axios from 'axios';
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { redirect } from "react-router-dom";
+import apiEndpoints from "./apiEndPoints";
+
+const urlBase = apiEndpoints.baseURL
+
+// Axios instances:
 
 /**
- * API calls in this application use the Axios library
+ * api is an Axios instance with an interceptor that will re-direct all error codes.
+ * 
+ * Ps: keep this in mind when writing try/catch blocks in api calls, since the page will navigate away when there is an error, and the code inside the catch block might not execute as planned.
+ * 
+ * ----------------------------------------------------
+ * API calls in this application use the Axios library.
+ * 
+ * Two axios instances were created: this (api), and another one called apiCredentials.
+ * The difference between them lies in the error handling from interceptors.
+ * api has an interceptor that will redirect all errors to an error page. apiCredentials will send error 400, 401, and 409 back to the function, while redirecting other error types. apiCredentials should be used for SignUp and LogIn forms.
  * @see {@link https://axios-http.com/docs/intro}
+ * -----------------------------------------------------
+ * @example
+ * 
+ * Usage:
+ * const response = await api.post(apiEndpoints.adminGetUsersTable, dataToPost)
  */
-const api = axios.create({
-    baseURL: 'http://127.0.0.1:5000',
+export const api = axios.create({
+    baseURL: urlBase,
+    timeout: 5000,
     withCredentials: true,
-    // headers: {
-    //     'Accept': 'application/json',
-    //     'Content-Type': 'application/json'
-    // }
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': urlBase,
+    }
 });
 
-// const navigate = useNavigate();
-
-//interceptor: ignore 401 for login or signup -- should be handled differently
-// how to do it: https://stackoverflow.com/questions/63423209/how-to-ignore-interceptors-in-axios-as-a-parameter
-// or create new instance: https://github.com/axios/axios/issues/108
-
-//uncomment the code bellow when login solved.
-
-// api.interceptors.response.use(
-//     function (response) {
-//         return response;
-//     },
-//     function (error) {
-//         let res = error.response;
-//         if (res.status == 401) { //401 = Unauthorized (lacks valid authentication)
-//             navigate("/login");
-//         } else if (res.status == 429) { // 429 = Too Many Requests
-//             console.log("too many requests") // handle properly
-//         } else {
-//             console.log("some other issue") //handle - display error page
-//         }
-//         console.error("Looks like there was a problem. Status Code:" + res.status);
-//         return Promise.reject(error);
-//     }
-// )
-
-export default api
+/**
+ * apiCredentials is an Axios instance with an interceptor that will re-direct most (but not all) errors to the error page. Errors 400, 401, and 409 will be sent back to the function.
+ * 
+ * Ps: keep this in mind when writing try/catch blocks in apiCredentials calls, since the page will navigate away when there is an error (eg 500), and the code inside the catch block might not execute as planned. Responses with error 400, 401, and 409 will be sent back to the function and should be handled inside the try-block (the catch block would only receive other error types).
+ * 
+ * ----------------------------------------------------
+ * API calls in this application use the Axios library.
+ * 
+ * Two axios instances were created: this (api), and another one called apiCredentials.
+ * The difference between them lies in the error handling from interceptors.
+ * api has an interceptor that will redirect all errors to an error page. apiCredentials will send error 400, 401, and 409 back to the function, while redirecting other error types. apiCredentials should be used for SignUp and LogIn forms.
+ * @see {@link https://axios-http.com/docs/intro}
+ * -----------------------------------------------------
+ * @example
+ * 
+ * Usage:
+ * const response = await apiCredentials.post(apiEndpoints.logIn, userCredentials)
+ */
+export const apiCredentials = axios.create({
+    baseURL: urlBase,
+    timeout: 5000,
+    withCredentials: true,
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': urlBase,
+    }
+}
+);

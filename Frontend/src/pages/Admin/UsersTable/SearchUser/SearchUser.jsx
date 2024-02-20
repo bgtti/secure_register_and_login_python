@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { flushSync } from 'react-dom';
 import PropTypes from 'prop-types'
 import { nameValidation, emailValidation } from "../../../../utils/validation"
 import "../usersTable.css"

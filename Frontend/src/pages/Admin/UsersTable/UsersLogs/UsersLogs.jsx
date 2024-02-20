@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { getUserLogs } from "../../../../config/apiHandler/admin"
+import { getUserLogs } from "../../../../config/apiHandler/admin/user_logs.js"
 import UsersLogRow from "./UsersLogRow"
 import Pagination from "../Pagination/Pagination.jsx";
 import "./usersLogs.css"
@@ -18,14 +18,14 @@ import "./usersLogs.css"
  * @param {object} props.user 
  * @param {string} props.user.name
  * @param {string} props.user.email
- * @param {string} props.user.uuid
+ * @param {number} props.user.id
  * @param {func} props.setShowUserLogs 
  * @param {func} props.selectUserAction 
  * @returns {React.ReactElement}
  */
 function UsersLogs(props) {
     const { user, setShowUserLogs, selectUserAction } = props;
-    const { name, email, uuid } = user;
+    const { name, email, id } = user;
 
     const dispatch = useDispatch();
     const isComponentMounted = useIsComponentMounted();
@@ -39,11 +39,11 @@ function UsersLogs(props) {
     }, [])
 
     function getLogs(pageNr = 1) {
-        if (uuid === "") {
+        if (id === 0) {
             return
         }
         dispatch(setLoader(true))
-        getUserLogs(pageNr, uuid)
+        getUserLogs(pageNr, id)
             .then(response => {
                 if (isComponentMounted()) {
                     if (response.data) {
@@ -132,7 +132,7 @@ UsersLogs.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string.isRequired,
         email: PropTypes.string.isRequired,
-        uuid: PropTypes.string.isRequired
+        id: PropTypes.number.isRequired
     }).isRequired,
     setShowUserLogs: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired,

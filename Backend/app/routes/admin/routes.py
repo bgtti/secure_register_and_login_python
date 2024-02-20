@@ -1,59 +1,38 @@
 from flask import Blueprint, request, jsonify, session
+from functools import wraps
 import logging
 import jsonschema
 from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
+from flask_login import current_user, login_required
 from app.extensions import flask_bcrypt, db
-from app.routes.account.schemas import sign_up_schema, log_in_schema
 from app.routes.admin.schemas import admin_users_table_schema, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
-# from app.account.salt import generate_salt
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.stats import UserStats
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.log_event_utils.log import log_event
+from app.utils.custom_decorators.admin_protected_route import admin_only
+from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 
 admin = Blueprint('admin', __name__)
 
-# In this file: routes concerning admin 
-
-# SIGN In
-@admin.route("/restricted_login", methods=["POST"])
-def admin_login():
-    """
-    login_user() -> JsonType
-    ----------------------------------------------------------
-    Route with no parameters.
-    Sets a session cookie in response.
-    Returns Json object containing strings.
-    "response" value is always included.  
-    "user" value only included if response is "success".
-    ----------------------------------------------------------
-    Response example:
-    response_data = {
-            "response":"success",
-            "user": {
-                "id": "16fd2706-8baf-433b-82eb-8c7fada847da", 
-                "name": "John", 
-                "email": "john@email.com"}, 
-        } 
-    """
-    
-    return jsonify({'response': 'You logged in!'})
+# In this file: routes concerning admin  
 
 # DASHBOARD
 @admin.route("/restricted_area/dashboard", methods=["POST"])
 def admin_dashboard():
+    # ...
+    return jsonify({'response': '...'})
 
-    # users = User.query.order_by(_email=email).first()
-    
-    return jsonify({'response': 'You logged in!'})
-
-# USERS TABLE ----------- SET COOKIE
+# USERS TABLE 
 @admin.route("/restricted_area/users", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_users_table_schema)
 def admin_users_table():
     """
     admin_users_table() -> JsonType
@@ -94,15 +73,8 @@ def admin_users_table():
     """
     # Get the JSON data from the request body 
     json_data = request.get_json()
-
-    # validate Json against the schema
-    try:
-        jsonschema.validate(instance=json_data, schema=admin_users_table_schema)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input page_nr: {json_data["page_nr"]}, items_per_page: {json_data["items_per_page"]}, order_by: {json_data["order_by"]}, order_sort: {json_data["order_sort"]}, filter_by: {json_data["filter_by"]}, search_by: {json_data["search_by"]}, search_word: {json_data["search_word"]}")
-        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
     
-    # setting defaults to optional arguments:
+    # Setting defaults to optional arguments:
     page_nr = json_data["page_nr"]
     items_per_page = json_data.get("items_per_page", 25)
     order_by = json_data.get("order_by", "last_seen")
@@ -110,8 +82,6 @@ def admin_users_table():
     filter_by = json_data.get("filter_by", "none")
     search_by = json_data.get("search_by", "none")
     search_word = json_data.get("search_word", "")
-
-    order_by = "_" + order_by
 
     # Check if search is valid
     if not search_word:
@@ -135,11 +105,11 @@ def admin_users_table():
     # Dynamic filtering conditions - possible values for (filter_by, search_by)
     filter_conditions = {
         ("none","none"): User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none", "email"): User.query.filter(User._email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none","name",): User.query.filter(User._name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked","none"): User.query.filter_by(_is_blocked="true").order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "email"): User.query.filter(User._is_blocked == "true", User._email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "name"): User.query.filter(User._is_blocked == "true", User._name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("none", "email"): User.query.filter(User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("none","name",): User.query.filter(User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked","none"): User.query.filter_by(is_blocked=modelBool.TRUE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked", "email"): User.query.filter(User.is_blocked == modelBool.TRUE, User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
+        ("is_blocked", "name"): User.query.filter(User.is_blocked == modelBool.TRUE, User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
     }
 
     try:
@@ -169,22 +139,25 @@ def admin_users_table():
     return jsonify(response_data)
 
 
-# USERS TABLE LOGS ----------- SET COOKIE 
+# USERS TABLE LOGS 
 @admin.route("/restricted_area/users/user_logs", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_user_logs_schema)
 def admin_user_logs():
     """
     admin_user_logs() -> JsonType
     ----------------------------------------------------------
     Route to get a user's logs.
     Takes a JSON payload with the following parameters:
-    - "user_uuid": User's uuid to be queried.
+    - "user_id": User's id to be queried.
     - "page_nr": int used for pagination.
 
     Returns a JSON object with a "response" field. Logs and other information only sent if response is 200.
     ----------------------------------------------------------
     Request example:
     json_payload = {
-        "user_uuid": "3f61108854cd4b5886401080d681dd96",
+        "user_id": 12345,
         "page_nr": 1
     }
     ----------------------------------------------------------
@@ -194,7 +167,7 @@ def admin_user_logs():
 
     {"response":"success",
             "logs": {
-                "user_uuid": "3f61108854cd4b5886401080d681dd96",
+                "user_id": 12345,
                 "created_at": "Thu, 25 Jan 2024 00:00:00 GMT",
                 "type": "INFO",
                 "activity": "login",
@@ -214,23 +187,15 @@ def admin_user_logs():
     # Get the JSON data from the request body
     json_data = request.get_json()
 
-    # validate Json against the schema
-    try:
-        jsonschema.validate(instance=json_data, schema=admin_user_logs_schema)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}")
-        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
-
     # Get info from JSON payload
-    user_uuid = json_data["user_uuid"]
+    user_id = json_data["user_id"]
     page_nr = json_data["page_nr"]
 
     try:
-        user_logs = LogEvent.query.filter_by(user_uuid=user_uuid).order_by(LogEvent._created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
+        user_logs = LogEvent.query.filter_by(user_id=user_id).order_by(LogEvent.created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
         if not user_logs.items:
             return jsonify({"response": "Requested page out of range"}), 404
     except Exception as e:
-        # Handle other exceptions
         logging.error(f"Error prevented eventLogs to be queried: {e}")
         return jsonify({"response": "Error prevented logs from being queried"}), 500
     
@@ -250,26 +215,29 @@ def admin_user_logs():
     return jsonify(response_data)
 
 
-# USERS TABLE BLOCK/UNBLOCK ----------- SET COOKIE
+# USERS TABLE BLOCK/UNBLOCK
 @admin.route("/restricted_area/users/block_unblock", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_block_and_unblock_user_schema)
 def block_unblock_user():
     """
     block_unblock_user() -> JsonType
     ----------------------------------------------------------
-    Route to block or unblock a user by UUID.
+    Route to block or unblock a user by id.
     Takes a JSON payload with the following parameters:
-    - "user_uuid": Uuid of the user to block/unblock.
+    - "user_id": id of the user to block/unblock.
     - "block": Set to true if the user should be blocked, false to unblock.
 
     Returns a JSON object with a "response" field:
     - If blocking/unblocking is successful: {"response": "success"}
-    - If the UUID is not found: {"response": "User not found"}
+    - If the id is not found: {"response": "User not found"}
     - If an error occurs during the operation: {"response": "Error blocking/unblocking user", "error": "Details of the error"}
 
     ----------------------------------------------------------
     Request example:
     json_payload = {
-        "user_uuid": "3f61108854cd4b5886401080d681dd96",
+        "user_id": 12345,
         "block": true
     }
     ----------------------------------------------------------
@@ -281,28 +249,21 @@ def block_unblock_user():
     # Get the JSON data from the request body
     json_data = request.get_json()
 
-    # Validate Json against the schema
-    try:
-        jsonschema.validate(instance=json_data, schema=admin_block_and_unblock_user_schema)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}. Input clock: {json_data["block"]}.")
-        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
-
     # Get Uuuid and block status from JSON payload
-    user_uuid = json_data["user_uuid"]
+    user_id = json_data["user_id"]
     block_status = json_data["block"]
 
     try:
-        user = User.query.filter_by(_uuid=user_uuid).first()
+        user = User.query.filter_by(id=user_id).first()
 
         if user:
 
             if block_status:
                 user.block_access()
-                log_event("LOG_EVENT_BLOCK","LEB_01",user_uuid)
+                log_event("ADMIN_BLOCK_USER","block user",user.id)
             else:
                 user.unblock_access()
-                log_event("LOG_EVENT_UNBLOCK","LEU_01",user_uuid)
+                log_event("ADMIN_BLOCK_USER","unblock user",user.id)
 
             db.session.commit()
             logging.info(f"User successfully set to blocked={block_status} by admin.") 
@@ -316,39 +277,42 @@ def block_unblock_user():
         db.session.rollback()
         logging.error(f"DB integrity error prevented user block/unblock: {e}")
         if block_status:
-            log_event("LOG_EVENT_BLOCK","LEB_02",user_uuid)
+            log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
-            log_event("LOG_EVENT_UNBLOCK","LEU_02",user_uuid)
+            log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user block/unblock: {e}")
         if block_status:
-            log_event("LOG_EVENT_BLOCK","LEB_02",user_uuid)
+            log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
-            log_event("LOG_EVENT_UNBLOCK","LEU_02",user_uuid)
+            log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
         return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
     
 
-# USERS TABLE DELETE ----------- SET COOKIE 
+# USERS TABLE DELETE 
 @admin.route("/restricted_area/users/delete", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_delete_user_schema)
 def admin_delete_user():
     """
     admin_delete_user() -> JsonType
     ----------------------------------------------------------
-    Route to delete a user by UUID.
+    Route to delete a user by id.
     Takes a JSON payload with the following parameters:
-    - "user_uuid": User's UUID to be deleted.
+    - "user_id": User's id to be deleted.
 
     Returns a JSON object with a "response" field:
     - If deletion is successful: {"response": "success"}
-    - If the UUID is not found: {"response": "User not found"}
+    - If the id is not found: {"response": "User not found"}
     - If an error occurs during deletion: {"response": "Error deleting user", "error": "Details of the error"}
 
     ----------------------------------------------------------
     Request example:
     json_payload = {
-        "uuid": "3f61108854cd4b5886401080d681dd96"
+        "user_id": 12345
     }
     ----------------------------------------------------------
     Response examples:
@@ -359,28 +323,26 @@ def admin_delete_user():
     # Get the JSON data from the request body
     json_data = request.get_json()
 
-    # validate Json against the schema
-    try:
-        jsonschema.validate(instance=json_data, schema=admin_delete_user_schema)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.info(f"Jsonschema validation error. Input uuid: {json_data["user_uuid"]}")
-        return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
-
-    # Get UUID from JSON payload
-    user_uuid = json_data["user_uuid"]
+    # Get id from JSON payload
+    user_id = json_data["user_id"]
 
     try:
-        user = User.query.filter_by(_uuid=user_uuid).first()
+        user = User.query.filter_by(id=user_id).first()
 
         if user:
-            if user.id == 1:
+            # Admin user should not be deleted
+            if user.access_level == UserAccessLevel.SUPER_ADMIN:
                 logging.warning(f"Blocked attempt to delete admin user.")
                 return jsonify({"response": "Action forbidden to all users. Check the request parameters."}), 403
+            # Admin user can only be deleted by the super admin
+            elif user.access_level == UserAccessLevel.ADMIN:
+                if current_user.access_level != UserAccessLevel.SUPER_ADMIN:
+                    return jsonify({"response": "Admin users can only be deleted by the super admin."}), 403
         
             db.session.delete(user)
             db.session.commit()
             logging.info("User deleted successfully by admin.")
-            log_event("LOG_EVENT_DELETE_USER","LEDU_01",user_uuid)
+            log_event("ADMIN_DELETE_USER","deletion successful",user.id)
 
             try:
                 new_user_stats = UserStats(new_user=-1,country="")
@@ -397,11 +359,11 @@ def admin_delete_user():
     except IntegrityError as e:
         db.session.rollback()
         logging.error(f"DB integrity error prevented user deletion: {e}")
-        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        log_event("ADMIN_DELETE_USER","deletion problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
 
     except Exception as e:
         logging.error(f"Error prevented user deletion: {e}")
-        log_event("LOG_EVENT_DELETE_USER","LEDU_02",user_uuid)
+        log_event("ADMIN_DELETE_USER","deletion problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
     

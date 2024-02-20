@@ -16,21 +16,21 @@ logs_examples = [
     ("WARN", "signup", "signup rejected: weak password. Frontend validation failed?", 20)
 ]
 
-def create_log_dic(index, uuid, date):
+def create_log_dic(index, uid, date):
     """
-    create_log_dic(index: int, uuid:str, date: datetime) -> dict
+    create_log_dic(index: int, uid:int, date: datetime) -> dict
     ------------------------------------------------------------
     This function will return a dictionary object representing a log.
     Index refers to that of the logs_examples array.
     Used in create_dummie_logs.
     """
     log = {
-            "_level":logs_examples[index][3],
-            "_type": logs_examples[index][0],
-            "_activity": logs_examples[index][1],
-            "_message": logs_examples[index][2],
-            "_user_uuid": uuid,
-            "_created_at": date,
+            "level":logs_examples[index][3],
+            "type": logs_examples[index][0],
+            "activity": logs_examples[index][1],
+            "message": logs_examples[index][2],
+            "user_id": uid,
+            "created_at": date,
         }
     return(log)
 
@@ -41,12 +41,12 @@ def create_dummie_logs():
     Should be used in the create_dummie_user_accts function, after dummir users are created.
     """
     log_list = []
-    users = User.query.order_by(User._created_at.desc()).limit(25).all()
+    users = User.query.order_by(User.created_at.desc()).limit(25).all()
     for user in users:
-        log_list.extend([create_log_dic(0, user.uuid, user.created_at), create_log_dic(1, user.uuid, user.last_seen)])
+        log_list.extend([create_log_dic(0, user.id, user.created_at), create_log_dic(1, user.id, user.last_seen)])
     log_list.extend([
-        create_log_dic(2, "", datetime.utcnow()),
-        create_log_dic(3, "", datetime.utcnow())
+        create_log_dic(2, 0, datetime.utcnow()),
+        create_log_dic(3, 0, datetime.utcnow())
     ])
 
     db.session.execute(insert(LogEvent), log_list)

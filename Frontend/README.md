@@ -45,3 +45,7 @@ then, in index.html you will see a link tag. Replace the name in the href with t
 <link rel="icon" type="image/svg+xml" href="/icon_lock.svg" />
 ```
 </pre>
+
+# React Helmet Async:
+used to handle meta tags and other header elements.
+https://www.youtube.com/watch?v=wWeG8rWkMsM

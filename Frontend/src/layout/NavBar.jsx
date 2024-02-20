@@ -2,22 +2,32 @@ import { useState } from "react"
 import { Outlet, NavLink } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setUserLogout } from "../redux/user/userSlice";
+import { setLoader } from "../redux/loader/loaderSlice";
+import { logoutUser } from "../config/apiHandler/logout";
 import MenuIcon from "../assets/icon_menu.svg"
-import api from "../config/axios"
-import APIURL from "../config/apiUrls";
 import "./navbar.css"
 
 function NavBar() {
     const [showNavbar, setShowNavbar] = useState(false)
+    const user = useSelector((state) => state.user);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const logoutUser = async () => {
-        const response = await api.post(APIURL.LOGOUT);
-        dispatch(setUserLogout());
-        navigate("/login");
+    const logOut = () => {
+        dispatch(setLoader(true))
+        logoutUser()
+            .then(res => {
+                if (!res.response) {
+                    console.warn("Check logout function.");
+                }
+            })
+            .catch(error => {
+                console.error("Error in logout function.", error);
+            })
+            .finally(() => {
+                dispatch(setLoader(false));
+            })
     }
 
     const handleShowNavbar = () => {
@@ -37,21 +47,39 @@ function NavBar() {
                         <li>
                             <NavLink to="/" onClick={handleShowNavbar}>Home</NavLink>
                         </li>
-                        <li>
-                            <NavLink to="login" onClick={handleShowNavbar}>Login</NavLink>
-                        </li>
-                        <li>
-                            <NavLink to="signup" onClick={handleShowNavbar}>Signup</NavLink>
-                        </li>
-                        <li>
-                            <a href="#!" onClick={() => { logoutUser(); handleShowNavbar(); }}>Logout</a>
-                        </li>
-                        <li>
-                            <NavLink to="adminLogin" onClick={handleShowNavbar}>ADMIN login</NavLink>
-                        </li>
-                        <li>
-                            <NavLink to="adminArea/dashboard" onClick={handleShowNavbar}>ADMIN dashboard</NavLink>
-                        </li>
+                        {
+                            (!user || user.email === "") && (
+                                <>
+                                    <li>
+                                        <NavLink to="/login" onClick={handleShowNavbar}>Login</NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/signup" onClick={handleShowNavbar}>Signup</NavLink>
+                                    </li>
+                                </>
+
+                            )
+                        }
+                        {
+                            user && user.loggedIn && (
+                                <>
+                                    <li>
+                                        <NavLink to="/login" onClick={() => { logOut(); handleShowNavbar(); }}>Logout</NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/dashboard" onClick={handleShowNavbar}>Dashboard</NavLink>
+                                    </li>
+                                </>
+
+                            )
+                        }
+                        {
+                            user && (user.access === "admin" || user.access === "super_admin") && (
+                                <li>
+                                    <NavLink to="/adminArea" onClick={handleShowNavbar}>Admin</NavLink>
+                                </li>
+                            )
+                        }
                     </ul>
                 </div>
             </nav>

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useRef } from "react";
-import { getAllUsers } from "../../../config/apiHandler/admin.js"
+import { getAllUsers } from "../../../config/apiHandler/admin/users.js"
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoader } from "../../../redux/loader/loaderSlice"
@@ -66,7 +66,7 @@ function UsersTable() {
     })
 
     // The following state is used for storing selected user action and modal display (block/delete user or show user's logs). They are set from the Table component.
-    const [userSelected, setUserSelected] = useState({ name: "", email: "", uuid: "" })
+    const [userSelected, setUserSelected] = useState({ name: "", email: "", id: 0 })
     const [userAction, setUserAction] = useState("")
     const [modalUserAction, setModalUserAction] = useState(false)
     const [showUserLogs, setShowUserLogs] = useState(false)
@@ -85,17 +85,17 @@ function UsersTable() {
     /**
      * Defines the userAction and userSelected states in UsersTable component.
      * Should be combined with setShowUserLogs (to show/hide UsersLogs component) or toggleModal (to show/hide block user or delete user modals)
-     * @param {string} uuid the uuid of the selected user
+     * @param {number} id the id of the selected user
      * @param {string} action must be member of the constant USER_ACTIONS ("delete", "block", "logs")
      * @returns {void}
      */
-    function selectUserAction(uuid = "", action = "") {
-        if (uuid === "" && action === "") {
-            setUserSelected({ name: "", email: "", uuid: "" });
+    function selectUserAction(id = 0, action = "") {
+        if (id === 0 && action === "") {
+            setUserSelected({ name: "", email: "", id: 0 });
             setUserAction("")
         } else {
-            const user = users.find(user => user.uuid === uuid);
-            user ? setUserSelected(user) : setUserSelected({ name: "", email: "", uuid: "" });
+            const user = users.find(user => user.id === id);
+            user ? setUserSelected(user) : setUserSelected({ name: "", email: "", id: 0 });
             USER_ACTIONS.includes(action.toLowerCase()) ? setUserAction(action) : setUserAction("");
         }
     }
