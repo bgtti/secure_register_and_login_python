@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { blockOrUnblockUser, deleteUser } from "../../../../config/apiHandler/admin"
+import { blockOrUnblockUser, deleteUser } from "../../../../config/apiHandler/admin/user_actions.js"
 import "./modalUserAction.css"
 
 /**
@@ -17,7 +17,7 @@ import "./modalUserAction.css"
  * @param {object} props.user
  * @param {string} props.user.name
  * @param {string} props.user.email
- * @param {string} props.user.uuid
+ * @param {number} props.user.id
  * @param {func} props.toggleModal 
  * @returns {React.ReactElement}
  * 
@@ -27,14 +27,14 @@ import "./modalUserAction.css"
  * //inside the functional component:
  * const [showModal, setShowModal] = useState(false)
  * function toggleModal() { setShowModal(!showModal)}
- * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", uuid: "12345"} action="block" modalToggler={toggleModal} /> //<- refers to this component!
+ * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", id: 12345} action="block" modalToggler={toggleModal} /> //<- refers to this component!
  * return (
  * <Modal title="Block User" content={modalInfo} modalStatus={showModal} setModalStatus={setShowModal} ></Modal> //<-the modal wrapper component with this component passed as a prop
  * )
  */
 function ModalUserAction(props) {
     const { action, user, modalToggler } = props;
-    const { name, email, uuid } = user;
+    const { name, email, id } = user;
 
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
@@ -63,13 +63,13 @@ function ModalUserAction(props) {
         };
 
         if (actionLowerCase === "delete") {
-            deleteUser(uuid)
+            deleteUser(id)
                 .then(response => handleResponse(response, "User deleted successfully! Close modal and reload the page to get an updated users table."))
                 .catch(handleError)
                 .finally(handleFinally);
         } else {
             const block = actionLowerCase === "block";
-            blockOrUnblockUser(uuid, block)
+            blockOrUnblockUser(id, block)
                 .then(response => handleResponse(response, `User ${actionLowerCase}ed successfully! Close modal and reload the page to get an updated users table.`))
                 .catch(handleError)
                 .finally(handleFinally);
@@ -108,7 +108,7 @@ ModalUserAction.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string.isRequired,
         email: PropTypes.string.isRequired,
-        uuid: PropTypes.string.isRequired
+        id: PropTypes.number.isRequired
     }).isRequired,
     modalToggler: PropTypes.func.isRequired
 };

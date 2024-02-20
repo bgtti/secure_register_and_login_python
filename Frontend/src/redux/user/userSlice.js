@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit"
 
 const initialState = {
-    id: "",
+    loggedIn: false,
+    access: "",
     email: "",
     name: ""
 }
@@ -10,28 +11,27 @@ export const userSlice = createSlice({
     name: "user",
     initialState,
     reducers: {
-        setUserId: (state, action) => {
-            state.id = action.payload;
-            state.email = state.email;
-            state.name = state.name;
-        },
         setUserEmail: (state, action) => {
-            state.id = state.id;
+            state.loggedIn = state.loggedIn;
+            state.access = state.access;
             state.email = action.payload;
             state.name = state.name;
         },
         setUserName: (state, action) => {
-            state.id = state.id;
+            state.loggedIn = state.loggedIn;
+            state.access = state.access;
             state.email = state.email;
             state.name = action.payload;
         },
         setUser: (state, action) => {
-            state.id = action.payload.id;
+            state.loggedIn = action.payload.loggedIn;
+            state.access = action.payload.access;
             state.email = action.payload.email;
             state.name = action.payload.name;
         },
         setUserLogout: (state) => {
-            state.id = "";
+            state.loggedIn = false;
+            state.access = "";
             state.email = "";
             state.name = "";
         },
@@ -40,7 +40,7 @@ export const userSlice = createSlice({
 
 const userReducer = userSlice.reducer;
 
-export const { setUserId, setUserEmail, setUserName, setUser, setUserLogout } = userSlice.actions;
+export const { setUserAccess, setUserEmail, setUserName, setUser, setUserLogout } = userSlice.actions;
 export default userReducer;
 
 // Example usage:

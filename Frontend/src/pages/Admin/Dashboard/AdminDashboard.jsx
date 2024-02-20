@@ -1,7 +1,6 @@
 // import UsersTable from "../UsersTable/UsersTable";
 import { useState, useEffect, lazy, Suspense, useRef } from "react";
 import LogTable from "./LogTable/LogTable"
-
 import "./admindashboard.css"
 
 /**

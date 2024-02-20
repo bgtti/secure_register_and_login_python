@@ -1,43 +1,30 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { setLoader } from "../../redux/loader/loaderSlice"
-import { setUser } from "../../redux/user/userSlice";
-import api from "../../config/axios"
-import APIURL from "../../config/apiUrls";
+import { useSelector } from "react-redux";
+import { Helmet } from "react-helmet-async";
 
+/**
+ * Component for the User's Dashboard
+ * 
+ * 
+ * @visibleName User Dashboard
+ * @returns {React.ReactElement}
+ * 
+ */
 function Dashboard() {
     const user = useSelector((state) => state.user);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (user.id === "") {
-            dispatch(setLoader(true));
-            const getUserData = async () => {
-                try {
-                    const response = await api.get(APIURL.GET_USER);
-                    if (response.status !== 200) {
-                        console.log("oops")
-                    } else {
-                        const userData = {
-                            id: response.data.user.id,
-                            email: response.data.user.email,
-                            name: response.data.user.name
-                        }
-                        dispatch(setUser(userData))
-                    }
-                } catch (error) {
-                    console.log("oops")
-                }
-                dispatch(setLoader(false));
-            }
-            getUserData();
-        }
-    }, [])
 
     return (
-        <p>Dashboard from {user.name}</p>
+        <div>
+            <Helmet>
+                <title>Dashboard</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Helmet>
+            <div>
+                <h2>User Dashboard</h2>
+            </div>
+            <p>Hello, {user.name}!</p>
+            <br />
+            <p>Set up the Dashboard with the content of your choice.</p>
+        </div>
     )
-}
-export default Dashboard
+};
+export default Dashboard;

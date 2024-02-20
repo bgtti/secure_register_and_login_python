@@ -170,3 +170,10 @@ PermissionError: [WinError 32] The process cannot access the file because it is 
 This error occurs when the logging system attempts to rotate the log file, but it's unable to do so because another process (possibly your application or some other process) is still holding a reference to the file.
 
 //setting log delay to True now. consider using a library like loguru
+
+//uuid issue: https://www.toomanyafterthoughts.com/uuids-are-bad-for-database-index-performance-uuid7/
+// another point of view for uuid: https://betterprogramming.pub/why-i-like-using-uuids-on-database-tables-ccab8c350f8a
+
+# setting up gmail:
+Password needs to be app password, not the usual account password
+2-factor must be enabled for this: https://support.google.com/mail/answer/185833?hl=en

@@ -1,6 +1,20 @@
 import jsonschema
 import pytest
-from app.account.schemas import sign_up_schema
+from app.routes.account.schemas import sign_up_schema
+
+# TODO:
+# test schema against following names:
+# Antonín Dvořák
+# Judit Polgár
+# François-Marie Arouet
+# Sabiha Gökçen
+# Zlatan Ibrahimović
+# Paul Erdős
+# Jürg M. Stauffer
+# Sinéad O'Connor
+# <script>window.location.href="https://evil.com"</script>
+# <img src=x onerror=alert("XSS")>
+
 
 def test_signup_schema():
     # Valid data

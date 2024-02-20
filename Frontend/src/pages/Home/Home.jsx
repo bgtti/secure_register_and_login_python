@@ -1,8 +1,12 @@
+import { Helmet } from "react-helmet-async";
 import "./home.css"
 
 function Home() {
     return (
         <div className="Home">
+            <Helmet>
+                <title>Home Page</title>
+            </Helmet>
             <section className="Home-Section1">
                 <div className="Home-Section1-text">
                     <h1>a secure</h1>

@@ -13,7 +13,7 @@ import iconUserMore from "../../../../assets/icon_user_more.svg";
  * @param {string} props.user.email
  * @param {string} props.user.lastSeen
  * @param {string} props.user.isBlocked
- * @param {string} props.user.uuid
+ * @param {number} props.user.id
  * @param {func} props.toggleModal from grandparent (UsersTable)
  * @param {func} props.setShowUserLogs from grandparent (UsersTable)
  * @param {func} props.selectUserAction from grandparent (UsersTable)
@@ -21,7 +21,7 @@ import iconUserMore from "../../../../assets/icon_user_more.svg";
  */
 function TableRow(props) {
     const { user, toggleModal, setShowUserLogs, selectUserAction } = props
-    const { name, email, lastSeen, isBlocked, uuid } = user;
+    const { name, email, lastSeen, isBlocked, id } = user;
 
     return (
         <tr role="row">
@@ -50,7 +50,7 @@ function TableRow(props) {
                         role="button"
                         title="More information"
                         src={iconUserMore}
-                        onClick={() => { selectUserAction(uuid, "logs"); setShowUserLogs(true) }}
+                        onClick={() => { selectUserAction(id, "logs"); setShowUserLogs(true) }}
                     />
                     <img
                         alt="Block user"
@@ -58,7 +58,7 @@ function TableRow(props) {
                         role="button"
                         title="Block user"
                         src={iconUserBlock}
-                        onClick={() => { selectUserAction(uuid, (isBlocked === "false" ? "block" : "unblock")); toggleModal() }}
+                        onClick={() => { selectUserAction(id, (isBlocked === "false" ? "block" : "unblock")); toggleModal() }}
                     />
                     <img
                         alt="Delete user"
@@ -66,7 +66,7 @@ function TableRow(props) {
                         role="button"
                         title="Delete user"
                         src={iconUserDelete}
-                        onClick={() => { selectUserAction(uuid, "delete"); toggleModal() }}
+                        onClick={() => { selectUserAction(id, "delete"); toggleModal() }}
                     />
                 </div>
             </td>
@@ -80,7 +80,7 @@ TableRow.propTypes = {
         email: PropTypes.string.isRequired,
         lastSeen: PropTypes.string.isRequired,
         isBlocked: PropTypes.string.isRequired,
-        uuid: PropTypes.string.isRequired
+        id: PropTypes.number.isRequired
     }).isRequired,
     toggleModal: PropTypes.func.isRequired,
     setShowUserLogs: PropTypes.func.isRequired,

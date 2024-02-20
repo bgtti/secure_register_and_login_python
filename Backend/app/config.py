@@ -2,8 +2,10 @@ import os
 from dotenv import load_dotenv  # getting .env variables
 import redis
 import datetime
+import json
+from enum import Enum
 from app.utils.rate_limit_utils.rate_limit_exceeded import rate_limit_exceeded
-from app.config_constants import pepper_array, secret_key, admin_credentials
+from app.config_constants import pepper_array, secret_key, admin_credentials, user_id_salt, email_credentials
 
 load_dotenv()
 
@@ -11,12 +13,24 @@ load_dotenv()
 PEPPER_STRING_ARRAY = pepper_array(os.getenv('PEPPER'))
 SECRET = secret_key(os.getenv('SECRET_KEY'))
 ADMIN_ACCT = admin_credentials(os.getenv('ADMIN_CREDENTIALS'))
+USER_ID_SALT = user_id_salt(os.getenv('USER_ID_SALT'))
+EMAIL_CREDENTIALS = email_credentials(os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_PASSWORD'))
 
 # *** BASE CONFIGURATION: used in development
 class Config:
+
+    # App credentials configuration
     PEPPER = PEPPER_STRING_ARRAY # used in account module when handling passwords
     SECRET_KEY = SECRET # used to protect user session data in flask
     ADMIN_CREDENTIALS = ADMIN_ACCT # used to create admin user
+
+    # Email credential configuration
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 465
+    MAIL_USERNAME = EMAIL_CREDENTIALS["email_address"]
+    MAIL_PASSWORD = EMAIL_CREDENTIALS["email_password"]
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
 
     # SQLAlchemy configuration 
     SQLALCHEMY_DATABASE_URI = "sqlite:///admin.db"
@@ -55,7 +69,7 @@ class ProductionConfig(Config):
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///admin.db"
     # SESSION_COOKIE_HTTPONLY=True, ---cookie cannot be read using js
-    SESSION_REDIS = redis.Redis(host=ENV_REDIS_SESSION_HOST, port=ENV_REDIS_SESSION_PORT, db=0)
+    SESSION_REDIS = redis.Redis(host=ENV_REDIS_SESSION_HOST, port=ENV_REDIS_SESSION_PORT, db=0, password= 'your_redis_password')
     SESSION_COOKIE_SAMESITE = "Lax" 
     RATELIMIT_STORAGE_URI = ENV_RATELIMIT_STORAGE_URI
 

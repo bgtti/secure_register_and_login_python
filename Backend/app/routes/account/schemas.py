@@ -1,4 +1,4 @@
-from app.utils.constants.account_constants import INPUT_LENGTH, EMAIL_PATTERN, PASSWORD_PATTERN
+from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
 
 sign_up_schema = {
     "type": "object",
@@ -6,7 +6,8 @@ sign_up_schema = {
         "name": {
             "type": "string", 
             "minLength": INPUT_LENGTH['name']['minValue'], 
-            "maxLength": INPUT_LENGTH['name']['maxValue']
+            "maxLength": INPUT_LENGTH['name']['maxValue'],
+            "pattern": NAME_PATTERN
             },
         "email": {
             "type": "string", 
@@ -20,9 +21,14 @@ sign_up_schema = {
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
             "pattern": PASSWORD_PATTERN
             },
+        "honeypot": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
     },
     "additionalProperties": False,
-    "required": ["name", "email", "password"]
+    "required": ["name", "email", "password", "honeypot"]
 }
 
 log_in_schema = {
@@ -38,7 +44,12 @@ log_in_schema = {
             "minLength":  INPUT_LENGTH['password']['minValue'], 
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
             "pattern": PASSWORD_PATTERN},
+        "honeypot": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
     },
     "additionalProperties": False,
-    "required": ["email", "password"]
+    "required": ["email", "password", "honeypot"]
 }

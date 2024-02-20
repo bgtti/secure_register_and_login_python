@@ -87,10 +87,10 @@
         min-width: 50%;
         height: inherit;
         background-color: transparent;
-        transition: none !important;
         -webkit-transition: none !important;
         -moz-transition: none !important;
         -o-transition: none !important;
+        transition: none !important;
     }
 
     .NavBar-nav-elements ul {

@@ -36,91 +36,28 @@ class LogEvent(UserMixin, db.Model):
     """
     __tablename__ = "log_event"
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    _level = db.Column(db.Integer, default=20)
-    _type = db.Column(db.String(50), nullable=False)
-    _activity = db.Column(db.String(50), nullable=False)
-    _message = db.Column(db.String(200), nullable=False)
-    _user_uuid = db.Column(db.String(32), nullable=False, default="none", index=True)
-    _created_at = db.Column(db.DateTime, default=datetime.utcnow(), index=True)
+    level = db.Column(db.Integer, default=20)
+    type = db.Column(db.String(50), nullable=False)
+    activity = db.Column(db.String(50), nullable=False)
+    message = db.Column(db.String(200), nullable=False)
+    user_uuid = db.Column(db.String(32), nullable=False, default="none", index=True) # DELETE
+    user_id = db.Column(db.Integer, nullable=True, index=True, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow(), index=True)
     
-    def __init__(self, level, type, activity, message, user_uuid, **kwargs):
-        self._level = level
-        self._type = type
-        self._activity = activity
-        self._message = message
-        self._user_uuid = user_uuid
+    def __init__(self, level, type, activity, message, **kwargs):
+        self.level = level
+        self.type = type
+        self.activity = activity
+        self.message = message
     
     def __repr__(self):
         return f"<Log: {self.id} {self.type} {self.message}>"
     
     def serialize_user_logs(self):
         return {
-            "user_uuid": self.user_uuid,
+            "user_id": self.user_id,
             "created_at": self.created_at,
             "type": self.type,
             "activity": self.activity,
             "message": self.message,
         }
-    
-    @property
-    def level(self):
-        return self._level
-    
-    # @level.setter
-    # def level(self, value):
-    #     self._level = value
-    
-    @property
-    def type(self):
-        return self._type
-    
-    # @type.setter
-    # def type(self, value):
-    #     self._type = value
-
-    @property
-    def activity(self):
-        return self._activity
-    
-    # @activity.setter
-    # def activity(self, value):
-    #     self._activity = value
-
-    @property
-    def message(self):
-        return self._message
-    
-    # @message.setter
-    # def message(self, value):
-    #     self._message = value
-
-    # @property
-    # def user_uuid(self):
-    #     return self._user_uuid
-    
-    # @user_uuid.setter
-    # def user_uuid(self, value):
-    #     self._user_uuid = value
-
-    # if a getter and setter method is needed as well, encapsulate it in the hybrid property:
-    # @hybrid_property
-    # def user_uuid(self, value=None):
-    #     if value is not None:
-    #         self._user_uuid = value
-    #     return self._user_uuid
-    
-    @hybrid_property
-    def user_uuid(self):
-        return self._user_uuid
-    
-    @user_uuid.expression
-    def user_uuid(cls):
-        return cls._user_uuid
-    
-    @property
-    def created_at(self):
-        return self._created_at
-    
-    # @created_at.setter
-    # def created_at(self, value):
-    #     self._created_at = value

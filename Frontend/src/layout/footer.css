@@ -1,12 +1,19 @@
 Footer {
     display: flex;
-    gap: 15px;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
     min-height: 40px;
 }
 
-Footer>* {
+Footer>div,
+Footer>ul {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+Footer>div>* {
     height: 20px;
 }
 
@@ -23,8 +30,24 @@ Footer img {
     filter: var(--FontColorDarkerFilter);
 }
 
+.Footer-Nav {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.Footer-Nav>li>a {
+    color: var(--BlueColour);
+    text-decoration: none;
+    cursor: pointer;
+}
+
 @media (hover: hover) {
     Footer img:hover {
         transform: scale(1.5) rotateZ(360deg);
+    }
+
+    .Footer-Nav>li>a:hover {
+        font-weight: bold;
     }
 }

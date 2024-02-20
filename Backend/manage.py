@@ -1,6 +1,6 @@
 # Application script: where instance is defined
 from app import create_app
-from create_db import create_admin_acct
+from create_db import create_super_admin_acct
 from app.extensions import db
 from app.config import ProductionConfig
 
@@ -20,13 +20,13 @@ else:
 
 with app.app_context():
     db.create_all()
-    create_admin_acct()
+    create_super_admin_acct()
     if MODE == "dev":
         from app.dummie_data.dummie_users import create_dummie_user_accts
         create_dummie_user_accts()
 
-if __name__ == '__main__':
-    if MODE == 'dev':
+if __name__ == "__main__":
+    if MODE == "dev":
         app.run(debug=True)
     else:
         app.run() # set accordingly for production. 

@@ -16,10 +16,12 @@ def create_app(config_class=Config):
     system_logger = logging.getLogger("system_log")
 
     extensions.flask_bcrypt.init_app(app)
-    extensions.cors.init_app(app, supports_credentials=True)
-    extensions.server_session.init_app(app)
+    extensions.cors.init_app(app, supports_credentials=True, resources=r"/api/*", origins=["http://localhost:5173"]) # consider adding allowed origin from requests: https://flask-cors.corydolphin.com/en/latest/api.html#extension
+    extensions.login_manager.init_app(app)
+    # extensions.server_session.init_app(app)
     extensions.db.init_app(app)
     extensions.limiter.init_app(app)
+    extensions.mail.init_app(app)
 
     from app.models import user
     from flask import current_app
@@ -27,9 +29,11 @@ def create_app(config_class=Config):
     from app.routes.account.routes import account
     from app.routes.admin.routes import admin
     from app.routes.stats.routes import stats
+    from app.routes.contact.routes import contact
     app.register_blueprint(account, url_prefix='/api/account')
     app.register_blueprint(admin, url_prefix='/api/admin')
     app.register_blueprint(stats, url_prefix='/api/stats')
+    app.register_blueprint(contact, url_prefix='/api/contact')
 
     @app.route('/test/')
     def test_page():

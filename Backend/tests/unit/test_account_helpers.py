@@ -1,5 +1,5 @@
 # import unittest
-from app.account.helpers import is_good_password
+from app.routes.account.helpers import is_good_password
 
 def test_is_good_password():
     """
