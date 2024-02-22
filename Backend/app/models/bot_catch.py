@@ -1,6 +1,6 @@
 from app.extensions import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 
 class BotCatch(UserMixin, db.Model):
     """
@@ -22,12 +22,13 @@ class BotCatch(UserMixin, db.Model):
     country = db.Column(db.String(90), nullable=True)
     user_agent = db.Column(db.String(250), nullable=True)
     form_targeted = db.Column(db.String(100), nullable=True)
-    date_accessed = db.Column(db.DateTime, default=datetime.utcnow)
+    date_accessed = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    def __init__(self, ip_address, country, user_agent, **kwargs):
+    def __init__(self, ip_address, country, user_agent, form_targeted, **kwargs):
         self.ip_address = ip_address
         self.country = country
         self.user_agent = user_agent
+        self.form_targeted = form_targeted
     
     def __repr__(self):
         return f"<IP blocked {self.ip_address}>"

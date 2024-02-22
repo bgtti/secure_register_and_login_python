@@ -68,12 +68,11 @@ def log_event(event_activity_name, event_code, user_id=0, extra_info=""):
         message = f"{log_obj["message"]} {extra_info}"
 
     new_log_event = LogEvent(
-        level=log_obj["level"],
-        type=log_obj["type"],
-        activity=log_obj["activity"],
-        message=message,
-        user_uuid="", # DELETE
-        user_id=user_id
+    level=log_obj["level"],
+    type=log_obj["type"],
+    activity=log_obj["activity"],
+    message=message,
+    user_id=user_id  # Update this line
     )
     db.session.add(new_log_event)
     db.session.commit()

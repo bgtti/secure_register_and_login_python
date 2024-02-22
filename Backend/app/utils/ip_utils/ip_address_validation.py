@@ -28,7 +28,8 @@ def get_client_ip(request):
     """
     # Check if the request is behind a proxy
     if request.headers.getlist("X-Forwarded-For"):
-        ip = request.headers.getlist("X-Forwarded-For")[0]
+        ip_list = [ip.strip() for ip in request.headers["X-Forwarded-For"].split(",")]
+        ip = ip_list[0]
     else:
         ip = request.remote_addr
 

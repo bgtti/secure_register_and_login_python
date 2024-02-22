@@ -4,7 +4,7 @@ import logging
 from random import randint
 from flask_login import UserMixin
 import ast
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from sqlalchemy import Enum
 from app.extensions import db
@@ -71,15 +71,15 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     flagged = db.Column(db.Enum(UserFlag), default=UserFlag.BLUE, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_attempts = db.Column(db.Integer, default=0)
-    last_login_attempt = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    login_blocked_until = db.Column(db.DateTime, default=datetime.utcnow)
+    login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     def __init__(self, name, email, password, salt, created_at, **kwargs):
         self.name = name
@@ -127,14 +127,14 @@ class User(db.Model, UserMixin):
         This will keep the counter of failed log-in attempts and temporarily block the user if necessary.
         """
         self.login_attempts += 1
-        self.last_login_attempt = datetime.utcnow()
+        self.last_login_attempt = datetime.now(timezone.utc)
         if self.login_attempts == 3:
             self.login_blocked = modelBool.TRUE
-            self.login_blocked_until = datetime.utcnow() + timedelta(minutes=1)
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=1)
         elif self.login_attempts == 5:
-            self.login_blocked_until = datetime.utcnow() +timedelta(minutes=2)
+            self.login_blocked_until = datetime.now(timezone.utc) +timedelta(minutes=2)
         elif self.login_attempts > 5:
-            self.login_blocked_until = datetime.utcnow() + timedelta(minutes=5)
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=5)
 
     def reset_login_attempts(self):
         """
@@ -144,8 +144,8 @@ class User(db.Model, UserMixin):
         This ensures the user failed login attempt count is set to 0.
         """
         self.login_attempts = 0
-        self.last_login_attempt = datetime.utcnow()
-        self.login_blocked_until = datetime.utcnow()
+        self.last_login_attempt = datetime.now(timezone.utc)
+        self.login_blocked_until = datetime.now(timezone.utc)
         self.login_blocked = modelBool.FALSE
 
     def is_login_blocked(self):
@@ -154,7 +154,7 @@ class User(db.Model, UserMixin):
         ----------------------------
         Called to check if the user has been temporarily blocked for typing the wrong password.
         """
-        return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.utcnow()
+        return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.now(timezone.utc)
     
     def has_access_blocked(self):
         """

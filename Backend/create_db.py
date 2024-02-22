@@ -1,7 +1,7 @@
 from flask import current_app
 import ast
 from random import randint
-from datetime import datetime
+from datetime import datetime, timezone
 from app.config import ADMIN_ACCT
 from app.extensions import db, flask_bcrypt
 from app.models.user import User
@@ -24,7 +24,7 @@ def create_super_admin_acct():
     super_admin_exists = db.session.query(User).first() is not None
     if not super_admin_exists:
         console_warn("Creating super admin user...", "CYAN")
-        date = datetime.utcnow()
+        date = datetime.now(timezone.utc)
         salt = generate_salt()
         pepper = get_pepper(date)
         salted_password = salt + ADMIN_PW + pepper

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session
-from functools import wraps
+# from functools import wraps
+# import pdb; pdb.set_trace()
 import logging
 import jsonschema
 from sqlalchemy import desc, asc
@@ -120,9 +121,10 @@ def admin_users_table():
     if not users.items:
         return jsonify({"response": "Requested page out of range"}), 404
     
+    
     response_data ={
             "response":"success",
-            "users": [user.serialize_user_table() for user in users.items if user.id != 1],
+            "users": [user.serialize_user_table() for user in users.items if user.access_level != UserAccessLevel.SUPER_ADMIN],
             "total_pages": users.pages,
             "current_page": users.page,
             "query":{
