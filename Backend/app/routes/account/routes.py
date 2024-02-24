@@ -43,7 +43,7 @@ def unauthorized():
 
 # SIGN UP
 @account.route("/signup", methods=["POST"])
-# @limiter.limit("2/minute;5/day")
+@limiter.limit("2/minute;5/day")
 @validate_schema(sign_up_schema)
 def signup_user():
     """
@@ -179,7 +179,7 @@ def signup_user():
 
 # LOG IN
 @account.route("/login", methods=["POST"])
-@limiter.limit("30/minute;50/day")
+# @limiter.limit("30/minute;50/day")
 @validate_schema(log_in_schema)
 def login_user():
     """
@@ -338,7 +338,7 @@ def get_current_user():
     response_data ={
             "response":"success",
             "user": {
-                "access": user.access, 
+                "access": user.access_level.value, 
                 "name": user.name, 
                 "email": user.email},
         }

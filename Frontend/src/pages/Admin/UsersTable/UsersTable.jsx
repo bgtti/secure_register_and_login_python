@@ -3,6 +3,7 @@ import { getAllUsers } from "../../../config/apiHandler/admin/users.js"
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoader } from "../../../redux/loader/loaderSlice"
+import { getLastMonthDate } from "../../../utils/helpers";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import Modal from "../../../components/Modal/Modal";
 import ModalUserAction from "./Modal/ModalUserAction.jsx";
@@ -12,6 +13,21 @@ import SearchUser from "./SearchUser/SearchUser.jsx";
 import Table from "./Table/Table.jsx";
 import Pagination from "./Pagination/Pagination.jsx";
 import "./usersTable.css"
+
+/** 
+ * Constants for defining set filter message
+ * @constant
+ * @type {string{}}
+*/
+const FILTER_APPLIED = {
+    is_blocked: "Filtering blocked users.",
+    is_unblocked: "Filtering unblocked users.",
+    flag: "Filtering users by flag colour.",
+    flag_not_blue: "Filtering flagged users.",
+    is_admin: "Fitering by user type admin.",
+    is_user: "Fitering by user type regular.",
+    last_seen: "Fitering by last seen online."
+}
 
 /** 
  * Constants for defining user actions on click events
@@ -56,7 +72,9 @@ function UsersTable() {
         itemsPerPage: "25",
         orderBy: "last_seen",
         orderSort: "descending",
-        filterBy: "none"
+        filterBy: "none",
+        filterByFlag: "blue",
+        filterByLastSeen: getLastMonthDate()
     })
 
     // The following items (searchOptions) are controlled by the by the SearchUser component. Only specific values are allowed for 'searchBy'. Check the component for more information
@@ -71,15 +89,26 @@ function UsersTable() {
     const [modalUserAction, setModalUserAction] = useState(false)
     const [showUserLogs, setShowUserLogs] = useState(false)
 
+    // If changes are made to the user's table (blocking/unblocking/deleting a user), reload user's table
+    const [reloadUsersTable, setReloadUsersTable] = useState(false)
+
     //Pulling new user data when user changes tableOptions or searches:
     useEffect(() => {
         getUsers();
     }, [searchOptions, tableOptions])
 
+    //Pulling new user data when a user from table is changed:
+    useEffect(() => {
+        if (reloadUsersTable) {
+            getUsers();
+            setReloadUsersTable(false);
+        }
+    }, [reloadUsersTable])
+
     // Setting up the modal content and managing user action triggered by click events in child components:
     modalUserAction ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
     const modalUserActionContent = modalUserAction && userAction !== "" && (
-        <ModalUserAction user={userSelected} action={userAction} modalToggler={toggleModal} />
+        <ModalUserAction user={userSelected} action={userAction} modalToggler={toggleModal} setReloadUsersTable={setReloadUsersTable} />
     );
 
     /**
@@ -132,6 +161,8 @@ function UsersTable() {
             orderBy: tableOptions.orderBy,
             orderSort: tableOptions.orderSort,
             filterBy: tableOptions.filterBy,
+            filterByFlag: tableOptions.filterByFlag,
+            filterByLastSeen: tableOptions.filterByLastSeen,
             searchBy: searchOptions.searchWord === "" ? "none" : searchOptions.searchBy,
             searchWord: searchOptions.searchBy === "none" ? "" : searchOptions.searchWord
         }
@@ -147,7 +178,6 @@ function UsersTable() {
                         setUsers([]);
                         setCurrentPage(1);
                         setTotalPages(1);
-                        //perhaps include logic for too many requests
                     }
                 }
             })
@@ -202,7 +232,7 @@ function UsersTable() {
                                         <p><b>Current filters being applied:</b></p>
                                         {
                                             tableOptions.filterBy !== "none" && (
-                                                <p>Filtering blocked users only.</p>
+                                                <p>{FILTER_APPLIED[tableOptions.filterBy]}</p>
                                             )
                                         }
                                         {

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Source: https://freesvg.org/silhouette-of-hand-palm -->
+<!-- Note: this svg has been modified from the original -->
+<svg
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:ns1="http://sozi.baierouge.fr"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    id="svg2"
+    sodipodi:docname="stop_2.svg"
+    viewBox="0 0 481 588"
+    version="1.0"
+    inkscape:version="0.48.4 r9939"
+  >
+  <sodipodi:namedview
+      id="namedview21"
+      bordercolor="#666666"
+      inkscape:pageshadow="2"
+      guidetolerance="10"
+      pagecolor="#ffffff"
+      gridtolerance="10"
+      inkscape:window-maximized="0"
+      inkscape:zoom="0.40136054"
+      objecttolerance="10"
+      borderopacity="1"
+      inkscape:current-layer="svg2"
+      inkscape:cx="240.5"
+      inkscape:cy="294"
+      inkscape:window-y="26"
+      inkscape:window-x="0"
+      inkscape:window-width="640"
+      showgrid="false"
+      inkscape:pageopacity="0"
+      inkscape:window-height="480"
+  />
+  <path
+      id="pathContourMain"
+      style="fill-rule:evenodd;stroke:#aa0000;stroke-width:1px;fill:#aa0000"
+      inkscape:connector-curvature="0"
+      d="m264.51 527.47c-8.39 1.99-18.29 4.32-25 6-8.13 0.52-16.22 1-24-2-6.45-3.51-15.53-7.05-24-8-10.88-4.22-21.13-9.81-30-18-13.75-7.79-18.58-22.77-27-35-10.46-13.4-18.77-28.08-29.5-41.5-4.69-6.25-11.724-19.01-21.5-33.5-8.391-12.26-18.788-34.21-21.5-42.5-2.352-5.12-8.51-20.12-12.5-29.5-4.237-8.45-11.19-21.26-16-29-4.403-7.08-4-25.08-4-32 1.167-9.16 8.727-9.21 10.5-9.5 5.41-0.86 18.573-2.48 23.5 1.5 16.708 5.3 24.229 16.17 32 32 2.54 5.09 6.98 20.99 11 25 13.82 13.14 19.45 24.31 24.5 31.5 3.38 5.88 10.57 10.29 15.5 11.5 5 2.34 9.71-5.94 12-8.5 5.65-6.3 6.9-13.08 7-21 0.06-4.63 0.34-12.23 1-17.5 1.29-10.23 0.78-17.38 1-24.5 0.26-8.2-5-18.44-5-28.5-2.08-7.59-1.23-24.6-1-31 0.34-9.56-1-25.55-1.5-33-0.46-6.88-4.17-23.89-4.5-33-0.38-10.56-3.67-29.03-4-40-0.21-6.85 0.92-18.848 1.5-24.998 0.61-6.465 1.05-17.797 1-25.5-0.03-4.758 3.35-12.393 8-16 6.66-7.161 20.06-11.471 28.5-5 11.31 8.187 10.18 16.194 12.5 21 3.62 7.479 2.67 16.834 3.5 24.5 0.63 7.912 1.43 15.541 0 28.498 0 5.7 0.54 18.06 1 25.5 0.5 8.08 2.94 24.11 4 30 1.59 8.82 3.5 24.4 3 32.5-0.66 10.72 2.16 22.3 3 29.5 0.88 7.58 6.8 18.96 12 23.5 4 3.49 11.5-5.27 11.5-17-1.03-17.06 2.54-36.37 2-43.5-0.48-6.33 0.5-13.66 0.5-15-0.81-3.23 0-6.66 0-10 0-7.24-2.64-16.53-2-26 0.39-5.82-0.59-21.62-1-30 0-21.783-0.56-9.93-0.5-19.498 0.04-6.329 1.9-19.102 3-23.5 0.32-10.239 2.96-20.96 5-28 3.25-9.011 11.56-22.292 23.5-23 16.57 0.799 20.31 7.524 21 17.5 0.27 3.915 1.33 16.334 2 20 0.26 5.475 1.16 18.152 1.5 25 0.41 8.209 2.52 20.268 3 27.498 0.28 4.2-1.43 15.86-1 24-1.9 8.3 0.5 20.27 0.5 29.5v28.5c0 12.29-3.13 22.76-1 33 0.89 4.31 1.93 16.73 6.5 17.5 7.65 1.3 15.33-12.22 17.5-34.5 1.33-14.18 4-28.48 4-40-1.64-6.55 4.22-26.79 6-33.5 2.82-10.64 4.25-22.99 7-31-1.28-12.496 3.29-25.14 5-37.498 2.5-9.138 5.27-19.272 12-22 6.5-5.714 13.83-3.333 18-1.5 7 5.251 9.57 12.745 11.5 20.5 1.59 6.393-0.17 17.667-1 23.5 0.01 8.029 0.61 17.838 0 26.998-0.6 9.01-3 19.78-3 27 0.11 9.98-1.5 25.28-1.5 37-2.23 14.72-3 28.93-6 43.5-2.06 9.7-7.43 23.24-7.5 34 0 9.27-4.6 21.31 7.5 23 7 8.37 16.35-17.31 20.5-25 4.81-11.42 11.42-28.99 14-37 2.85-7.75 9.2-18.63 11.5-26 6.02-12.05 8.67-22.39 11-30.5 3.97-7.93 11.52-14.63 17-15.5 7.33-1.16 13.35 4.89 18 12 3.01 7.98-0.4 20.31-2 32-3.05 15.17-6.98 28.59-10.43 37.31-2.48 6.25-8.74 19.99-11.57 28.23-3.35 8.1-7.22 18.91-10.41 24.88-3.51 6.55-9.89 15.88-12.09 24.58-3.14 12.57-3.5 23.31-3.5 33 0 6.21-2 11.75-2 20 0.77 10.25-3.24 19.77-2 30 0.65 2.59 0.5 10.34-0.5 17 0.82 9.79-3.89 22.56-5.5 29-1.94 7.75-7 25.13-7 28.5-8.96 16.43-9.84 28.18-15.5 36-4.85 6.2-9.82 15.24-15.5 19.5-4.68 3.51-9.71 7.86-14 10-8.01 4.39-17 8.76-31 10-9.61-0.87-20.68-5.17-27-6-9.52-4.48-20.63-7.43-31-8z"
+  />
+  <metadata
+    >
+    <rdf:RDF
+      >
+      <cc:Work
+        >
+        <dc:format
+          >image/svg+xml</dc:format
+        >
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+        />
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/publicdomain/"
+        />
+        <dc:publisher
+          >
+          <cc:Agent
+              rdf:about="http://openclipart.org/"
+            >
+            <dc:title
+              >Openclipart</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:publisher
+        >
+      </cc:Work
+      >
+      <cc:License
+          rdf:about="http://creativecommons.org/licenses/publicdomain/"
+        >
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks"
+        />
+      </cc:License
+      >
+    </rdf:RDF
+    >
+  </metadata
+  >
+</svg
+>

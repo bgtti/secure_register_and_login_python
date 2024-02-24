@@ -222,6 +222,8 @@ class User(db.Model, UserMixin):
             "name": self.name,
             "email": self.email,
             "last_seen": self.last_seen,
+            "access": self.access_level.value,
+            "flagged": self.flagged.value,
             "is_blocked": self.is_blocked.value,
         }
     def flag_change(self, flag_colour):

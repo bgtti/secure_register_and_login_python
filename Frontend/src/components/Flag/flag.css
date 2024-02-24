@@ -1,0 +1,31 @@
+.Flag {
+    display: flex;
+    align-items: center;
+}
+
+.Flag-pole {
+    width: 2px;
+    height: 13px;
+    background-color: black;
+    border-top: 1px solid black;
+}
+
+.Flag-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.Flag-container>* {
+    width: 9px;
+}
+
+.Flag-flag {
+    height: 6px;
+    border-right: 1px solid black;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.Flag-empty {
+    height: 6px;
+}

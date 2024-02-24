@@ -60,3 +60,23 @@ export const USER_ACCESS_TYPES = [
     "admin",
     "super_admin"
 ]
+
+export const FLAG_TYPES = [
+    "red",
+    "yellow",
+    "purple",
+    "blue"
+]
+
+export const IS_BLOCKED_TYPES = [
+    "true",
+    "false"
+]
+
+export const USERS_TABLE_REQUEST = {
+    order_by: ["last_seen", "name", "email", "created_at"],
+    order_sort: ["descending", "ascending"],
+    filter_by: ["none", "is_blocked", "is_unblocked", "flag", "flag_not_blue", "is_admin", "is_user", "last_seen"],
+    filter_by_flag: [...FLAG_TYPES],
+    search_by: ["none", "name", "email"]
+}

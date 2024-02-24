@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { flushSync } from 'react-dom';
+import { FLAG_TYPES, USERS_TABLE_REQUEST } from "../../../../utils/constants";
+import { getTodaysDate } from "../../../../utils/helpers";
+import { validateDateFormat } from "../../../../utils/validation";
 import PropTypes from 'prop-types';
 import "../usersTable.css"
 
@@ -54,7 +56,13 @@ const ORDER_SORT = ["descending", "ascending"];
 */
 const FILTER_BY = {
     none: "no filter",
-    is_blocked: "blocked users"
+    is_blocked: "blocked users",
+    is_unblocked: "unblocked users",
+    flag: "selected flag colour",
+    flag_not_blue: "flagged non-blue",
+    is_admin: "admin users",
+    is_user: "non-admin users",
+    last_seen: "last seen from date",
 }
 
 /*******************  THE COMPONENT  ********************/
@@ -70,6 +78,8 @@ const FILTER_BY = {
  * @param {string} props.tableOptions.orderBy string 
  * @param {string} props.tableOptions.orderSort string 
  * @param {string} props.tableOptions.filterBy string 
+ * @param {string} props.tableOptions.filterByFlag string 
+ * @param {string} props.tableOptions.filterByLastSeen string 
  *
  * @returns {React.ReactElement}
  */
@@ -83,7 +93,9 @@ function FilterUsersTable(props) {
         itemsPerPage: tableOptions.itemsPerPage,
         orderBy: tableOptions.orderBy,
         orderSort: tableOptions.orderSort,
-        filterBy: tableOptions.filterBy
+        filterBy: tableOptions.filterBy,
+        filterByFlag: tableOptions.filterByFlag,
+        filterByLastSeen: tableOptions.filterByLastSeen,
     });
 
     function toggleShowOptions() {
@@ -100,13 +112,17 @@ function FilterUsersTable(props) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        //Check data
         let itemsPerPage = parseInt(formData.itemsPerPage)
         itemsPerPage = (formData.itemsPerPage && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : false;
         let orderBy = (formData.orderBy && formData.orderBy in ORDER_BY) ? formData.orderBy : false;
         let orderSort = (formData.orderSort && ORDER_SORT.includes(formData.orderSort)) ? formData.orderSort : false;
         let filter = (formData.filterBy && formData.filterBy in FILTER_BY) ? formData.filterBy : false;
+        let filterByFlag = (formData.filterByFlag && USERS_TABLE_REQUEST.filter_by_flag.includes(formData.filterByFlag)) ? formData.filterByFlag : false;
+        let filterByLastSeen = (formData.filterByLastSeen && validateDateFormat(formData.filterByLastSeen)) ? formData.filterByLastSeen : false;
 
-        let formIsValid = itemsPerPage && orderBy && orderSort && filter
+        //Make sure form is valid and that fields were changed
+        let formIsValid = itemsPerPage && orderBy && orderSort && filter && filterByFlag && filterByLastSeen
         let stateChanged = JSON.stringify(tableOptions) !== JSON.stringify(formData)
 
         if (formIsValid && stateChanged) {
@@ -169,6 +185,28 @@ function FilterUsersTable(props) {
                             </select>
                         </div>
                         {
+                            formData.filterBy === "flag" && (
+                                <div className="MAIN-form-display-table">
+                                    <label htmlFor="filterByFlag">Flag colour:</label>
+                                    <select name="filterByFlag" id="filterByFlag" defaultValue={formData.filterByFlag} onChange={handleChange}>
+                                        {
+                                            FLAG_TYPES.map((item, index) => (
+                                                <option value={item} key={index}>{item}</option>
+                                            ))
+                                        }
+                                    </select>
+                                </div>
+                            )
+                        }
+                        {
+                            formData.filterBy === "last_seen" && (
+                                <div className="MAIN-form-display-table">
+                                    <label htmlFor="filterByLastSeen">From date:</label>
+                                    <input type="date" id="filterByLastSeen" name="filterByLastSeen" value={formData.filterByLastSeen} min="2024-01-01" max={getTodaysDate()} onChange={handleChange} />
+                                </div>
+                            )
+                        }
+                        {
                             errorMessage !== "" && (
                                 <p className="MAIN-error-message">
                                     <i>{errorMessage}</i>
@@ -186,11 +224,12 @@ function FilterUsersTable(props) {
 FilterUsersTable.propTypes = {
     setTableOptions: PropTypes.func.isRequired,
     tableOptions: PropTypes.shape({
-        itemsPerPage: PropTypes.string,
-        orderBy: PropTypes.string,
-        orderSort: PropTypes.string,
-        filterBy: PropTypes.string,
-        tableOptionsChanged: PropTypes.bool
+        itemsPerPage: PropTypes.string.isRequired,
+        orderBy: PropTypes.string.isRequired,
+        orderSort: PropTypes.string.isRequired,
+        filterBy: PropTypes.string.isRequired,
+        filterByFlag: PropTypes.string.isRequired,
+        filterByLastSeen: PropTypes.string.isRequired
     })
 };
 

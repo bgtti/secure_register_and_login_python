@@ -2,17 +2,19 @@ from flask import Blueprint, request, jsonify, session
 # from functools import wraps
 # import pdb; pdb.set_trace()
 import logging
-import jsonschema
+# import jsonschema
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
 from flask_login import current_user, login_required
-from app.extensions import flask_bcrypt, db
+from app.extensions import db, limiter
 from app.routes.admin.schemas import admin_users_table_schema, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.stats import UserStats
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
+from app.utils.constants.enum_helpers import map_string_to_enum
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.log_event_utils.log import log_event
 from app.utils.custom_decorators.admin_protected_route import admin_only
@@ -31,6 +33,7 @@ def admin_dashboard():
 
 # USERS TABLE 
 @admin.route("/restricted_area/users", methods=["POST"])
+@limiter.limit("200/hour")
 @login_required
 @admin_only
 @validate_schema(admin_users_table_schema)
@@ -53,20 +56,24 @@ def admin_users_table():
             "total_pages": 5,
             "query": {
                 "filter_by": "none",
+                "filter_by_flag": "blue",
+                "filter_by_last_seen": "2024-01-01",
                 "items_per_page": 25,
                 "order_sort": "descending",
-                "ordered_by": "_last_seen",
+                "ordered_by": "last_seen",
                 "page_nr": 1,
                 "search_by": "email",
                 "search_word": "frank",
             },
             "users": [
                 {
-                "email": "frank.torres@fakemail.com",
-                "is_blocked": "false",
-                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "id": 10
                 "name": "Frank Torres",
-                "uuid": "3f61108854cd4b5886401080d681dd96"
+                "email": "frank.torres@fakemail.com",
+                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "access": "user",
+                "flagged": "blue",
+                "is_blocked": "false"
                 }, 
                 ...
             ]
@@ -81,6 +88,8 @@ def admin_users_table():
     order_by = json_data.get("order_by", "last_seen")
     order_sort = json_data.get("order_sort", "descending")
     filter_by = json_data.get("filter_by", "none")
+    filter_by_flag = json_data.get("filter_by_flag", "blue")
+    filter_by_last_seen = json_data.get("filter_by_last_seen", "") 
     search_by = json_data.get("search_by", "none")
     search_word = json_data.get("search_word", "")
 
@@ -103,20 +112,36 @@ def admin_users_table():
     else:
         ordering = ordering.asc()
 
-    # Dynamic filtering conditions - possible values for (filter_by, search_by)
-    filter_conditions = {
-        ("none","none"): User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none", "email"): User.query.filter(User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none","name",): User.query.filter(User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked","none"): User.query.filter_by(is_blocked=modelBool.TRUE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "email"): User.query.filter(User.is_blocked == modelBool.TRUE, User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "name"): User.query.filter(User.is_blocked == modelBool.TRUE, User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-    }
+    if filter_by != "none":
+        filter_conditions_map = {
+            "is_blocked": User.is_blocked == modelBool.TRUE,
+            "is_unblocked": User.is_blocked == modelBool.FALSE,
+            "flag": User.flagged == map_string_to_enum(filter_by_flag, UserFlag),
+            "flag_not_blue": User.flagged != UserFlag.BLUE,
+            "is_admin": User.access_level == UserAccessLevel.ADMIN,
+            "is_user": User.access_level == UserAccessLevel.USER,
+            "last_seen": User.last_seen >= filter_by_last_seen if filter_by_last_seen != "" else User.last_seen >= (datetime.now(timezone.utc) - timedelta(30)),
+        }
+    if search_by != "none":
+        search_conditions_map = {
+            "name":User.name.ilike(f"%{search_word}%"),
+            "email": User.email.ilike(f"%{search_word}%")
+        }
+        
+    filter_case = (filter_by == "none", search_by == "none")
 
-    try:
-        users = filter_conditions.get((filter_by, search_by), ("none","none"))
-    except Exception as e:
-        logging.error(f"User table could not be retrieved. Error: {e}")
+    match filter_case:
+        case (True, True):
+            users = User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (True, False):
+            users = User.query.filter(search_conditions_map[search_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (False, True):
+            users = User.query.filter(filter_conditions_map[filter_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (False, False):
+            users = User.query.filter(filter_conditions_map[filter_by], search_conditions_map[search_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case _:
+            logging.error(f"User table could not be retrieved as criteria was not met.")
+            return jsonify({"response": "Could not match search criteria"}), 404
 
     if not users.items:
         return jsonify({"response": "Requested page out of range"}), 404
@@ -133,6 +158,8 @@ def admin_users_table():
                 "ordered_by": order_by,
                 "order_sort": order_sort,
                 "filter_by": filter_by,
+                "filter_by_flag": filter_by_flag,
+                "filter_by_last_seen": filter_by_last_seen,
                 "search_by": search_by,
                 "search_word": search_word,
             }

@@ -50,6 +50,8 @@ def test_admin_users_table(client, app_test):
             "order_by": "last_seen",
             "order_sort": "descending",
             "filter_by": "none",
+            "filter_by_flag": "not_blue",
+            "filter_by_last_seen":"2024-01-01",
             "search_by": "none",
             "search_word": ""
         }

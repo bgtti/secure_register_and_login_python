@@ -59,6 +59,10 @@ class Config:
 class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # Disable Flask-Limiter for tests
+    RATELIMIT_ENABLED = False
+    RATELIMIT_STORAGE_OPTIONS = {}  # Empty storage options for testing
+    RATELIMIT_DEFAULT = "1000/day"  # Adjust this rate limit as needed for your tests
 
 # *** PRODUCTION CONFIGURATION: set in manage.py when environment is production
 ENV_REDIS_SESSION_HOST = os.getenv('REDIS_SESSION_HOST')

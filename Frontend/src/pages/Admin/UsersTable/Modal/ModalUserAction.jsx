@@ -19,6 +19,7 @@ import "./modalUserAction.css"
  * @param {string} props.user.email
  * @param {number} props.user.id
  * @param {func} props.toggleModal 
+ * @param {func} props.setReloadUsersTable
  * @returns {React.ReactElement}
  * 
  * @example
@@ -27,19 +28,20 @@ import "./modalUserAction.css"
  * //inside the functional component:
  * const [showModal, setShowModal] = useState(false)
  * function toggleModal() { setShowModal(!showModal)}
- * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", id: 12345} action="block" modalToggler={toggleModal} /> //<- refers to this component!
+ * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", id: 12345} action="block" modalToggler={toggleModal} setReloadUsersTable={setReloadUsersTable}/> //<- refers to this component!
  * return (
  * <Modal title="Block User" content={modalInfo} modalStatus={showModal} setModalStatus={setShowModal} ></Modal> //<-the modal wrapper component with this component passed as a prop
  * )
  */
 function ModalUserAction(props) {
-    const { action, user, modalToggler } = props;
+    const { action, user, modalToggler, setReloadUsersTable } = props;
     const { name, email, id } = user;
 
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
 
     const [errorMessage, setErrroMessage] = useState("")
+    const [usersTableUpdated, setUsersTableUpdated] = useState(false)
 
 
     const actionLowerCase = action.toLowerCase()
@@ -51,6 +53,10 @@ function ModalUserAction(props) {
         const handleResponse = (response, successMessage) => {
             if (isComponentMounted()) {
                 setErrroMessage(response.success ? successMessage : "An error occurred. Please reload the page and try again.");
+                if (response.success) {
+                    setUsersTableUpdated(true)
+                    setReloadUsersTable(true);
+                }
             }
         };
 
@@ -64,13 +70,13 @@ function ModalUserAction(props) {
 
         if (actionLowerCase === "delete") {
             deleteUser(id)
-                .then(response => handleResponse(response, "User deleted successfully! Close modal and reload the page to get an updated users table."))
+                .then(response => handleResponse(response, "User deleted successfully!"))
                 .catch(handleError)
                 .finally(handleFinally);
         } else {
             const block = actionLowerCase === "block";
             blockOrUnblockUser(id, block)
-                .then(response => handleResponse(response, `User ${actionLowerCase}ed successfully! Close modal and reload the page to get an updated users table.`))
+                .then(response => handleResponse(response, `User ${actionLowerCase}ed successfully!`))
                 .catch(handleError)
                 .finally(handleFinally);
         };
@@ -78,17 +84,26 @@ function ModalUserAction(props) {
 
     return (
         <>
-            <p>You are about to {actionLowerCase} the following user:</p>
+            {!usersTableUpdated && (
+                <p>You are about to {actionLowerCase} the following user:</p>
+            )}
+            {usersTableUpdated && (
+                <p>The following user was {actionLowerCase}ed:</p>
+            )}
             <br />
             <p className="ModalUserAction-Bold">Name: {name}</p><b></b>
             <p className="ModalUserAction-Bold">Email: {email}</p>
             <br />
-            <p>Are you sure you would like to proceed?</p>
-            <br />
-            <div className="ModalUserAction-BtnContainer">
-                <button className="ModalUserAction-ActionBtn" disabled={(errorMessage !== "")} onClick={clickHandler}>{actionCapitalized} User</button>
-                <button disabled={(errorMessage !== "")} onClick={modalToggler}>Cancel</button>
-            </div>
+            {!usersTableUpdated && (
+                <>
+                    <p>Are you sure you would like to proceed?</p>
+                    <br />
+                    <div className="ModalUserAction-BtnContainer">
+                        <button className="ModalUserAction-ActionBtn" disabled={(errorMessage !== "")} onClick={clickHandler}>{actionCapitalized} User</button>
+                        <button disabled={(errorMessage !== "")} onClick={modalToggler}>Cancel</button>
+                    </div>
+                </>
+            )}
             {
                 errorMessage !== "" && (
                     <>
@@ -110,7 +125,8 @@ ModalUserAction.propTypes = {
         email: PropTypes.string.isRequired,
         id: PropTypes.number.isRequired
     }).isRequired,
-    modalToggler: PropTypes.func.isRequired
+    modalToggler: PropTypes.func.isRequired,
+    setReloadUsersTable: PropTypes.func.isRequired,
 };
 
 export default ModalUserAction;

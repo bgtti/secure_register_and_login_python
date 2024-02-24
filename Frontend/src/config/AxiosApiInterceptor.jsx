@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { api, apiCredentials } from './axios';
+import { api, apiCredentials, apiHandle404 } from "./axios";
 
 /**
  * Component used to add axios request interceptors to catch and handle error responses.
  * The interceptors were added to a React component (this) in order to use React Router's useNavigate hook. This component was then placed in Router.jsx.
  * 
- * Two interceptors are used: in api and apiCredentials. The interceptor in api will redirect all errors to the error page. The interceptor in apiCredentials will return the response to the function making the request in case of error 400, 401, and 409 and only redirect to the error page in case of other errors. 
- * 
- * The reason for apiCredentials not redirecting all error is so that certain errors can be handled locally by components such as SignUp and LogIn to give better feedback. Example: a password validation failure, or attempting to create an account that already exists.
+ * Three interceptors are used: api, apiCredentials, apiHandle404. More information about them in ./axios.js
+ * If unsure which axios instance to use, use api - it will redirect all errors through it's interceptor. 
  * 
  * @visibleName Axios interceptors
  * @returns {React.ReactElement}
@@ -42,6 +41,18 @@ function AxiosApiInterceptor() {
                     return error;
                 } else if (errorCode === "418") {
                     navigate("/botError");
+                } else {
+                    navigate("/errorPage", { state: errorCode });
+                }
+                return Promise.reject(error);
+            }
+        );
+        const navigate404Error = apiHandle404.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                let errorCode = error.response.request.status.toString()
+                if (errorCode === "404") {
+                    return error;
                 } else {
                     navigate("/errorPage", { state: errorCode });
                 }
