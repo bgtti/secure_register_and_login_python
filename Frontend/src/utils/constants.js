@@ -55,12 +55,20 @@ export const INPUT_LENGTH = Object.freeze({
     }
 })
 
+//All user permission types
 export const USER_ACCESS_TYPES = [
     "user",
     "admin",
     "super_admin"
 ]
 
+//User permissions that can be given/changed
+export const USER_TYPE_REQUEST = {
+    admin: "admin",
+    user: "user"
+}
+
+//All flag colours available
 export const FLAG_TYPES = [
     "red",
     "yellow",
@@ -68,11 +76,13 @@ export const FLAG_TYPES = [
     "blue"
 ]
 
+//Blocked status possible
 export const IS_BLOCKED_TYPES = [
     "true",
     "false"
 ]
 
+//Requests sent to get users' table possibilities
 export const USERS_TABLE_REQUEST = {
     order_by: ["last_seen", "name", "email", "created_at"],
     order_sort: ["descending", "ascending"],

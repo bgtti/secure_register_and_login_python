@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
 from flask_login import current_user, login_required
 from app.extensions import db, limiter
-from app.routes.admin.schemas import admin_users_table_schema, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
+from app.routes.admin.schemas import admin_users_table_schema, admin_user_information, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.stats import UserStats
@@ -167,6 +167,64 @@ def admin_users_table():
     
     return jsonify(response_data)
 
+# USERS TABLE INFO 
+@admin.route("/restricted_area/users/user_information", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_user_information)
+def admin_user_information():
+    """
+    admin_user_information() -> JsonType
+    ----------------------------------------------------------
+    Route to get a user's base information.
+    Takes a JSON payload with the following parameter:
+    - "user_id": User's id to be queried.
+
+    Returns a JSON object with a "response" field. User information only sent if response is 200.
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "user_id": 12345
+    }
+    ----------------------------------------------------------
+    Response examples:
+
+    {"response": "Requested page out of range"}
+
+    {
+        "response":"success",
+        "user":      {
+                "id": 12345
+                "name": "Frank Torres",
+                "email": "frank.torres@fakemail.com",
+                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "access": "user",
+                "flagged": "blue",
+                "is_blocked": "false"
+                }, 
+    }
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get info from JSON payload
+    user_id = json_data["user_id"]
+
+    # Get user info
+    try:
+        user = User.query.filter_by(id=user_id).first()
+        if user is None:
+            return jsonify({"response": "User not found."}), 404
+    except Exception as e:
+        logging.error(f"Failed to access db. Error: {e}")
+        return jsonify({"response": "Error prevented user from being queried"}), 500
+    
+    response_data ={
+            "response":"success",
+            "user": user.serialize_user_table(),
+        }
+    
+    return jsonify(response_data)
 
 # USERS TABLE LOGS 
 @admin.route("/restricted_area/users/user_logs", methods=["POST"])

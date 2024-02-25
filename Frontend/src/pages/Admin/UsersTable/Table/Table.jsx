@@ -19,7 +19,7 @@ import "./table.css";
  * @param {string} props.users[].flagged //one of FLAG_TYPES
  * @param {string} props.users[].isBlocked //one of IS_BLOCKED_TYPES
  * @param {func} props.toggleModal function passed on to child
- * @param {func} props.setShowUserLogs function passed on to child
+ * @param {func} props.setShowUserInfo function passed on to child
  * @param {func} props.selectUserAction function passed on to child
  * @returns {React.ReactElement}
  * 
@@ -39,7 +39,7 @@ import "./table.css";
 ]
  */
 function Table(props) {
-    const { users, toggleModal, setShowUserLogs, selectUserAction } = props
+    const { users, toggleModal, setShowUserInfo, selectUserAction } = props
 
     return (
         <table className="MAIN-table Table" role="table">
@@ -61,7 +61,7 @@ function Table(props) {
                             user={user}
                             key={index}
                             toggleModal={toggleModal}
-                            setShowUserLogs={setShowUserLogs}
+                            setShowUserInfo={setShowUserInfo}
                             selectUserAction={selectUserAction} />
                     ))
                 )}
@@ -80,7 +80,7 @@ Table.propTypes = {
         isBlocked: PropTypes.PropTypes.oneOf(IS_BLOCKED_TYPES),
     })).isRequired,
     toggleModal: PropTypes.func.isRequired,
-    setShowUserLogs: PropTypes.func.isRequired,
+    setShowUserInfo: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired
 }
 export default Table;

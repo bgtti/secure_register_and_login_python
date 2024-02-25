@@ -23,12 +23,12 @@ import iconUserMore from "../../../../assets/icon_user_more.svg";
  * @param {string} props.user.flagged //one of FLAG_TYPES
  * @param {string} props.user.isBlocked //one of IS_BLOCKED_TYPES
  * @param {func} props.toggleModal from grandparent (UsersTable)
- * @param {func} props.setShowUserLogs from grandparent (UsersTable)
+ * @param {func} props.setShowUserInfo from grandparent (UsersTable)
  * @param {func} props.selectUserAction from grandparent (UsersTable)
  * @returns {React.ReactElement}
  */
 function TableRow(props) {
-    const { user, toggleModal, setShowUserLogs, selectUserAction } = props
+    const { user, toggleModal, setShowUserInfo, selectUserAction } = props
     const { id, name, email, lastSeen, access, flagged, isBlocked } = user;
 
     return (
@@ -108,9 +108,9 @@ function TableRow(props) {
                         alt="More user information"
                         className="Table-icon"
                         role="button"
-                        title="More information"
+                        title="User information"
                         src={iconUserMore}
-                        onClick={() => { selectUserAction(id, "logs"); setShowUserLogs(true) }}
+                        onClick={() => { selectUserAction(id, "userInfo"); setShowUserInfo(true) }}
                     />
                     <img
                         alt="Block user"
@@ -145,7 +145,7 @@ TableRow.propTypes = {
         isBlocked: PropTypes.PropTypes.oneOf(IS_BLOCKED_TYPES),
     }).isRequired,
     toggleModal: PropTypes.func.isRequired,
-    setShowUserLogs: PropTypes.func.isRequired,
+    setShowUserInfo: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired
 }
 

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { getUserLogs } from "../../../../config/apiHandler/admin/user_logs.js"
+import { getUserLogs } from "../../../../config/apiHandler/admin/userLogs.js"
 import UsersLogRow from "./UsersLogRow"
 import Pagination from "../Pagination/Pagination.jsx";
 import "./usersLogs.css"
@@ -19,12 +19,13 @@ import "./usersLogs.css"
  * @param {string} props.user.name
  * @param {string} props.user.email
  * @param {number} props.user.id
+ * @param {func} props.setShowUserInfo 
  * @param {func} props.setShowUserLogs 
  * @param {func} props.selectUserAction 
  * @returns {React.ReactElement}
  */
 function UsersLogs(props) {
-    const { user, setShowUserLogs, selectUserAction } = props;
+    const { user, setShowUserInfo, setShowUserLogs, selectUserAction } = props;
     const { name, email, id } = user;
 
     const dispatch = useDispatch();
@@ -71,15 +72,22 @@ function UsersLogs(props) {
         }
     }
 
-    function handleReturn() {
+    function handleReturnToUsersTable() {
         selectUserAction("", "");
         setShowUserLogs(false);
+    }
+
+    function handleReturnToUserInfo() {
+        selectUserAction(id, "userInfo");
+        setShowUserLogs(false);
+        setShowUserInfo(true);
     }
 
     return (
         <>
             <div className="UsersLogs">
-                <button onClick={handleReturn}>Back to Users Table</button>
+                <button onClick={handleReturnToUserInfo}>Back to Users' Info</button>
+                <button onClick={handleReturnToUsersTable}>Back to All Users Table</button>
                 <h3>Activity Logs</h3>
                 <div>
                     <p><b className="UsersLogs-bold">User:</b> {name}</p>
@@ -135,6 +143,7 @@ UsersLogs.propTypes = {
         id: PropTypes.number.isRequired
     }).isRequired,
     setShowUserLogs: PropTypes.func.isRequired,
+    setShowUserInfo: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired,
 };
 

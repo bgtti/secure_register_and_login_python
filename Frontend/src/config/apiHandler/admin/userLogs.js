@@ -1,4 +1,4 @@
-import { api } from "../../axios";
+import { apiHandle404 } from "../../axios";
 import apiEndpoints from "../../apiEndPoints";
 
 /**
@@ -6,7 +6,7 @@ import apiEndpoints from "../../apiEndPoints";
  * 
  * Pagination is expected to handle the returned data.
  * 
- * Given an invalid uuid or error response, will return an empty object.
+ * Given an invalid id or error response, will return an empty object.
  * 
  * Sends the key 'data' as a boolean to indicate whether there is response data or not.
  * 
@@ -83,9 +83,9 @@ export function getUserLogs(pageNr, userId) {
 
     const getData = async () => {
         try {
-            const response = await api.post(apiEndpoints.adminGetUserLogs, requestData)
+            const response = await apiHandle404.post(apiEndpoints.adminGetUserLogs, requestData)
             if (response.status === 200 && response.data.logs.length > 0) {
-                const javaScriptifiedUserFields = response.data.logs.map(log => {
+                const javaScriptifiedLogFields = response.data.logs.map(log => {
                     const { user_id: userId, created_at: createdAt, ...rest } = log;
                     // Format lastSeen date
                     const formattedCreatedAt = new Date(createdAt).toLocaleDateString('en-GB', {
@@ -100,7 +100,7 @@ export function getUserLogs(pageNr, userId) {
                     };
                 });
                 return {
-                    logs: javaScriptifiedUserFields,
+                    logs: javaScriptifiedLogFields,
                     totalPages: response.data.total_pages,
                     currentPage: response.data.current_page,
                     data: true,

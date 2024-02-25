@@ -14,6 +14,7 @@ import Table from "./Table/Table.jsx";
 import Pagination from "./Pagination/Pagination.jsx";
 import "./usersTable.css"
 
+// *** CONSTANTS ***
 /** 
  * Constants for defining set filter message
  * @constant
@@ -36,9 +37,14 @@ const FILTER_APPLIED = {
  * @default 
  * ["delete", "block", "logs"]
 */
-const USER_ACTIONS = ["delete", "block", "unblock", "logs"]
+const USER_ACTIONS = ["delete", "block", "unblock", "flag", "type change", "logs", "userInfo"]
+
+// *** LAZY LOADS ***
 
 const UsersLogs = lazy(() => import("./UsersLogs/UsersLogs.jsx"));
+const UserInformation = lazy(() => import("./UserInformation/UserInformation.jsx"));
+
+// *** COMPONENT ***
 
 /**
  * Component for managing the component showing a table of all users, the component showing a user's log, or modal components to delete or block users.
@@ -87,7 +93,8 @@ function UsersTable() {
     const [userSelected, setUserSelected] = useState({ name: "", email: "", id: 0 })
     const [userAction, setUserAction] = useState("")
     const [modalUserAction, setModalUserAction] = useState(false)
-    const [showUserLogs, setShowUserLogs] = useState(false)
+    const [showUserInfo, setShowUserInfo] = useState(false) //lazy loaded component
+    const [showUserLogs, setShowUserLogs] = useState(false) //lazy loaded component
 
     // If changes are made to the user's table (blocking/unblocking/deleting a user), reload user's table
     const [reloadUsersTable, setReloadUsersTable] = useState(false)
@@ -115,7 +122,7 @@ function UsersTable() {
      * Defines the userAction and userSelected states in UsersTable component.
      * Should be combined with setShowUserLogs (to show/hide UsersLogs component) or toggleModal (to show/hide block user or delete user modals)
      * @param {number} id the id of the selected user
-     * @param {string} action must be member of the constant USER_ACTIONS ("delete", "block", "logs")
+     * @param {string} action one of constant USER_ACTIONS -> ["delete", "block", "unblock", "logs", "userInfo"]
      * @returns {void}
      */
     function selectUserAction(id = 0, action = "") {
@@ -213,7 +220,7 @@ function UsersTable() {
             }
             <h3>{showUserLogs ? "User Logs" : "Users Table"}</h3>
             {
-                !showUserLogs && (
+                !showUserLogs && !showUserInfo && (
                     <>
                         {
                             ((users && users.length >= 0) || ((!users || users.length === 0) && (tableOptions.filterBy !== "none"))) && (
@@ -255,7 +262,7 @@ function UsersTable() {
                                     <Table
                                         users={users}
                                         toggleModal={toggleModal}
-                                        setShowUserLogs={setShowUserLogs}
+                                        setShowUserInfo={setShowUserInfo}
                                         selectUserAction={selectUserAction}
                                     />
                                     {
@@ -286,11 +293,27 @@ function UsersTable() {
                     </>
                 )
             }
+            {/* Clicking the more info button on a user in the table will lead to the user's UserInformation page: */}
+            {
+                showUserInfo && (
+                    <Suspense fallback={<Loader />}>
+                        <UserInformation
+                            userId={userSelected.id}
+                            setShowUserInfo={setShowUserInfo}
+                            setShowUserLogs={setShowUserLogs}
+                            selectUserAction={selectUserAction}
+                            toggleModal={toggleModal}
+                        />
+                    </Suspense>
+                )
+            }
+            {/* Inside the UserInformation page, clicking on the show logs button will lead to the User's logs page: */}
             {
                 showUserLogs && (
                     <Suspense fallback={<Loader />}>
                         <UsersLogs
                             user={userSelected}
+                            setShowUserInfo={setShowUserInfo}
                             setShowUserLogs={setShowUserLogs}
                             selectUserAction={selectUserAction}
                         />

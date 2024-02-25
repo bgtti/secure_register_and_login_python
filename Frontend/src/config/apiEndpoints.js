@@ -11,6 +11,7 @@ const apiEndpoints = {
     //admin
     adminGetDashboardData: "/api/admin/restricted_dashboard",
     adminGetUsersTable: "api/admin/restricted_area/users",
+    adminGetUserInfo: "api/admin/restricted_area/users/user_information",
     adminGetUserLogs: "api/admin/restricted_area/users/user_logs",
     adminBlockUnblockUser: "api/admin/restricted_area/users/block_unblock",
     adminDeleteUser: "api/admin/restricted_area/users/delete",

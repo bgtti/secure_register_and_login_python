@@ -61,12 +61,26 @@ admin_users_table_schema = {
     "required": ["page_nr"]
 }
 
-admin_user_logs_schema = {
+admin_user_information = {
     "type": "object",
-    "title": "Users table pagination", 
+    "title": "User information", 
     "properties": {
         "user_id": {
-            "description": "Id of user to delete.",
+            "description": "Id of user to get information.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+    },
+    "additionalProperties": False,
+    "required": ["user_id"]
+}
+
+admin_user_logs_schema = {
+    "type": "object",
+    "title": "Users table logs", 
+    "properties": {
+        "user_id": {
+            "description": "Id of user to get logs.",
             "type": "integer",
             "exclusiveMinimum": 0 
             },
