@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { FLAG_TYPES, USERS_TABLE_REQUEST } from "../../../../utils/constants";
-import { getTodaysDate } from "../../../../utils/helpers";
-import { validateDateFormat } from "../../../../utils/validation";
+import { FLAG_TYPES, USERS_TABLE_REQUEST } from "../../../../../utils/constants";
+import { getTodaysDate } from "../../../../../utils/helpers";
+import { validateDateFormat } from "../../../../../utils/validation";
 import PropTypes from 'prop-types';
 import "../usersTable.css"
 
@@ -48,11 +48,6 @@ const ORDER_SORT = ["descending", "ascending"];
  * Constants object for defining selection of filter
  * @constant
  * @type {object}
- * @default 
- * {
-    none: "no filter",
-    is_blocked: "blocked users"
-}
 */
 const FILTER_BY = {
     none: "no filter",
@@ -83,7 +78,7 @@ const FILTER_BY = {
  *
  * @returns {React.ReactElement}
  */
-function FilterUsersTable(props) {
+function FilterTable(props) {
     const { tableOptions, setTableOptions } = props
 
     const [showOptions, setShowOptions] = useState(false);
@@ -221,7 +216,7 @@ function FilterUsersTable(props) {
     );
 };
 
-FilterUsersTable.propTypes = {
+FilterTable.propTypes = {
     setTableOptions: PropTypes.func.isRequired,
     tableOptions: PropTypes.shape({
         itemsPerPage: PropTypes.string.isRequired,
@@ -233,4 +228,4 @@ FilterUsersTable.propTypes = {
     })
 };
 
-export default FilterUsersTable;
+export default FilterTable;

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { PropTypes } from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
-import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { blockOrUnblockUser, deleteUser } from "../../../../config/apiHandler/admin/user_actions.js"
+import { setLoader } from "../../../../redux/loader/loaderSlice.js"
+import { changeUserFlag, changeUserType, blockOrUnblockUser, deleteUser } from "../../../../config/apiHandler/admin/userActions.js"
 import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES, USER_TYPE_REQUEST } from "../../../../utils/constants.js";
 import "./modalUserAction.css"
 
@@ -28,7 +28,7 @@ const CHANGE_USER_TYPE = {
  * @param {string} props.user.flagged
  * @param {number} props.user.id
  * @param {func} props.toggleModal 
- * @param {func} props.setReloadUsersTable
+ * @param {func} props.setUpdateData 
  * @returns {React.ReactElement}
  * 
  * @example
@@ -37,23 +37,23 @@ const CHANGE_USER_TYPE = {
  * //inside the functional component:
  * const [showModal, setShowModal] = useState(false)
  * function toggleModal() { setShowModal(!showModal)}
- * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", id: 12345} action="block" modalToggler={toggleModal} setReloadUsersTable={setReloadUsersTable}/> //<- refers to this component!
+ * const modalInfo = <ModalUserAction user={name: "Josy", email: "j@example", id: 12345} action="block" modalToggler={toggleModal} setUpdateData={setUpdateData}/> //<- refers to this component!
  * return (
  * <Modal title="Block User" content={modalInfo} modalStatus={showModal} setModalStatus={setShowModal} ></Modal> //<-the modal wrapper component with this component passed as a prop
  * )
  */
 function ModalUserAction(props) {
-    const { action, user, modalToggler, setReloadUsersTable } = props;
+    const { action, user, modalToggler, setUpdateData } = props;
     const { name, email, flagged, access, id } = user;
 
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
 
     const [errorMessage, setErrroMessage] = useState("")
-    const [usersTableUpdated, setUsersTableUpdated] = useState(false)
+    const [changesWereMade, setChangesWereMade] = useState(false)
 
     const [userFlag, setUserFlag] = useState(flagged)//only used when changing flag color
-    const [userTypeIsAdmin, setTypeIsAdmin] = useState(access === USER_TYPE_REQUEST.admin)//only used when changing user type
+    const userTypeIsAdmin = useState(access === USER_TYPE_REQUEST.admin)//only used when changing user type
 
     const actionLowerCase = action.toLowerCase()
     const actionCapitalized = actionLowerCase.charAt(0).toUpperCase() + actionLowerCase.slice(1);
@@ -75,8 +75,8 @@ function ModalUserAction(props) {
             if (isComponentMounted()) {
                 setErrroMessage(response.success ? successMessage : "An error occurred. Please reload the page and try again.");
                 if (response.success) {
-                    setUsersTableUpdated(true)
-                    setReloadUsersTable(true);
+                    setChangesWereMade(true);
+                    setUpdateData(true);
                 }
             }
         };
@@ -89,24 +89,45 @@ function ModalUserAction(props) {
             dispatch(setLoader(false));
         };
 
-        if (actionLowerCase === "delete") {
-            deleteUser(id)
-                .then(response => handleResponse(response, "User deleted successfully!"))
+        let requestAction;
+        let responseActionMessage;
+
+        switch (actionLowerCase) {
+            case "flag":
+                requestAction = function () { return changeUserFlag(id, userFlag) };
+                responseActionMessage = "User flag changed successfully!";
+                break
+            case "block":
+                const block = actionLowerCase === "block";
+                requestAction = function () { return blockOrUnblockUser(id, block) };
+                responseActionMessage = `User ${actionLowerCase}ed successfully!`;
+                break
+            case "type change":
+                let newType = userTypeIsAdmin ? "user" : "admin";
+                requestAction = function () { return changeUserType(id, newType) };
+                responseActionMessage = "User type changed successfully!";
+            case "delete":
+                requestAction = function () { return deleteUser(id) };
+                responseActionMessage = "User deleted successfully!";
+                break
+            default:
+                return console.error("Wrong action input in ModalUserAction.")
+        }
+        try {
+            requestAction()
+                .then(response => handleResponse(response, responseActionMessage))
                 .catch(handleError)
                 .finally(handleFinally);
-        } else {
-            const block = actionLowerCase === "block";
-            blockOrUnblockUser(id, block)
-                .then(response => handleResponse(response, `User ${actionLowerCase}ed successfully!`))
-                .catch(handleError)
-                .finally(handleFinally);
-        };
+        } catch {
+            console.error("Error in ModalUserAction", error);
+            dispatch(setLoader(false));
+        }
     }
 
     return (
         <>
             {
-                !usersTableUpdated && action === "type change" && (
+                !changesWereMade && action === "type change" && (
                     <>
                         <p>You are about to change the type the following user:</p>
                         <br />
@@ -114,11 +135,12 @@ function ModalUserAction(props) {
                         <p><b className="ModalUserAction-Bold" >Type: </b> {access}</p>
                         <br />
                         <p><b className="ModalUserAction-Bold" >You are about to {access === USER_TYPE_REQUEST.admin ? CHANGE_USER_TYPE.user : CHANGE_USER_TYPE.admin}.</b></p>
+                        <br />
                     </>
                 )
             }
             {
-                usersTableUpdated && action === "type change" && (
+                changesWereMade && action === "type change" && (
                     <>
                         <p>The type of the following user was changed:</p>
                         <br />
@@ -129,16 +151,20 @@ function ModalUserAction(props) {
                 )
             }
             {
-                !usersTableUpdated && action === "flag" && (
+                !changesWereMade && action === "flag" && (
                     <>
                         <p>Select the flag colour of the following user:</p>
                         <br />
                         {userBaseInfo}
                         <p><b className="ModalUserAction-Bold" >Flag: </b> {flagged}</p>
                         <br />
-                        <div className="MAIN-form-display-table">
+                        <div className="MAIN-form-display-table ModalUserAction-displayTable">
                             <label htmlFor="changeFlag">Select new flag colour:</label>
-                            <select name="changeFlag" id="changeFlag" defaultValue={userFlag}
+                            <select
+                                className="ModalUserAction-Select"
+                                name="changeFlag"
+                                id="changeFlag"
+                                defaultValue={userFlag}
                                 onChange={(e) => { setUserFlag(e.target.value) }}>
                                 {
                                     FLAG_TYPES.map((item, index) => (
@@ -151,7 +177,7 @@ function ModalUserAction(props) {
                 )
             }
             {
-                usersTableUpdated && action === "flag" && (
+                changesWereMade && action === "flag" && (
                     <>
                         <p>The type of the following user was changed:</p>
                         <br />
@@ -161,28 +187,24 @@ function ModalUserAction(props) {
                     </>
                 )
             }
-            {!usersTableUpdated && action !== "type change" && action !== "flag" && (
+            {!changesWereMade && action !== "type change" && action !== "flag" && (
                 <>
                     <p>You are about to {actionLowerCase} the following user:</p>
                     <br />{userBaseInfo} <br />
                 </>
             )}
-            {usersTableUpdated && action !== "type change" && action !== "flag" && (
+            {changesWereMade && action !== "type change" && action !== "flag" && (
                 <>
-                    <p>The following user was {actionLowerCase}ed:</p>
+                    <p>The following user was {actionLowerCase}{actionLowerCase === "delete" ? "d" : "ed"}:</p>
                     <br />{userBaseInfo} <br />
                 </>
             )}
-            {/* <br />
-            <p className="ModalUserAction-Bold">Name: {name}</p>
-            <p className="ModalUserAction-Bold">Email: {email}</p>
-            <br /> */}
-            {!usersTableUpdated && (
+            {!changesWereMade && (
                 <>
                     {
                         action !== "flag" && (
                             <>
-                                <br />
+                                {/* <br /> */}
                                 <p>Are you sure you would like to proceed?</p>
                             </>
                         )
@@ -219,7 +241,7 @@ ModalUserAction.propTypes = {
         id: PropTypes.number.isRequired
     }).isRequired,
     modalToggler: PropTypes.func.isRequired,
-    setReloadUsersTable: PropTypes.func.isRequired,
+    setUpdateData: PropTypes.func.isRequired,
 };
 
 export default ModalUserAction;

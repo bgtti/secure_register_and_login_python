@@ -94,6 +94,44 @@ admin_user_logs_schema = {
     "required": ["user_id", "page_nr"]
 }
 
+admin_user_flag_change = {
+    "type": "object",
+    "title": "Change a user's flag colour", 
+    "properties": {
+        "user_id": {
+            "description": "Id of user to change flag.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "new_flag_colour": {
+            "description": "Flag colour to flag user.",
+            "type": "string",
+            "enum": user_flag_values,
+            },
+    },
+    "additionalProperties": False,
+    "required": ["user_id", "new_flag_colour"]
+}
+
+admin_user_access_type_change = {
+    "type": "object",
+    "title": "Change a user's access type to admin or regular user.", 
+    "properties": {
+        "user_id": {
+            "description": "Id of user whose type needs changing.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "new_type": {
+            "description": "A user's type can be either 'user' or 'admin'.",
+            "type": "string",
+            "enum": ["user", "admin"],
+            },
+    },
+    "additionalProperties": False,
+    "required": ["user_id", "new_type"]
+}
+
 admin_block_and_unblock_user_schema = {
     "type": "object",
     "title": "Users table pagination", 

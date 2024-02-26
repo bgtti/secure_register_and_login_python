@@ -62,6 +62,12 @@ export const USER_ACCESS_TYPES = [
     "super_admin"
 ]
 
+export const USER_ACCESS_DIC = {
+    user: "user",
+    admin: "admin",
+    super_admin: "super_admin"
+}
+
 //User permissions that can be given/changed
 export const USER_TYPE_REQUEST = {
     admin: "admin",

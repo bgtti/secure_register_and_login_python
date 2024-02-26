@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import TableRow from "./TableRow.jsx";
-import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES } from "../../../../utils/constants.js";
+import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES } from "../../../../../utils/constants.js";
 import "./table.css";
 
 /**
@@ -8,7 +8,7 @@ import "./table.css";
  * 
  * Child component: TableRow
  * 
- * @visibleName Admin Area: Users' Table: Table
+ * @visibleName Users Table
  * @param {object} props 
  * @param {object[]} props.users an array of user objects (see example bellow)
  * @param {number} props.users[].id // should be an int
@@ -19,7 +19,6 @@ import "./table.css";
  * @param {string} props.users[].flagged //one of FLAG_TYPES
  * @param {string} props.users[].isBlocked //one of IS_BLOCKED_TYPES
  * @param {func} props.toggleModal function passed on to child
- * @param {func} props.setShowUserInfo function passed on to child
  * @param {func} props.selectUserAction function passed on to child
  * @returns {React.ReactElement}
  * 
@@ -48,10 +47,10 @@ function Table(props) {
                     <th role="columnheader">Name</th>
                     <th role="columnheader">Email</th>
                     <th role="columnheader">Last seen</th>
-                    <th role="columnheader">Type</th>
-                    <th role="columnheader">Flag</th>
-                    <th role="columnheader">Blocked</th>
-                    <th role="columnheader">Actions</th>
+                    <th role="columnheader" className="Table-th">Type</th>
+                    <th role="columnheader" className="Table-th">Flag</th>
+                    <th role="columnheader" className="Table-th">Blocked</th>
+                    <th role="columnheader" className="Table-th">Actions</th>
                 </tr>
             </thead>
             <tbody role="rowgroup">
@@ -80,7 +79,6 @@ Table.propTypes = {
         isBlocked: PropTypes.PropTypes.oneOf(IS_BLOCKED_TYPES),
     })).isRequired,
     toggleModal: PropTypes.func.isRequired,
-    setShowUserInfo: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired
 }
 export default Table;

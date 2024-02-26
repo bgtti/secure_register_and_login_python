@@ -24,6 +24,7 @@ import apiEndpoints from "../../apiEndPoints";
                 "id": 1234
                 "name": "Frank Torres",
                 "email": "frank.torres@fakemail.com",
+                "created_at": "Thu, 25 Jan 2024 00:00:00 GMT",
                 "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
                 "access": "user",
                 "flagged": "blue",
@@ -38,6 +39,7 @@ import apiEndpoints from "../../apiEndPoints";
                 "id": 1234
                 "name": "Frank Torres",
                 "email": "frank.torres@fakemail.com",
+                "createdAt": "09 Jan 2024",
                 "lastSeen": "09 Jan 2024",
                 "access": "user",
                 "flagged": "blue",
@@ -69,6 +71,11 @@ export function getUserInfo(userId) {
             if (response.status === 200) {
                 const javaScriptifiedUserFields = {
                     ...response.data.user,
+                    createdAt: new Date(response.data.user.created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    }),
                     lastSeen: new Date(response.data.user.last_seen).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',

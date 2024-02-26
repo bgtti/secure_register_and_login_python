@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { api, apiCredentials, apiHandle404 } from "./axios";
+import { setLoader } from '../redux/loader/loaderSlice';
 
 /**
  * Component used to add axios request interceptors to catch and handle error responses.
@@ -15,11 +17,20 @@ import { api, apiCredentials, apiHandle404 } from "./axios";
 function AxiosApiInterceptor() {
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const loader = useSelector((state) => state.loader);
+
+    function stopLoaderDisplay() {
+        if (loader.display) {
+            dispatch(setLoader(false));
+        }
+    }
 
     useEffect(() => {
         const navigateToError = api.interceptors.response.use(
             (response) => response,
             (error) => {
+                stopLoaderDisplay();
                 let errorCode = error.response.request.status.toString()
                 if (errorCode === "401") {
                     navigate("/login");
@@ -40,8 +51,10 @@ function AxiosApiInterceptor() {
                 if (errorCode === "400" || errorCode === "401" || errorCode === "403" || errorCode === "409") {
                     return error;
                 } else if (errorCode === "418") {
+                    stopLoaderDisplay();
                     navigate("/botError");
                 } else {
+                    stopLoaderDisplay();
                     navigate("/errorPage", { state: errorCode });
                 }
                 return Promise.reject(error);
@@ -54,6 +67,7 @@ function AxiosApiInterceptor() {
                 if (errorCode === "404") {
                     return error;
                 } else {
+                    stopLoaderDisplay();
                     navigate("/errorPage", { state: errorCode });
                 }
                 return Promise.reject(error);

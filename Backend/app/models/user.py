@@ -11,6 +11,8 @@ from app.extensions import db
 from app.config import ADMIN_ACCT, USER_ID_SALT
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
+from app.utils.constants.enum_helpers import map_string_to_enum
+from app.utils.console_warning.print_warning import console_warn
 
 ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
 ADMIN_PW = ADMIN_DATA[2]
@@ -189,8 +191,18 @@ class User(db.Model, UserMixin):
         """
         user.make_user_admin() -> void
         -------------------------------
-        Method will change the user's access_level.
+        Method will change the user's access_level to 'admin'.
         Make sure only the super admin calls this method on other users.
+        """
+        self.access_level = UserAccessLevel.ADMIN
+    
+    def make_user_regular_user(self):
+        """
+        user.make_user_regular_user() -> void
+        -------------------------------
+        Method will change the user's access_level to 'user'.
+        This should be used to take away a user's admin rights.
+        Make sure this method is not called on super_admin.
         """
         self.access_level = UserAccessLevel.ADMIN
     
@@ -202,7 +214,7 @@ class User(db.Model, UserMixin):
         Since the idea is to call it only once (as the super admin is the first user created),
         it required the admin password defined in the app's config.
         """
-        if self.access_level != 1:
+        if self.access_level != UserAccessLevel.SUPER_ADMIN:
             existing_super_admins = User.query.filter_by(access_level=UserAccessLevel.SUPER_ADMIN).count()
             if existing_super_admins == 0 and admin_password == ADMIN_PW:
                 self.access_level = UserAccessLevel.SUPER_ADMIN
@@ -221,6 +233,7 @@ class User(db.Model, UserMixin):
             "id": self.id,
             "name": self.name,
             "email": self.email,
+            "created_at": self.created_at,
             "last_seen": self.last_seen,
             "access": self.access_level.value,
             "flagged": self.flagged.value,
@@ -235,10 +248,10 @@ class User(db.Model, UserMixin):
         Example usage:
         user.flag_change("blue")
         """
-        flag_colour = flag_colour.upper()
-        flags = [member.name for member in UserFlag]
-        if flag_colour in flags:
-            self.flagged = UserFlag[flag_colour].value
+        the_colour = flag_colour.lower()
+        flag = map_string_to_enum(the_colour, UserFlag)
+        if flag is not None:
+            self.flagged = flag
         else:
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
-            print("Error: flag color not found. User's flagged status not changed.")
+            console_warn("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")

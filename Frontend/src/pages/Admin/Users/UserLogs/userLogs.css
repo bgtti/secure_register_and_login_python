@@ -1,0 +1,25 @@
+.UserLogs>h4 {
+    font-size: 1.4em;
+    margin: 10px 0;
+}
+
+.UserLogs-btnContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 230px;
+}
+
+.UserLogs-noLogs {
+    margin-top: 10px;
+    color: var(--FontColorDarker);
+}
+
+/* BIG SCREEN */
+@media only screen and (min-width:600px) {
+
+    .UserLogs-Table>thead>tr,
+    .UserLogs-Table>tbody>tr {
+        grid-template-columns: repeat(3, 7em) auto;
+    }
+}

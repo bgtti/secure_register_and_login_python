@@ -1,18 +1,19 @@
 import PropTypes from "prop-types";
-import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES } from "../../../../utils/constants.js";
-import Flag from "../../../../components/Flag/Flag.jsx"
-import iconUserIsBlocked from "../../../../assets/icon_user_status_blocked.svg";
-import iconUserIsNotBlocked from "../../../../assets/icon_user_status_unblocked.svg";
-import iconUserTypeAdmin from "../../../../assets/icon_user_type_admin.svg";
-import iconUserTypeUser from "../../../../assets/icon_user_type_user.svg";
-import iconUserBlock from "../../../../assets/icon_user_block.svg";
-import iconUserDelete from "../../../../assets/icon_user_delete.svg";
-import iconUserMore from "../../../../assets/icon_user_more.svg";
+import { useNavigate } from "react-router-dom";
+import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES } from "../../../../../utils/constants.js";
+import Flag from "../../../../../components/Flag/Flag.jsx"
+import iconUserIsBlocked from "../../../../../assets/icon_user_status_blocked.svg";
+import iconUserIsNotBlocked from "../../../../../assets/icon_user_status_unblocked.svg";
+import iconUserTypeAdmin from "../../../../../assets/icon_user_type_admin.svg";
+import iconUserTypeUser from "../../../../../assets/icon_user_type_user.svg";
+import iconUserBlock from "../../../../../assets/icon_user_block.svg";
+import iconUserDelete from "../../../../../assets/icon_user_delete.svg";
+import iconUserMore from "../../../../../assets/icon_user_more.svg";
 
 /**
  * Component returns HTML table row (tr element) with user information and action buttons
  * 
- * @visibleName Admin Area: Users' Table: Table: TableRow
+ * @visibleName Users' Table: Table Row
  * @param {object} props
  * @param {object} props.user 
  * @param {number} props.user.id // should be an int
@@ -23,13 +24,14 @@ import iconUserMore from "../../../../assets/icon_user_more.svg";
  * @param {string} props.user.flagged //one of FLAG_TYPES
  * @param {string} props.user.isBlocked //one of IS_BLOCKED_TYPES
  * @param {func} props.toggleModal from grandparent (UsersTable)
- * @param {func} props.setShowUserInfo from grandparent (UsersTable)
  * @param {func} props.selectUserAction from grandparent (UsersTable)
  * @returns {React.ReactElement}
  */
 function TableRow(props) {
-    const { user, toggleModal, setShowUserInfo, selectUserAction } = props
+    const { user, toggleModal, selectUserAction } = props;
     const { id, name, email, lastSeen, access, flagged, isBlocked } = user;
+
+    const navigate = useNavigate();
 
     return (
         <tr role="row">
@@ -45,61 +47,35 @@ function TableRow(props) {
                 <label className="MAIN-table-label" htmlFor="last-seen">Last seen:</label>
                 {lastSeen}
             </td>
-            <td role="cell">
+            <td role="cell" className="TableRow-iconCell">
                 <label className="MAIN-table-label" htmlFor="access_level">Type:</label>
-                {access === "user" && (
-                    <div className="Table-iconType">
-                        <img
-                            alt="User is regular user"
-                            className="Table-icon"
-                            role="img"
-                            title="Regular user"
-                            src={iconUserTypeUser}
-                        />
-                    </div>
-                )}
-                {access === "admin" && (
-                    <div className="Table-iconType">
-                        <img
-                            alt="User is admin user"
-                            className="Table-icon"
-                            role="img"
-                            title="Admin user"
-                            src={iconUserTypeAdmin}
-                        />
-                    </div>
-                )}
+                <div className="MAIN-iconContainerCircle">
+                    <img
+                        alt={`User is ${access === "user" ? "regular user" : "admin"}`}
+                        className="MAIN-iconUserType"
+                        role="img"
+                        title={access === "user" ? "Regular user" : "Admin user"}
+                        src={access === "user" ? iconUserTypeUser : iconUserTypeAdmin}
+                    />
+                </div>
             </td>
-            <td role="cell">
+            <td role="cell" className="TableRow-iconCell">
                 <label className="MAIN-table-label" htmlFor="flag">Flag:</label>
-                <div className="Table-iconFlag">
+                <div className="MAIN-iconContainerCircle">
                     <Flag flag={flagged} />
                 </div>
             </td>
-            <td role="cell">
+            <td role="cell" className="TableRow-iconCell">
                 <label className="MAIN-table-label" htmlFor="blocked">Blocked:</label>
-                {isBlocked === "true" && (
-                    <div className="Table-iconStatus Table-iconStatus-Blocked">
-                        <img
-                            alt="User is blocked"
-                            className="Table-icon"
-                            role="img"
-                            title="User is blocked"
-                            src={iconUserIsBlocked}
-                        />
-                    </div>
-                )}
-                {isBlocked === "false" && (
-                    <div className="Table-iconStatus">
-                        <img
-                            alt="User is unblocked"
-                            className="Table-icon"
-                            role="img"
-                            title="User is unblocked"
-                            src={iconUserIsNotBlocked}
-                        />
-                    </div>
-                )}
+                <div className="MAIN-iconContainerCircle">
+                    <img
+                        alt={`User is ${isBlocked === "false" ? "un" : ""}blocked`}
+                        role="img"
+                        className={`${isBlocked === "false" ? "" : "MAIN-iconUserBlocked"}`}
+                        title={`User is ${isBlocked === "false" ? "un" : ""}blocked`}
+                        src={isBlocked === "false" ? iconUserIsNotBlocked : iconUserIsBlocked}
+                    />
+                </div>
             </td>
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="actions">Actions:</label>
@@ -110,7 +86,7 @@ function TableRow(props) {
                         role="button"
                         title="User information"
                         src={iconUserMore}
-                        onClick={() => { selectUserAction(id, "userInfo"); setShowUserInfo(true) }}
+                        onClick={() => { navigate("userInfo", { state: id }) }}
                     />
                     <img
                         alt="Block user"
@@ -145,7 +121,6 @@ TableRow.propTypes = {
         isBlocked: PropTypes.PropTypes.oneOf(IS_BLOCKED_TYPES),
     }).isRequired,
     toggleModal: PropTypes.func.isRequired,
-    setShowUserInfo: PropTypes.func.isRequired,
     selectUserAction: PropTypes.func.isRequired
 }
 

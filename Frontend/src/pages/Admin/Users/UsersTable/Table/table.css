@@ -1,0 +1,68 @@
+.Table-IconsContainer {
+    display: flex;
+    justify-content: space-between;
+}
+
+.Table-icon {
+    height: 30px;
+    cursor: pointer;
+}
+
+.Table>tbody>tr>td {
+    word-break: break-all;
+    grid-template-columns: 6em minmax(auto, calc(100vw - 70px - 6em)) !important;
+}
+
+@media (hover: hover) {
+    .Table-icon:hover {
+        filter: grayscale(70%) drop-shadow(0 0 0.2rem black);
+    }
+}
+
+@media only screen and (min-width:600px) {
+
+    .Table>thead>tr,
+    .Table>tbody>tr {
+        grid-template-columns: 6em minmax(6em, auto) 6em repeat(2, 2.5em) 3.8em 6em !important;
+    }
+
+    .Table-th {
+        text-align: center !important;
+    }
+
+    .TableRow-iconCell>div {
+        margin: auto;
+    }
+}
+
+@media only screen and (min-width:800px) {
+
+    .Table>thead>tr,
+    .Table>tbody>tr {
+        grid-template-columns: 7em minmax(7em, auto) 8em repeat(2, 2.5em) 4em 6em !important;
+    }
+}
+
+@media only screen and (min-width:950px) {
+
+    .Table>thead>tr,
+    .Table>tbody>tr {
+        grid-template-columns: 9em minmax(8em, auto) 8em repeat(2, 2.5em) 4em 6em !important;
+    }
+}
+
+@media only screen and (min-width:1100px) {
+
+    .Table>thead>tr,
+    .Table>tbody>tr {
+        grid-template-columns: 11em minmax(10em, auto) 8em repeat(3, 5em) 6em !important;
+    }
+}
+
+@media only screen and (min-width:1250px) {
+
+    .Table>thead>tr,
+    .Table>tbody>tr {
+        grid-template-columns: 15em minmax(10em, auto) 8em repeat(3, 6em) 8em !important;
+    }
+}

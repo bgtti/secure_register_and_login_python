@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from 'react-router-dom';
 import { setLoader } from "../redux/loader/loaderSlice";
@@ -16,9 +17,12 @@ function ProtectedUserRoute(props) {
     let { children } = props
     const dispatch = useDispatch();
 
+    const triedLogIn = useRef(false);
+
     const user = useSelector((state) => state.user);
 
-    if (!user.loggedIn) {
+    if (!user.loggedIn && !triedLogIn) {
+        triedLogIn.current = true;
         dispatch(setLoader(true));
         getUserData()
             .then(res => {
@@ -33,6 +37,9 @@ function ProtectedUserRoute(props) {
             .finally(() => {
                 dispatch(setLoader(false));
             });
+    }
+    if (!user.loggedIn && triedLogIn) {
+        return <Navigate to={"/login"} replace />;
     }
 
     return children ? children : <Outlet />;

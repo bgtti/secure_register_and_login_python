@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from 'react-router-dom';
 import { setLoader } from "../redux/loader/loaderSlice";
@@ -16,13 +17,16 @@ function ProtectedAdminRoute(props) {
     let { children } = props
     const dispatch = useDispatch();
 
+    const triedLogIn = useRef(false);
+
     const user = useSelector((state) => state.user);
 
     if (user.loggedIn && !(user.access !== "admin" || user.access !== "super_admin")) {
         return <Navigate to={"/errorPage"} state={"401"} replace />;
     }
 
-    if (!user.loggedIn) {
+    if (!user.loggedIn && !triedLogIn.current) {
+        triedLogIn.current = true;
         dispatch(setLoader(true));
         getUserData()
             .then(res => {
@@ -40,6 +44,10 @@ function ProtectedAdminRoute(props) {
             .finally(() => {
                 dispatch(setLoader(false));
             });
+    }
+
+    if (!user.loggedIn && triedLogIn.current) {
+        return <Navigate to={"/login"} replace />;
     }
 
     return children ? children : <Outlet />;
