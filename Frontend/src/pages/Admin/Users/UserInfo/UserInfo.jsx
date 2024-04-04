@@ -18,7 +18,7 @@ import "./userInfo.css"
  * 
  * Should be passed a location state when navigated to: the selected user's id.
  * 
- * @param {number} state //userId as int, navigate("userInfo", { state: userId })
+ * @param {number} state //userId as int, navigate("userInfo", { state: userId }) 
  * @returns {React.ReactElement}
  */
 function UserInfo() {
@@ -66,6 +66,7 @@ function UserInfo() {
     useEffect(() => {
         getInfo();
     }, [])
+
     useEffect(() => {
         if (updateData) {
             setUserAction("");

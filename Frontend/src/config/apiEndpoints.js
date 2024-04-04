@@ -10,7 +10,7 @@ const apiEndpoints = {
     userDeleteOwnAccount: "/api/account/delete", //MISSING
     //admin
     adminGetDashboardData: "/api/admin/restricted_dashboard", //MISSING
-    adminGetUsersTable: "api/admin/restricted_area/users",
+    adminGetUsersTable: "api/admin/restricted_area/users/users_table",
     adminGetUserInfo: "api/admin/restricted_area/users/user_information",
     adminGetUserLogs: "api/admin/restricted_area/users/user_logs",
     adminChangeUserFlag: "api/admin/restricted_area/users/flag_change",

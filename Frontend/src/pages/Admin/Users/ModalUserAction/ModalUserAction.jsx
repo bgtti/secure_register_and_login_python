@@ -53,7 +53,7 @@ function ModalUserAction(props) {
     const [changesWereMade, setChangesWereMade] = useState(false)
 
     const [userFlag, setUserFlag] = useState(flagged)//only used when changing flag color
-    const userTypeIsAdmin = useState(access === USER_TYPE_REQUEST.admin)//only used when changing user type
+    const userTypeIsAdmin = useState(access == USER_TYPE_REQUEST.admin)//only used when changing user type
 
     const actionLowerCase = action.toLowerCase()
     const actionCapitalized = actionLowerCase.charAt(0).toUpperCase() + actionLowerCase.slice(1);
@@ -98,6 +98,7 @@ function ModalUserAction(props) {
                 responseActionMessage = "User flag changed successfully!";
                 break
             case "block":
+            case "unblock":
                 const block = actionLowerCase === "block";
                 requestAction = function () { return blockOrUnblockUser(id, block) };
                 responseActionMessage = `User ${actionLowerCase}ed successfully!`;
@@ -106,12 +107,14 @@ function ModalUserAction(props) {
                 let newType = userTypeIsAdmin ? "user" : "admin";
                 requestAction = function () { return changeUserType(id, newType) };
                 responseActionMessage = "User type changed successfully!";
+                break
             case "delete":
                 requestAction = function () { return deleteUser(id) };
                 responseActionMessage = "User deleted successfully!";
                 break
             default:
-                return console.error("Wrong action input in ModalUserAction.")
+                requestAction = function () { return console.error("Wrong action input in ModalUserAction.") };
+                responseActionMessage = "An error occurred: action input invalid.";
         }
         try {
             requestAction()

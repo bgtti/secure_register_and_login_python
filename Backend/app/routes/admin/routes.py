@@ -32,7 +32,7 @@ def admin_dashboard():
     return jsonify({'response': '...'})
 
 # USERS TABLE 
-@admin.route("/restricted_area/users", methods=["POST"])
+@admin.route("/restricted_area/users/users_table", methods=["POST"])
 @limiter.limit("200/hour")
 @login_required
 @admin_only

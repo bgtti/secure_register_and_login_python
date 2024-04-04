@@ -54,6 +54,7 @@ class Config:
     RATELIMIT_HEADERS_ENABLED = True
     RATELIMIT_DEFAULT = "200/day;60/hour"
     RATELIMIT_ON_BREACH_CALLBACK = rate_limit_exceeded
+    RATELIMIT_ENABLED = False # rate limiter disabled in development
 
 # *** TESTS' CONFIGURATION: used to create app in the tests module
 class TestConfig(Config):
@@ -76,6 +77,7 @@ class ProductionConfig(Config):
     SESSION_REDIS = redis.Redis(host=ENV_REDIS_SESSION_HOST, port=ENV_REDIS_SESSION_PORT, db=0, password= 'your_redis_password')
     SESSION_COOKIE_SAMESITE = "Lax" 
     RATELIMIT_STORAGE_URI = ENV_RATELIMIT_STORAGE_URI
+    RATELIMIT_ENABLED = True
 
 # *** LOGGING CONFIGURATION (system_logs)
 
