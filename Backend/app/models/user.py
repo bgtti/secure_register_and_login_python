@@ -204,7 +204,7 @@ class User(db.Model, UserMixin):
         This should be used to take away a user's admin rights.
         Make sure this method is not called on super_admin.
         """
-        self.access_level = UserAccessLevel.ADMIN
+        self.access_level = UserAccessLevel.USER
     
     def make_user_super_admin(self, admin_password):
         """

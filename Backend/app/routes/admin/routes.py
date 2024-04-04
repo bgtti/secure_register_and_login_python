@@ -352,7 +352,7 @@ def change_user_flag():
             user.flag_change(flag_colour)
             db.session.commit()
 
-            log_event("ADMIN_FLAG_USER","flag changed",user.id, f"Previous flag: {old_flag} New flag: {flag_colour}.")
+            log_event("ADMIN_FLAG_USER","flag changed",user.id, f"Previous flag: {old_flag} New flag: {flag_colour}. Admin action from: {current_user.email}.") 
             return jsonify({"response": "success"})
         else:
             log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id} lead to 404 not found.")
@@ -434,7 +434,8 @@ def change_user_access():
                 user.make_user_regular_user()
 
             db.session.commit()
-            log_event("ADMIN_USER_ACCESS_CHANGE","access changed",user.id, f"Previous access type: {current_type} New: {user_type}.")
+
+            log_event("ADMIN_USER_ACCESS_CHANGE","access changed",user.id, f"Previous access type: {current_type.value} New access type: {user_type.value}. Admin action from: {current_user.email}.")
             return jsonify({"response": "success"})
         else:
             log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id} lead to 404 not found.")
@@ -508,7 +509,7 @@ def block_unblock_user():
                 log_event("ADMIN_BLOCK_USER","block user",user.id)
             else:
                 user.unblock_access()
-                log_event("ADMIN_BLOCK_USER","unblock user",user.id)
+                log_event("ADMIN_BLOCK_USER","unblock user",user.id, f"Admin action from: {current_user.email}." )
 
             db.session.commit()
             logging.info(f"User successfully set to blocked={block_status} by admin.") 
@@ -587,7 +588,7 @@ def admin_delete_user():
             db.session.delete(user)
             db.session.commit()
             logging.info("User deleted successfully by admin.")
-            log_event("ADMIN_DELETE_USER","deletion successful",user.id)
+            log_event("ADMIN_DELETE_USER","deletion successful",user.id, f"Admin action from: {current_user.email}.")
 
             try:
                 new_user_stats = UserStats(new_user=-1,country="")

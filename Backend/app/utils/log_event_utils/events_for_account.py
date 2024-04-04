@@ -10,27 +10,27 @@ def signup_event(event):
     }
     match event:
         case "signup successful":
-            log_obj["message"] = "successful signup."
+            log_obj["message"] = "Successful signup."
         case "schema validation failure":
-            log_obj["message"] = "signup rejected: schema validation failure."
+            log_obj["message"] = "Signup rejected: schema validation failure."
             log_obj["user_id"] = NONE
         case "user exists":
-            log_obj["message"] = "signup rejected: user already exists."
+            log_obj["message"] = "Signup rejected: user already exists."
             log_obj["user_id"] = NONE
         case "weak password":
-            log_obj["message"] = "signup rejected: weak password. Frontend validation failed?"
+            log_obj["message"] = "Signup rejected: weak password. Frontend validation failed?"
             log_obj["user_id"] = NONE
             log_obj["type"] = LOG_EVENT_TYPE["WARN"]
         case "signup failed":
-            log_obj["message"] = "signup rejected: user could not be created"
+            log_obj["message"] = "Signup rejected: user could not be created"
             log_obj["user_id"] = NONE
             log_obj["type"] = LOG_EVENT_TYPE["WARN"]
             log_obj["level"] = LOG_EVENT_LEVEL["ERROR"]
         case "html detected":
-            log_obj["message"] = "html might have been supplied in form."
+            log_obj["message"] = "Html might have been supplied in form."
             log_obj["type"] = LOG_EVENT_TYPE["SUSPISCIOUS"]
         case "profanity":
-            log_obj["message"] = "possible use of profanity in input."
+            log_obj["message"] = "Possible use of profanity in input."
             log_obj["type"] = LOG_EVENT_TYPE["WARN"]
         case _:
             log_obj = False
@@ -46,26 +46,26 @@ def login_event(event):
     }
     match event:
         case "login successful":
-            log_obj["message"] = "successful login."
+            log_obj["message"] = "Successful login."
         case "schema validation failure":
-            log_obj["message"] = "login rejected: schema validation failure."
+            log_obj["message"] = "Login rejected: schema validation failure."
             log_obj["user_id"] = NONE
         case "user not found":
-            log_obj["message"] = "login rejected: user does not exist."
+            log_obj["message"] = "Login rejected: user does not exist."
             log_obj["user_id"] = NONE
         case "user blocked":
-            log_obj["message"] = "login rejected: user is blocked."
+            log_obj["message"] = "Login rejected: user is blocked."
         case "user temporary block":
-            log_obj["message"] = "login rejected: user is temporarily blocked."
+            log_obj["message"] = "Login rejected: user is temporarily blocked."
         case "user temporary block":
-            log_obj["message"] = "login rejected: user is temporarily blocked."
+            log_obj["message"] = "Login rejected: user is temporarily blocked."
         case "wrong credentials 3x":
-            log_obj["message"] = "login rejected: wrong password input more than 3 times."
+            log_obj["message"] = "Login rejected: wrong password input more than 3 times."
         case "wrong credentials 5x":
-            log_obj["message"] = "login rejected: wrong password input 5 times or more."
+            log_obj["message"] = "Login rejected: wrong password input 5 times or more."
             log_obj["type"] = LOG_EVENT_TYPE["WARN"]
         case "html detected":
-            log_obj["message"] = "html might have been supplied in form."
+            log_obj["message"] = "Html might have been supplied in form."
             log_obj["type"] = LOG_EVENT_TYPE["SUSPISCIOUS"]
         case _:
             log_obj = False

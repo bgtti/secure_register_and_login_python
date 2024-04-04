@@ -82,7 +82,7 @@ function UsersTable() {
     }, [searchOptions, tableOptions])
 
     useEffect(() => {
-        if (updateData) {
+        if (updateData && isComponentMounted()) {
             getUsers();
             setUpdateData(false);
         }
