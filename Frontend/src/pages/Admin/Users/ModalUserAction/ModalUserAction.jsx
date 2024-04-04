@@ -53,7 +53,7 @@ function ModalUserAction(props) {
     const [changesWereMade, setChangesWereMade] = useState(false)
 
     const [userFlag, setUserFlag] = useState(flagged)//only used when changing flag color
-    const userTypeIsAdmin = useState(access == USER_TYPE_REQUEST.admin)//only used when changing user type
+    const userTypeIsAdmin = (access == USER_TYPE_REQUEST.admin)//only used when changing user type
 
     const actionLowerCase = action.toLowerCase()
     const actionCapitalized = actionLowerCase.charAt(0).toUpperCase() + actionLowerCase.slice(1);
