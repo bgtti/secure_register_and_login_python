@@ -1,5 +1,44 @@
 from app.utils.log_event_utils.constants import REQUIRED, NONE, LOG_EVENT_TYPE, LOG_EVENT_LEVEL
 
+def flag_user_event(event):
+    log_obj = {
+        "activity": "user_flag_change",
+        "message": "",
+        "user_id": REQUIRED,
+        "type": LOG_EVENT_TYPE["INFO"],
+        "level": LOG_EVENT_LEVEL["INFO"],
+    }
+    match event:
+        case "flag changed":
+            log_obj["message"] = "admin successfully changed user flag."
+        case "flag change problem":
+            log_obj["message"] = "there was a problem changing user flag."
+            log_obj["user_id"] = NONE
+            log_obj["type"] = LOG_EVENT_TYPE["WARN"]
+            log_obj["level"] = LOG_EVENT_LEVEL["ERROR"]
+        case _:
+            log_obj = False
+    return log_obj
+
+def user_access_change(event):
+    log_obj = {
+        "activity": "user_access_change",
+        "message": "",
+        "user_id": REQUIRED,
+        "type": LOG_EVENT_TYPE["INFO"],
+        "level": LOG_EVENT_LEVEL["INFO"],
+    }
+    match event:
+        case "access changed":
+            log_obj["message"] = "user access changed."
+        case "access change problem":
+            log_obj["message"] = "there was a problem changing user access type."
+            log_obj["user_id"] = NONE
+            log_obj["type"] = LOG_EVENT_TYPE["WARN"]
+            log_obj["level"] = LOG_EVENT_LEVEL["ERROR"]
+        case _:
+            log_obj = False
+    return log_obj
 
 def block_user_event(event):
     log_obj = {

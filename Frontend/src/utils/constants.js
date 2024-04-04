@@ -55,8 +55,44 @@ export const INPUT_LENGTH = Object.freeze({
     }
 })
 
+//All user permission types
 export const USER_ACCESS_TYPES = [
     "user",
     "admin",
     "super_admin"
 ]
+
+export const USER_ACCESS_DIC = {
+    user: "user",
+    admin: "admin",
+    super_admin: "super_admin"
+}
+
+//User permissions that can be given/changed
+export const USER_TYPE_REQUEST = {
+    admin: "admin",
+    user: "user"
+}
+
+//All flag colours available
+export const FLAG_TYPES = [
+    "red",
+    "yellow",
+    "purple",
+    "blue"
+]
+
+//Blocked status possible
+export const IS_BLOCKED_TYPES = [
+    "true",
+    "false"
+]
+
+//Requests sent to get users' table possibilities
+export const USERS_TABLE_REQUEST = {
+    order_by: ["last_seen", "name", "email", "created_at"],
+    order_sort: ["descending", "ascending"],
+    filter_by: ["none", "is_blocked", "is_unblocked", "flag", "flag_not_blue", "is_admin", "is_user", "last_seen"],
+    filter_by_flag: [...FLAG_TYPES],
+    search_by: ["none", "name", "email"]
+}

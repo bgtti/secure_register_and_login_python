@@ -17,7 +17,7 @@ function AdminArea() {
                         <NavLink to="admindashboard" >Dashboard</NavLink>
                     </li>
                     <li>
-                        <NavLink to="usersTable" >Users</NavLink>
+                        <NavLink to="users" >Users</NavLink>
                     </li>
                     <li>
                         <NavLink to="adminSettings" >Settings</NavLink>

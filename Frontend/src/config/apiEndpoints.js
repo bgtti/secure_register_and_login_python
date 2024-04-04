@@ -9,13 +9,14 @@ const apiEndpoints = {
     userGetOwnAcctInfo: "/api/account/@me", //OK
     userDeleteOwnAccount: "/api/account/delete", //MISSING
     //admin
-    adminGetDashboardData: "/api/admin/restricted_dashboard",
-    adminGetUsersTable: "api/admin/restricted_area/users",
+    adminGetDashboardData: "/api/admin/restricted_dashboard", //MISSING
+    adminGetUsersTable: "api/admin/restricted_area/users/users_table",
+    adminGetUserInfo: "api/admin/restricted_area/users/user_information",
     adminGetUserLogs: "api/admin/restricted_area/users/user_logs",
+    adminChangeUserFlag: "api/admin/restricted_area/users/flag_change",
+    adminChangeUserAccessType: "api/admin/restricted_area/users/access_change",
     adminBlockUnblockUser: "api/admin/restricted_area/users/block_unblock",
     adminDeleteUser: "api/admin/restricted_area/users/delete",
-    //DELETE ROUTES:
-    adminLogIn: "/api/admin/restricted_login",
 };
 
 export default apiEndpoints;

@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
  * @param {string} props.log.message
  * @returns {React.ReactElement}
  */
-function UsersLogRow(props) {
+function UserLogRow(props) {
     const { log } = props;
     const { createdAt, type, activity, message } = log;
 
@@ -37,7 +37,7 @@ function UsersLogRow(props) {
         </tr>
     );
 };
-UsersLogRow.propTypes = {
+UserLogRow.propTypes = {
     log: PropTypes.shape({
         createdAt: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
@@ -45,4 +45,4 @@ UsersLogRow.propTypes = {
         message: PropTypes.string.isRequired,
     }).isRequired,
 };
-export default UsersLogRow;
+export default UserLogRow;

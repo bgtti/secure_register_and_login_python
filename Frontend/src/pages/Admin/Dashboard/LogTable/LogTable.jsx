@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice"
-import { getUserLogs } from "../../../../config/apiHandler/admin/user_logs.js"
+// import { getUserLogs } from "../../../../config/apiHandler/admin/user_logs.js"
 import LogTableRow from "./LogTableRow"
 // import Pagination from "../Pagination/Pagination.jsx";
 import "./logTable.css"

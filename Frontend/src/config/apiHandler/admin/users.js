@@ -1,6 +1,8 @@
-import { api } from "../../axios";
+import { apiHandle404 } from "../../axios";
 import apiEndpoints from "../../apiEndPoints";
-import { INPUT_LENGTH } from "../../../utils/constants";
+import { INPUT_LENGTH, USERS_TABLE_REQUEST } from "../../../utils/constants";
+import { validateDateFormat } from "../../../utils/validation";
+import { getLastMonthDate } from "../../../utils/helpers";
 
 /**
  * Function makes api call to retrieve an array of users (number of users retrieved = itemsPerPage).
@@ -16,7 +18,9 @@ import { INPUT_LENGTH } from "../../../utils/constants";
  * @param {number} [data.itemsPerPage = 25] integer between 5 and 50, must be multiple of 5
  * @param {string} [data.orderBy = "last_seen"] enum: ["last_seen", "name", "email", "created_at"]
  * @param {string} [data.orderSort = "descending"] enum: ["descending", "ascending"]
- * @param {string} [data.filterBy = "none"] enum: ["none", "is_blocked"]
+ * @param {string} [data.filterBy = "none"] enum: ["none", "is_blocked", "is_unblocked", "flag", "flag_not_blue", "is_admin", "is_user", "last_seen"]
+ * @param {string} [data.filterByFlag = "blue"] enum: ["red", "yellow", "purple", "blue"]
+ * @param {string} [data.filterByLastSeen = ""] date format YYYY-MM-DD
  * @param {string} [data.searchBy = "none"] enum: ["none", "name", "email"]
  * @param {string} [data.searchWord  = ""] no longer than maximum email length
  * @returns {object}
@@ -32,14 +36,16 @@ import { INPUT_LENGTH } from "../../../utils/constants";
  * {
  *  "response": "success"
  *  "users": [
- *      {
- *        uuid: "3f61108854cd4b5886401080d681dd96",
- *        name: "Josy",
- *        email: "josy@example.com",
- *        last_seen: "Thu, 25 Jan 2024 00:00:00 GMT",
- *        is_blocked: "false"
- *      },
- *      ...
+                {
+                "id": 10
+                "name": "Frank Torres",
+                "email": "frank.torres@fakemail.com",
+                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "access": "user",
+                "flagged": "blue",
+                "is_blocked": "false"
+                }, 
+                ...
  *  ]
  *  "total_pages": 3,
  *  "current_page": 1,
@@ -50,10 +56,12 @@ import { INPUT_LENGTH } from "../../../utils/constants";
  * {
  *  users: [
  *      {
- *        uuid: "3f61108854cd4b5886401080d681dd96",
- *        name: "Josy",
- *        email: "josy@example.com",
+ *        id: 10,
+ *        name: "Frank Torres",
+ *        email: "frank.torres@fakemail.com",
  *        lastSeen: "25 Jan 2024",
+ *        access: "user",
+ *        flagged: "blue",
  *        isBlocked: "false"
  *      },
  *      ...
@@ -65,10 +73,11 @@ import { INPUT_LENGTH } from "../../../utils/constants";
  */
 export function getAllUsers(data = {}) {
 
-    const ORDER = ["last_seen", "name", "email", "created_at"]
-    const SORT = ["descending", "ascending"]
-    const FILTER = ["none", "is_blocked"]
-    const SEARCH_BY = ["none", "name", "email"]
+    const ORDER = USERS_TABLE_REQUEST.order_by
+    const SORT = USERS_TABLE_REQUEST.order_sort
+    const FILTER = USERS_TABLE_REQUEST.filter_by
+    const FLAG_FILTER = USERS_TABLE_REQUEST.filter_by_flag
+    const SEARCH_BY = USERS_TABLE_REQUEST.search_by
     const SEARCH_WORD_MAX_LENGTH = INPUT_LENGTH.email.maxValue
 
     // validate data - if validation fails, defaults are set
@@ -81,6 +90,8 @@ export function getAllUsers(data = {}) {
     let orderBy = (data.orderBy && ORDER.includes(data.orderBy)) ? data.orderBy : "last_seen";
     let orderSort = (data.orderSort && SORT.includes(data.orderSort)) ? data.orderSort : "descending";
     let filterBy = (data.filterBy && FILTER.includes(data.filterBy)) ? data.filterBy : "none";
+    let filterByFlag = (data.filterByFlag && FLAG_FILTER.includes(data.filterByFlag)) ? data.filterByFlag : "blue";
+    let filterByLastSeen = (data.filterByLastSeen && validateDateFormat(data.filterByLastSeen)) ? data.filterByLastSeen : getLastMonthDate();
     let searchBy = (data.searchBy && SEARCH_BY.includes(data.searchBy)) ? data.searchBy : "none";
     let search_word = (data.searchWord && (typeof data.searchWord === "string") && data.searchWord.length <= SEARCH_WORD_MAX_LENGTH) ? data.searchWord : "";
 
@@ -90,6 +101,8 @@ export function getAllUsers(data = {}) {
         "order_by": orderBy,
         "order_sort": orderSort,
         "filter_by": filterBy,
+        "filter_by_flag": filterByFlag,
+        "filter_by_last_seen": filterByLastSeen,
         "search_by": searchBy,
         "search_word": search_word
     }
@@ -103,7 +116,7 @@ export function getAllUsers(data = {}) {
 
     const getData = async () => {
         try {
-            const response = await api.post(apiEndpoints.adminGetUsersTable, requestData)
+            const response = await apiHandle404.post(apiEndpoints.adminGetUsersTable, requestData)
             if (response.status === 200 && response.data.users.length > 0) {
                 const javaScriptifiedUserFields = response.data.users.map(user => {
                     const { last_seen: lastSeen, is_blocked: isBlocked, ...rest } = user;

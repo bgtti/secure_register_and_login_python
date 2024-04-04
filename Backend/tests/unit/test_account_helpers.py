@@ -1,10 +1,10 @@
-# import unittest
 from app.routes.account.helpers import is_good_password
 
 def test_is_good_password():
     """
     GIVEN a password
     CHECK whether it meets the criteria for a safe password
+    WHILE making it possible for user to use a great range of characters
     """
     # Sequential characters check: Characters should not be repeated 4 or more times in sequence
     assert is_good_password("drrrrghz4") == False
@@ -20,4 +20,7 @@ def test_is_good_password():
     # Passwords over 15 characters can pass even if containing common passwords
     assert is_good_password("fksbzr§&fws*ilovemikeymouse") == True
     assert is_good_password("joeTesting067!") == True
+    # Password can contain spaces and wide range of characters
+    assert is_good_password("I followed the mouse in the park.") == True
+    assert is_good_password("3%&/()=@{]üäà+-`*ç+") == True
 

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user as flask_login_user, current_user, logout_user as flask_logout_user, login_required
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from app.extensions import flask_bcrypt, db, limiter, login_manager
 from app.routes.account.schemas import sign_up_schema, log_in_schema
@@ -109,7 +109,7 @@ def signup_user():
         return jsonify({"response": "There was an error registering user."}), 400 
 
     # Not to use same pepper for every user, pepper array has 6 values, and pepper will rotate according to the month the user created the account. If pepper array does not contain 6 values, this will fail. Make sure pepper array is setup correctly in env file.
-    date = datetime.utcnow()
+    date = datetime.now(timezone.utc)
     salt = generate_salt()
     pepper = get_pepper(date)
     salted_password = salt + password + pepper
@@ -179,7 +179,7 @@ def signup_user():
 
 # LOG IN
 @account.route("/login", methods=["POST"])
-@limiter.limit("30/minute;50/day")
+# @limiter.limit("30/minute;50/day")
 @validate_schema(log_in_schema)
 def login_user():
     """
@@ -287,7 +287,7 @@ def login_user():
     # Reset login attempts counter upon successful login, set last seen, & create session
     try:
         user.reset_login_attempts()
-        user._last_seen = datetime.utcnow()
+        user._last_seen = datetime.now(timezone.utc)
         # new_session = user.new_session()
         db.session.commit()
     except Exception as e:
@@ -338,7 +338,7 @@ def get_current_user():
     response_data ={
             "response":"success",
             "user": {
-                "access": user.access, 
+                "access": user.access_level.value, 
                 "name": user.name, 
                 "email": user.email},
         }

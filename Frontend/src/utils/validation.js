@@ -109,3 +109,22 @@ export function passwordValidationForLogin(password) {
         return { response: true, message: "" }
     }
 }
+
+/**
+ * Function that validates a date in string format to make sure it complies with the format "YYYY-MM-DD".
+ * 
+ * It will return true if the date format is valid, and false otherwise
+ * 
+ * @param {string} dateString // format "YYYY-MM-DD"
+ * @returns {boolean}
+ * @example
+ * console.log(isValidDateFormat("2022-02-23")); // Output: true
+ * console.log(isValidDateFormat("2022-0223")); // Output: false
+ */
+export function validateDateFormat(dateString) {
+    if (typeof dateString !== "string") {
+        return false;
+    }
+    const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
+    return dateFormatRegex.test(dateString);
+}

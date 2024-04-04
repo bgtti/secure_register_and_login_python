@@ -1,6 +1,6 @@
 import logging
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Enum
 from app.extensions import db
 from app.utils.constants.enum_class import UserFlag
@@ -18,7 +18,7 @@ class Message(UserMixin, db.Model):
     """
     __tablename__ = "message"
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, default=0) #if message from registered user, save id
     sender_name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), nullable=False)
     sender_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False)

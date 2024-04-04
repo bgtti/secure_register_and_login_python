@@ -1,6 +1,6 @@
 from app.extensions import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from uuid import uuid4
 import warnings
@@ -39,7 +39,7 @@ def get_month():
     return datetime.now().month
 
 def get_week_num():
-    return datetime.date(datetime.utcnow()).isocalendar()[1]
+    return datetime.date(datetime.now(timezone.utc)).isocalendar()[1]
 
 # UserStats is meant to help the admin to measure user growth and understand where their users are based.
 # Care was taken not to include a datestamp, so that location information is not linked to a single user.
@@ -115,7 +115,7 @@ class VisitorStats(UserMixin, db.Model):
     referrer = db.Column(db.String(100), nullable=True)
     page_accessed = db.Column(db.String(50), nullable=True)
     session_visit = db.Column(db.String(32), nullable=True, default="")
-    date_accessed = db.Column(db.DateTime, default=datetime.utcnow)
+    date_accessed = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __init__(self, ip_address, continent, country, country_code, city, user_agent, screen_size , referrer, page_accessed, session_visit, **kwargs):
         self.ip_address = self.check_and_hash_ip(ip_address)

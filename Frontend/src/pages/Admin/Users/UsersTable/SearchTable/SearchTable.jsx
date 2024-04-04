@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
-import { nameValidation, emailValidation } from "../../../../utils/validation"
+import { nameValidation, emailValidation } from "../../../../../utils/validation"
 import "../usersTable.css"
 
 /*******************  CONSTANTS  ********************/
@@ -26,7 +26,7 @@ const SEARCH_BY = ["name", "email", "none"];
  * @param {string} props.searchOptions.searchWord string 
  * @returns {React.ReactElement}
  */
-function SearchUser(props) {
+function SearchTable(props) {
     const { searchOptions, setSearchOptions } = props
 
     const [showOptions, setShowOptions] = useState(false);
@@ -121,7 +121,7 @@ function SearchUser(props) {
     )
 }
 
-SearchUser.propTypes = {
+SearchTable.propTypes = {
     setSearchOptions: PropTypes.func.isRequired,
     searchOptions: PropTypes.shape({
         searchBy: PropTypes.string,
@@ -129,4 +129,4 @@ SearchUser.propTypes = {
     })
 };
 
-export default SearchUser;
+export default SearchTable;

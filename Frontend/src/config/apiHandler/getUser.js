@@ -58,10 +58,11 @@ export function getUserData() {
                     response.data.user.access
                 )
             }
+            return res;
         } catch {
             console.error("Could not get user.")
+            return res;
         }
-        return res;
     }
     return getUser()
 }

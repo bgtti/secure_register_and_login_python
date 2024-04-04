@@ -132,6 +132,10 @@ i {
     font-style: italic;
 }
 
+b {
+    font-weight: bold;
+}
+
 button {
     font-weight: 600;
     padding: 7px 25px;
@@ -379,4 +383,36 @@ textarea {
     overflow: hidden;
     opacity: 0;
     z-index: -1;
+}
+
+/* ICON DISPLAY */
+/* Classes for icon containers which should display the icon in the middle of a circle
+    Example: admin users table icons with flag, blocked status and user type
+ */
+.MAIN-iconContainerCircle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid black;
+    background-color: var(--FontColorSecondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.MAIN-iconContainerCircle>img {
+    height: 15px;
+}
+
+/* MAIN-iconUserBlocked is a class to be used on the img icon_user_status_blocked.svg when it is a child of MAIN-iconContainerCircle*/
+.MAIN-iconContainerCircle>.MAIN-iconUserBlocked {
+    margin-left: -1px;
+    height: 17px !important;
+}
+
+/* MAIN-iconUserType is a class to be used on the img icon_user_type_admin.svg and icon_user_type_user.svg when it is a child of MAIN-iconContainerCircle*/
+.MAIN-iconContainerCircle>.MAIN-iconUserType {
+    margin-left: 10%;
+    margin-top: -10%;
+    height: 19px !important;
 }

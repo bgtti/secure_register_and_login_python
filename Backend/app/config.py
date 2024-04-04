@@ -54,11 +54,16 @@ class Config:
     RATELIMIT_HEADERS_ENABLED = True
     RATELIMIT_DEFAULT = "200/day;60/hour"
     RATELIMIT_ON_BREACH_CALLBACK = rate_limit_exceeded
+    RATELIMIT_ENABLED = False # rate limiter disabled in development
 
 # *** TESTS' CONFIGURATION: used to create app in the tests module
 class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # Disable Flask-Limiter for tests
+    RATELIMIT_ENABLED = False
+    RATELIMIT_STORAGE_OPTIONS = {}  # Empty storage options for testing
+    RATELIMIT_DEFAULT = "1000/day"  # Adjust this rate limit as needed for your tests
 
 # *** PRODUCTION CONFIGURATION: set in manage.py when environment is production
 ENV_REDIS_SESSION_HOST = os.getenv('REDIS_SESSION_HOST')
@@ -72,6 +77,7 @@ class ProductionConfig(Config):
     SESSION_REDIS = redis.Redis(host=ENV_REDIS_SESSION_HOST, port=ENV_REDIS_SESSION_PORT, db=0, password= 'your_redis_password')
     SESSION_COOKIE_SAMESITE = "Lax" 
     RATELIMIT_STORAGE_URI = ENV_RATELIMIT_STORAGE_URI
+    RATELIMIT_ENABLED = True
 
 # *** LOGGING CONFIGURATION (system_logs)
 

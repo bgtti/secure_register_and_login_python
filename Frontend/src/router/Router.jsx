@@ -2,20 +2,29 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AxiosApiInterceptor from "../config/AxiosApiInterceptor";
 import Loader from "../components/Loader";
+//Layout
 import NavBar from "../layout/NavBar";
+import Footer from "../layout/Footer";
+//Pages: open website pages
 import Home from '../pages/Home/Home';
 import LogIn from "../pages/Login/LogIn";
 import SignUp from "../pages/SignUp/SignUp";
 import Contact from "../pages/Contact/Contact";
+//Pages: protected route (registered users)
 import Dashboard from "../pages/Dashboard/Dashboard";
 import UserSettings from "../pages/UserSettings/UserSettings";
+//Pages: admin protected
 import AdminArea from "../pages/Admin/AdminArea";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
-import UsersTable from "../pages/Admin/UsersTable/UsersTable";
+import Users from "../pages/Admin/Users/Users";
+import UserInfo from "../pages/Admin/Users/UserInfo/UserInfo";
+import UserLogs from "../pages/Admin/Users/UserLogs/UserLogs";
+import UsersTable from "../pages/Admin/Users/UsersTable/UsersTable";
 import AdminSettings from "../pages/Admin/Settings/AdminSettings";
-import Footer from "../layout/Footer";
+//Pages: error pages
 import ErrorPage from '../pages/ErrorPage/ErrorPage';
 import BotError from "../pages/ErrorPage/BotError";
+//Router: protected route wrappers
 import ProtectedUserRoute from "./ProtectedUserRoute";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
@@ -51,7 +60,12 @@ const Router = () => {
                     <Route path="adminArea" element={<AdminArea />}>
                         <Route index element={<AdminDashboard />} />
                         <Route path="admindashboard" element={<AdminDashboard />} />
-                        <Route path="usersTable" element={<UsersTable />} />
+                        <Route path="users" element={<Users />}>
+                            <Route index element={<UsersTable />} />
+                            <Route path="usersTable" element={<UsersTable />} />
+                            <Route path="userInfo" element={<UserInfo />} />
+                            <Route path="userLogs" element={<UserLogs />} />
+                        </Route>
                         <Route path="adminSettings" element={<AdminSettings />} />
                     </Route>
                 </Route>

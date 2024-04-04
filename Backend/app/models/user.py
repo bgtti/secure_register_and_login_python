@@ -4,13 +4,15 @@ import logging
 from random import randint
 from flask_login import UserMixin
 import ast
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from sqlalchemy import Enum
 from app.extensions import db
 from app.config import ADMIN_ACCT, USER_ID_SALT
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
+from app.utils.constants.enum_helpers import map_string_to_enum
+from app.utils.console_warning.print_warning import console_warn
 
 ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
 ADMIN_PW = ADMIN_DATA[2]
@@ -71,15 +73,15 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     flagged = db.Column(db.Enum(UserFlag), default=UserFlag.BLUE, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_attempts = db.Column(db.Integer, default=0)
-    last_login_attempt = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    login_blocked_until = db.Column(db.DateTime, default=datetime.utcnow)
+    login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     def __init__(self, name, email, password, salt, created_at, **kwargs):
         self.name = name
@@ -127,14 +129,14 @@ class User(db.Model, UserMixin):
         This will keep the counter of failed log-in attempts and temporarily block the user if necessary.
         """
         self.login_attempts += 1
-        self.last_login_attempt = datetime.utcnow()
+        self.last_login_attempt = datetime.now(timezone.utc)
         if self.login_attempts == 3:
             self.login_blocked = modelBool.TRUE
-            self.login_blocked_until = datetime.utcnow() + timedelta(minutes=1)
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=1)
         elif self.login_attempts == 5:
-            self.login_blocked_until = datetime.utcnow() +timedelta(minutes=2)
+            self.login_blocked_until = datetime.now(timezone.utc) +timedelta(minutes=2)
         elif self.login_attempts > 5:
-            self.login_blocked_until = datetime.utcnow() + timedelta(minutes=5)
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=5)
 
     def reset_login_attempts(self):
         """
@@ -144,8 +146,8 @@ class User(db.Model, UserMixin):
         This ensures the user failed login attempt count is set to 0.
         """
         self.login_attempts = 0
-        self.last_login_attempt = datetime.utcnow()
-        self.login_blocked_until = datetime.utcnow()
+        self.last_login_attempt = datetime.now(timezone.utc)
+        self.login_blocked_until = datetime.now(timezone.utc)
         self.login_blocked = modelBool.FALSE
 
     def is_login_blocked(self):
@@ -154,7 +156,7 @@ class User(db.Model, UserMixin):
         ----------------------------
         Called to check if the user has been temporarily blocked for typing the wrong password.
         """
-        return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.utcnow()
+        return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.now(timezone.utc)
     
     def has_access_blocked(self):
         """
@@ -189,8 +191,18 @@ class User(db.Model, UserMixin):
         """
         user.make_user_admin() -> void
         -------------------------------
-        Method will change the user's access_level.
+        Method will change the user's access_level to 'admin'.
         Make sure only the super admin calls this method on other users.
+        """
+        self.access_level = UserAccessLevel.ADMIN
+    
+    def make_user_regular_user(self):
+        """
+        user.make_user_regular_user() -> void
+        -------------------------------
+        Method will change the user's access_level to 'user'.
+        This should be used to take away a user's admin rights.
+        Make sure this method is not called on super_admin.
         """
         self.access_level = UserAccessLevel.ADMIN
     
@@ -202,7 +214,7 @@ class User(db.Model, UserMixin):
         Since the idea is to call it only once (as the super admin is the first user created),
         it required the admin password defined in the app's config.
         """
-        if self.access_level != 1:
+        if self.access_level != UserAccessLevel.SUPER_ADMIN:
             existing_super_admins = User.query.filter_by(access_level=UserAccessLevel.SUPER_ADMIN).count()
             if existing_super_admins == 0 and admin_password == ADMIN_PW:
                 self.access_level = UserAccessLevel.SUPER_ADMIN
@@ -221,7 +233,10 @@ class User(db.Model, UserMixin):
             "id": self.id,
             "name": self.name,
             "email": self.email,
+            "created_at": self.created_at,
             "last_seen": self.last_seen,
+            "access": self.access_level.value,
+            "flagged": self.flagged.value,
             "is_blocked": self.is_blocked.value,
         }
     def flag_change(self, flag_colour):
@@ -233,10 +248,10 @@ class User(db.Model, UserMixin):
         Example usage:
         user.flag_change("blue")
         """
-        flag_colour = flag_colour.upper()
-        flags = [member.name for member in UserFlag]
-        if flag_colour in flags:
-            self.flagged = UserFlag[flag_colour].value
+        the_colour = flag_colour.lower()
+        flag = map_string_to_enum(the_colour, UserFlag)
+        if flag is not None:
+            self.flagged = flag
         else:
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
-            print("Error: flag color not found. User's flagged status not changed.")
+            console_warn("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")

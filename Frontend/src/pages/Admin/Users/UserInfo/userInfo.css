@@ -1,0 +1,42 @@
+.UserInfo>h4 {
+    font-size: 1.4em;
+    margin: 10px 0;
+}
+
+.UserInfo-InfoGrid>* {
+    display: grid;
+    grid-template-columns: 6em auto;
+}
+
+.UserInfo-iconContainer {
+    display: grid;
+    grid-template-columns: 2em 6em;
+}
+
+.UserInfo-iconContainer>p {
+    color: var(--FontColorSecondary);
+}
+
+.UserInfo-hr {
+    border: 1px solid var(--BackgroudTertiary);
+    margin: 15px 0;
+}
+
+.UserInfo-ActBtnContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.UserInfo-ActBtn {
+    background-color: var(--YellowColor);
+    font-size: 13px;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 140px;
+}
+
+.UserInfo-DeleteBtn {
+    background-color: var(--RedColor);
+    color: var(--FontColorPrimary);
+}

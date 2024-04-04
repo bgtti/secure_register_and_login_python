@@ -1,6 +1,6 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 # TODO: create function to delete old logs on a schedule
@@ -42,13 +42,14 @@ class LogEvent(UserMixin, db.Model):
     message = db.Column(db.String(200), nullable=False)
     user_uuid = db.Column(db.String(32), nullable=False, default="none", index=True) # DELETE
     user_id = db.Column(db.Integer, nullable=True, index=True, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow(), index=True)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), index=True)
     
-    def __init__(self, level, type, activity, message, **kwargs):
+    def __init__(self, level, type, activity, message, user_id=0, **kwargs):
         self.level = level
         self.type = type
         self.activity = activity
         self.message = message
+        self.user_id = user_id
     
     def __repr__(self):
         return f"<Log: {self.id} {self.type} {self.message}>"

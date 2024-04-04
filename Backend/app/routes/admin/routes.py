@@ -1,17 +1,20 @@
 from flask import Blueprint, request, jsonify, session
-from functools import wraps
+# from functools import wraps
+# import pdb; pdb.set_trace()
 import logging
-import jsonschema
+# import jsonschema
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import escape_like
 from flask_login import current_user, login_required
-from app.extensions import flask_bcrypt, db
-from app.routes.admin.schemas import admin_users_table_schema, admin_user_logs_schema, admin_block_and_unblock_user_schema, admin_delete_user_schema
+from app.extensions import db, limiter
+from app.routes.admin.schemas import admin_users_table_schema, admin_user_information, admin_user_logs_schema, admin_user_flag_change,admin_user_access_type_change, admin_block_and_unblock_user_schema, admin_delete_user_schema
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.stats import UserStats
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
+from app.utils.constants.enum_helpers import map_string_to_enum
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.log_event_utils.log import log_event
 from app.utils.custom_decorators.admin_protected_route import admin_only
@@ -29,7 +32,8 @@ def admin_dashboard():
     return jsonify({'response': '...'})
 
 # USERS TABLE 
-@admin.route("/restricted_area/users", methods=["POST"])
+@admin.route("/restricted_area/users/users_table", methods=["POST"])
+@limiter.limit("200/hour")
 @login_required
 @admin_only
 @validate_schema(admin_users_table_schema)
@@ -52,20 +56,24 @@ def admin_users_table():
             "total_pages": 5,
             "query": {
                 "filter_by": "none",
+                "filter_by_flag": "blue",
+                "filter_by_last_seen": "2024-01-01",
                 "items_per_page": 25,
                 "order_sort": "descending",
-                "ordered_by": "_last_seen",
+                "ordered_by": "last_seen",
                 "page_nr": 1,
                 "search_by": "email",
                 "search_word": "frank",
             },
             "users": [
                 {
-                "email": "frank.torres@fakemail.com",
-                "is_blocked": "false",
-                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "id": 10
                 "name": "Frank Torres",
-                "uuid": "3f61108854cd4b5886401080d681dd96"
+                "email": "frank.torres@fakemail.com",
+                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "access": "user",
+                "flagged": "blue",
+                "is_blocked": "false"
                 }, 
                 ...
             ]
@@ -80,6 +88,8 @@ def admin_users_table():
     order_by = json_data.get("order_by", "last_seen")
     order_sort = json_data.get("order_sort", "descending")
     filter_by = json_data.get("filter_by", "none")
+    filter_by_flag = json_data.get("filter_by_flag", "blue")
+    filter_by_last_seen = json_data.get("filter_by_last_seen", "") 
     search_by = json_data.get("search_by", "none")
     search_word = json_data.get("search_word", "")
 
@@ -102,27 +112,44 @@ def admin_users_table():
     else:
         ordering = ordering.asc()
 
-    # Dynamic filtering conditions - possible values for (filter_by, search_by)
-    filter_conditions = {
-        ("none","none"): User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none", "email"): User.query.filter(User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("none","name",): User.query.filter(User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked","none"): User.query.filter_by(is_blocked=modelBool.TRUE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "email"): User.query.filter(User.is_blocked == modelBool.TRUE, User.email.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-        ("is_blocked", "name"): User.query.filter(User.is_blocked == modelBool.TRUE, User.name.ilike(f"%{search_word}%")).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False),
-    }
+    if filter_by != "none":
+        filter_conditions_map = {
+            "is_blocked": User.is_blocked == modelBool.TRUE,
+            "is_unblocked": User.is_blocked == modelBool.FALSE,
+            "flag": User.flagged == map_string_to_enum(filter_by_flag, UserFlag),
+            "flag_not_blue": User.flagged != UserFlag.BLUE,
+            "is_admin": User.access_level == UserAccessLevel.ADMIN,
+            "is_user": User.access_level == UserAccessLevel.USER,
+            "last_seen": User.last_seen >= filter_by_last_seen if filter_by_last_seen != "" else User.last_seen >= (datetime.now(timezone.utc) - timedelta(30)),
+        }
+    if search_by != "none":
+        search_conditions_map = {
+            "name":User.name.ilike(f"%{search_word}%"),
+            "email": User.email.ilike(f"%{search_word}%")
+        }
+        
+    filter_case = (filter_by == "none", search_by == "none")
 
-    try:
-        users = filter_conditions.get((filter_by, search_by), ("none","none"))
-    except Exception as e:
-        logging.error(f"User table could not be retrieved. Error: {e}")
+    match filter_case:
+        case (True, True):
+            users = User.query.order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (True, False):
+            users = User.query.filter(search_conditions_map[search_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (False, True):
+            users = User.query.filter(filter_conditions_map[filter_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case (False, False):
+            users = User.query.filter(filter_conditions_map[filter_by], search_conditions_map[search_by]).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+        case _:
+            logging.error(f"User table could not be retrieved as criteria was not met.")
+            return jsonify({"response": "Could not match search criteria"}), 404
 
     if not users.items:
         return jsonify({"response": "Requested page out of range"}), 404
     
+    
     response_data ={
             "response":"success",
-            "users": [user.serialize_user_table() for user in users.items if user.id != 1],
+            "users": [user.serialize_user_table() for user in users.items if user.access_level != UserAccessLevel.SUPER_ADMIN],
             "total_pages": users.pages,
             "current_page": users.page,
             "query":{
@@ -131,6 +158,8 @@ def admin_users_table():
                 "ordered_by": order_by,
                 "order_sort": order_sort,
                 "filter_by": filter_by,
+                "filter_by_flag": filter_by_flag,
+                "filter_by_last_seen": filter_by_last_seen,
                 "search_by": search_by,
                 "search_word": search_word,
             }
@@ -138,6 +167,64 @@ def admin_users_table():
     
     return jsonify(response_data)
 
+# USERS TABLE INFO 
+@admin.route("/restricted_area/users/user_information", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_user_information)
+def admin_user_information():
+    """
+    admin_user_information() -> JsonType
+    ----------------------------------------------------------
+    Route to get a user's base information.
+    Takes a JSON payload with the following parameter:
+    - "user_id": User's id to be queried.
+
+    Returns a JSON object with a "response" field. User information only sent if response is 200.
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "user_id": 12345
+    }
+    ----------------------------------------------------------
+    Response examples:
+
+    {"response": "Requested page out of range"}
+
+    {
+        "response":"success",
+        "user":      {
+                "id": 12345
+                "name": "Frank Torres",
+                "email": "frank.torres@fakemail.com",
+                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
+                "access": "user",
+                "flagged": "blue",
+                "is_blocked": "false"
+                }, 
+    }
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get info from JSON payload
+    user_id = json_data["user_id"]
+
+    # Get user info
+    try:
+        user = User.query.filter_by(id=user_id).first()
+        if user is None:
+            return jsonify({"response": "User not found."}), 404
+    except Exception as e:
+        logging.error(f"Failed to access db. Error: {e}")
+        return jsonify({"response": "Error prevented user from being queried"}), 500
+    
+    response_data ={
+            "response":"success",
+            "user": user.serialize_user_table(),
+        }
+    
+    return jsonify(response_data)
 
 # USERS TABLE LOGS 
 @admin.route("/restricted_area/users/user_logs", methods=["POST"])
@@ -214,6 +301,164 @@ def admin_user_logs():
     
     return jsonify(response_data)
 
+# USERS TABLE CHANGE USER FLAG
+@admin.route("/restricted_area/users/flag_change", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_user_flag_change)
+def change_user_flag():
+    """
+    change_user_flag() -> JsonType
+    ----------------------------------------------------------
+    Route to change a user's flag by id.
+    Takes a JSON payload with the following parameters:
+    - "user_id": id of the user to block/unblock.
+    - "new_flag_colour": Should be a value from UserFlag enum class in string form.
+
+    Returns a JSON object with a "response" field:
+    - If flag colour change is successful: {"response": "success"}
+    - If the id is not found: {"response": "User not found"}
+    - If an error occurs during the operation: {"response": "Error changing user flag", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "user_id": 12345,
+        "new_flag_colour": "red"
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "User not found"}
+    {"response": "Error changing user flag", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get JSON payload 
+    user_id = json_data["user_id"]
+    flag_colour = json_data["new_flag_colour"]
+
+    # Make sure flag exists
+    flag = map_string_to_enum(flag_colour, UserFlag)
+    if flag == None:
+        return jsonify({"response": "Flag colour not found"}), 404
+
+    try:
+        user = User.query.filter_by(id=user_id).first()
+
+        if user:
+            old_flag = user.flagged
+            user.flag_change(flag_colour)
+            db.session.commit()
+
+            log_event("ADMIN_FLAG_USER","flag changed",user.id, f"Previous flag: {old_flag} New flag: {flag_colour}.")
+            return jsonify({"response": "success"})
+        else:
+            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id} lead to 404 not found.")
+            logging.info(f"User id={user_id} could not be found, 404 not found.") 
+            return jsonify({"response": "User not found"}), 404
+        
+    except IntegrityError as e:
+        # Handle database integrity error (e.g., foreign key constraint)
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented user flag change: {e}")
+        try:
+            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, integrity error raised.")
+        except Exception as e:
+            logging.error(f"Error prevented user flag change log to be saved: {e}")
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+    
+    except Exception as e:
+        logging.error(f"Error prevented user flag change: {e}")
+        try:
+            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, error raised.")
+        except Exception as e:
+            logging.error(f"Error prevented user flag change log to be saved: {e}")
+        return jsonify({"response": "Error changing user flag", "error": str(e)}), 500
+    
+# USERS TABLE CHANGE USER ACCESS TYPE
+@admin.route("/restricted_area/users/access_change", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_user_access_type_change)
+def change_user_access():
+    """
+    change_user_access() -> JsonType
+    ----------------------------------------------------------
+    Route to change a user's access type by id.
+    Takes a JSON payload with the following parameters:
+    - "user_id": id of the user to block/unblock.
+    - "new_type": Should be either "admin" or "user".
+
+    Returns a JSON object with a "response" field:
+    - If type change is successful: {"response": "success"}
+    - If the id is not found: {"response": "User not found"}
+    - If an error occurs during the operation: {"response": "Error changing user type", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "user_id": 12345,
+        "new_type": "admin"
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "User not found"}
+    {"response": "Error changing user type", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get JSON payload 
+    user_id = json_data["user_id"]
+    user_type = json_data["new_type"]
+
+    try:
+        user = User.query.filter_by(id=user_id).first()
+
+        if user:
+            current_type = user.access_level
+
+            if user_type == "admin":
+
+                if current_type == UserAccessLevel.ADMIN:
+                    return jsonify({"response": "success"})
+                else:
+                    if current_user.access_level != UserAccessLevel.SUPER_ADMIN:
+                        return jsonify({"response": "Users can only get admin permissions from the super admin."}), 403
+                    else:
+                        user.make_user_admin()
+            else:
+                user.make_user_regular_user()
+
+            db.session.commit()
+            log_event("ADMIN_USER_ACCESS_CHANGE","access changed",user.id, f"Previous access type: {current_type} New: {user_type}.")
+            return jsonify({"response": "success"})
+        else:
+            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id} lead to 404 not found.")
+            logging.info(f"User id={user_id} could not be found, 404 not found.") 
+            return jsonify({"response": "User not found"}), 404
+        
+    except IntegrityError as e:
+        # Handle database integrity error (e.g., foreign key constraint)
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented user type change: {e}")
+        try:
+            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, integrity error raised.")
+        except Exception as e:
+            logging.error(f"Error prevented user access change log to be saved: {e}")
+        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+    
+    except Exception as e:
+        logging.error(f"Error prevented user type change: {e}")
+        try:
+            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, error raised.")
+        except Exception as e:
+            logging.error(f"Error prevented user access change log to be saved: {e}")
+        return jsonify({"response": "Error changing user type", "error": str(e)}), 500
+
 
 # USERS TABLE BLOCK/UNBLOCK
 @admin.route("/restricted_area/users/block_unblock", methods=["POST"])
@@ -249,7 +494,7 @@ def block_unblock_user():
     # Get the JSON data from the request body
     json_data = request.get_json()
 
-    # Get Uuuid and block status from JSON payload
+    # Get id and block status from JSON payload
     user_id = json_data["user_id"]
     block_status = json_data["block"]
 
@@ -330,7 +575,7 @@ def admin_delete_user():
         user = User.query.filter_by(id=user_id).first()
 
         if user:
-            # Admin user should not be deleted
+            # Super Admin user should not be deleted
             if user.access_level == UserAccessLevel.SUPER_ADMIN:
                 logging.warning(f"Blocked attempt to delete admin user.")
                 return jsonify({"response": "Action forbidden to all users. Check the request parameters."}), 403

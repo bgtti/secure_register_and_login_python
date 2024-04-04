@@ -1,7 +1,7 @@
 from app.extensions import  db
 from app.models.log_event import LogEvent
 from app.utils.log_event_utils.events_for_account import signup_event, login_event
-from app.utils.log_event_utils.events_for_admin import block_user_event, delete_user_event
+from app.utils.log_event_utils.events_for_admin import flag_user_event, user_access_change, block_user_event, delete_user_event
 from app.utils.log_event_utils.events_for_contact import contact_form_event
 
 # EVENT LOGS VERSUS OTHER LOGS:
@@ -14,6 +14,8 @@ from app.utils.log_event_utils.events_for_contact import contact_form_event
 LOG_EVENTS = {
     "ACCOUNT_SIGNUP": "ACCOUNT_SIGNUP",
     "ACCOUNT_LOGIN": "ACCOUNT_LOGIN",
+    "ADMIN_FLAG_USER": "ADMIN_FLAG_USER",
+    "ADMIN_USER_ACCESS_CHANGE":"ADMIN_USER_ACCESS_CHANGE",
     "ADMIN_BLOCK_USER": "ADMIN_BLOCK_USER",
     "ADMIN_DELETE_USER": "ADMIN_DELETE_USER",
     "CONTACT_FORM_MESSAGE": "CONTACT_FORM_MESSAGE"
@@ -47,6 +49,10 @@ def log_event(event_activity_name, event_code, user_id=0, extra_info=""):
             log_obj = signup_event(event_code)
         case "ACCOUNT_LOGIN":
             log_obj = login_event(event_code)
+        case "ADMIN_FLAG_USER":
+            log_obj = flag_user_event(event_code)
+        case "ADMIN_USER_ACCESS_CHANGE":
+            log_obj = user_access_change(event_code)
         case "ADMIN_BLOCK_USER":
             log_obj = block_user_event(event_code)
         case "ADMIN_DELETE_USER":
@@ -68,12 +74,11 @@ def log_event(event_activity_name, event_code, user_id=0, extra_info=""):
         message = f"{log_obj["message"]} {extra_info}"
 
     new_log_event = LogEvent(
-        level=log_obj["level"],
-        type=log_obj["type"],
-        activity=log_obj["activity"],
-        message=message,
-        user_uuid="", # DELETE
-        user_id=user_id
+    level=log_obj["level"],
+    type=log_obj["type"],
+    activity=log_obj["activity"],
+    message=message,
+    user_id=user_id  # Update this line
     )
     db.session.add(new_log_event)
     db.session.commit()
