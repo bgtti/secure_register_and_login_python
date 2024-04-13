@@ -1,7 +1,7 @@
 import os
 import json
 from sqlalchemy import insert
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.extensions import db, flask_bcrypt
 from app.models.user import User
 from app.models.stats import UserStats, VisitorStats
@@ -9,6 +9,7 @@ from app.utils.salt_and_pepper.helpers import get_pepper
 from app.utils.console_warning.print_warning import console_warn
 from app.dummie_data.create_files import create_dummie_files
 from app.dummie_data.dummie_logs import create_dummie_logs
+from app.dummie_data.dummie_messages import create_dummie_messages
 
 """
 The file named dummie_base_data.py (in this module) created the files data_users.json, data_user_stats.json, data_users_visitor_stats.json, and data_visitor_stats.json.
@@ -38,7 +39,7 @@ def generate_date_obj(num_months_in_the_past, day_of_month=1):
     date_obj.month -> January
     """
     # Get the current date
-    current_date = datetime.utcnow()
+    current_date = datetime.now(timezone.utc)
 
     # Calculate the target month and year
     target_month = current_date.month - num_months_in_the_past
@@ -92,7 +93,7 @@ def get_date_obj_last_week():
     date_obj_2 = get_date_obj_last_week() -> datetime of the 25th of Dec 2024
     """
     this_year = datetime.now().year
-    this_week_num = datetime.date(datetime.utcnow()).isocalendar()[1]
+    this_week_num = datetime.date(datetime.now(timezone.utc)).isocalendar()[1] 
     if this_week_num == 1:
         last_week_of_year = datetime(this_year-1, 12, 31).isocalendar()[1]
         return get_date_from_week_num(last_week_of_year, this_year-1)
@@ -122,10 +123,10 @@ Users are being created for testing purposes and, as such, the date of the accou
 Why are user creation dates being spread out?
 To be able to visualize data represented from the Stats module as well (visually represented when logging in the admin dashboard).
 """
-TODAY = datetime.utcnow()
+TODAY = datetime.now(timezone.utc)
 YESTERDAY = TODAY - timedelta(days = 1)
 THIS_YEAR = datetime.now().year
-THIS_WEEK_NUM = datetime.date(datetime.utcnow()).isocalendar()[1]
+THIS_WEEK_NUM = datetime.date(datetime.now(timezone.utc)).isocalendar()[1]
 
 DATE_OBJ_LAST_WEEK = get_date_obj_last_week()
 DATE_OBJ_THIS_WEEK = get_date_from_week_num(THIS_WEEK_NUM, THIS_YEAR)
@@ -284,6 +285,9 @@ def create_dummie_user_accts():
 
         console_warn("...adding some dummie logs to db...", "CYAN")
         create_dummie_logs()
+
+        console_warn("...adding some dummie messages to db...", "CYAN")
+        create_dummie_messages()
 
         console_warn("100 users created successfully!", "CYAN")
         print()

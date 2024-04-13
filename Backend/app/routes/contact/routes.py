@@ -40,6 +40,7 @@ def contactForm():
     json_data = request.get_json()
     name = json_data["name"]
     email = json_data["email"]
+    subject = json_data["subject"]
     message = json_data["message"]
     is_user = json_data["is_user"]
     honeypot = json_data["honeypot"]
@@ -66,9 +67,10 @@ def contactForm():
 
     html_in_name = check_for_html(name, "contact_form - name field", email)
     html_in_email = check_for_html(email, "contact_form - email field", email)
+    html_in_subject = check_for_html(subject, "contact_form - subject field", email)
     html_in_message = check_for_html(message, "contact_form - message field", email)
 
-    if html_in_email or html_in_name or html_in_message:
+    if html_in_email or html_in_name or html_in_subject or html_in_message:
         flag = "YELLOW"
         if is_user:
             log_event("CONTACT_FORM_MESSAGE", "html detected", the_user.id)
@@ -78,8 +80,9 @@ def contactForm():
     else:
         profanity_in_name = has_profanity(name) 
         profanity_in_email = has_profanity(email)
+        profanity_in_subject = has_profanity(subject)
         profanity_in_message = has_profanity(message)
-        if profanity_in_name or profanity_in_email or profanity_in_message:
+        if profanity_in_name or profanity_in_email or profanity_in_subject or profanity_in_message:
             flag = "PURPLE"
             if is_user:
                 log_event("CONTACT_FORM_MESSAGE", "profanity", the_user.id)
@@ -89,7 +92,7 @@ def contactForm():
 
     # Create message
     try:
-        new_message = Message(sender_name=name, sender_email=email, message=message) 
+        new_message = Message(sender_name=name, sender_email=email, subject=subject, message=message) 
         db.session.add(new_message)
         if flag:
             new_message.flag_change(flag)
@@ -118,7 +121,7 @@ def contactForm():
     if is_user:
         email_in_db = the_user.email
     try:
-        email_forwarded = contact_form_email_forwarding(name, email, message, is_user, email_in_db)
+        email_forwarded = contact_form_email_forwarding(name, email, subject, message, is_user, email_in_db)
     except Exception as e:
         logging.error(f"Email forwarding issue. Error: {e}")
 

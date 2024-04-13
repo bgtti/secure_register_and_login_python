@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice";
 import { getUserInfo } from "../../../../config/apiHandler/admin/userInfo.js";
+import { PATH_TO } from "../../../../router/routePaths.js";
 import { USER_ACCESS_DIC } from "../../../../utils/constants.js"
 import Modal from "../../../../components/Modal/Modal";
 import ModalUserAction from "../ModalUserAction/ModalUserAction";
@@ -81,6 +82,19 @@ function UserInfo() {
     function toggleModal() {
         setDisplayModal(!displayModal);
     }
+
+    /**
+     * Gets user object to pass on as props to children
+     */
+    function getUserObj() {
+        let userObj = {
+            name: user.name,
+            email: user.email,
+            id: user.id
+        }
+        return userObj;
+    }
+
     /**
      * Fetch user data
      * 
@@ -125,7 +139,7 @@ function UserInfo() {
 
             <h3>User Info</h3>
 
-            <button onClick={() => { navigate("/adminArea/users/usersTable") }}>Back to Users Table</button>
+            <button onClick={() => { navigate(PATH_TO.adminArea_usersTable) }}>Back to Users Table</button>
 
             <h4>Selected User</h4>
             {
@@ -226,12 +240,8 @@ function UserInfo() {
                             <button
                                 className="UserInfo-ActBtn"
                                 onClick={() => {
-                                    let userObj = {
-                                        name: user.name,
-                                        email: user.email,
-                                        id: user.id
-                                    }
-                                    navigate("/adminArea/users/userLogs", { state: userObj })
+                                    let userObj = getUserObj();
+                                    navigate(PATH_TO.adminArea_userLogs, { state: userObj })
                                 }}>
                                 Show Logs
                             </button>
@@ -242,7 +252,13 @@ function UserInfo() {
                         <h4>Message</h4>
                         <div>
                             <button
-                                className="UserInfo-ActBtn">Show Messages</button>
+                                className="UserInfo-ActBtn"
+                                onClick={() => {
+                                    let userObj = getUserObj();
+                                    navigate(PATH_TO.adminArea_userMessages, { state: userObj })
+                                }}>
+                                Show Messages
+                            </button>
                         </div>
                     </>
                 )

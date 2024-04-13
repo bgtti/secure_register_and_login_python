@@ -1,0 +1,74 @@
+.Message {
+    /* width: 100%; */
+    border: 2px solid var(--FontColorDarker);
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+
+}
+
+.Message>* {
+    font-size: .9em;
+}
+
+.Message>section {
+    margin-bottom: 10px;
+}
+
+.Message>hr {
+    border: 1px solid var(--BackgroundInput);
+}
+
+.Message-Sect1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.Message-FontDarker {
+    color: var(--FontColorSecondary);
+}
+
+.Message-StrongFontColour {
+    color: var(--YellowColor);
+}
+
+.Message-MarginTop {
+    margin-top: 10px;
+}
+
+.Message-WrapText {
+    max-width: 97%;
+    text-wrap: pretty;
+}
+
+.Message-BtnContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.Message-BtnContainer>* {
+    background-color: var(--YellowColor);
+    font-size: .8em;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 140px;
+}
+
+.Message-DelBtn {
+    background-color: var(--RedColor);
+    color: var(--FontColorPrimary);
+}
+
+@media (min-width: 600px) {
+    .Message>* {
+        font-size: 1em;
+    }
+
+    .Message-BtnContainer>* {
+        font-size: 13px;
+        width: 150px;
+    }
+}

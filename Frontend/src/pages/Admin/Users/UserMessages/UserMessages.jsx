@@ -3,13 +3,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice";
-import { getUserLogs } from "../../../../config/apiHandler/admin/userLogs.js"
-import UserLogRow from "./UserLogRow.jsx"
+import { PATH_TO } from "../../../../router/routePaths.js";
 import Pagination from "../../../../components/Pagination/Pagination.jsx";
-import "./userLogs.css"
+import { getUserMessages } from "../../../../config/apiHandler/admin/userMessages.js"
+import UserMessageContainer from "./UserMessageContainer.jsx";
+// import "./userLogs.css"
 
 /**
- * Component returns HTML div with selected user's logs
+ * Component returns HTML div with selected user's messages
  * 
  * Should be passed a location state when navigated to: the selected user's id, name, and email.
  * 
@@ -19,15 +20,15 @@ import "./userLogs.css"
  * @param {number} state.id
  * @returns {React.ReactElement}
  * @example
- * navigate("userLogs", { state: user })
+ * navigate("userMessages", { state: user })
  */
-function UserLogs() {
+function UserMessages() {
     const location = useLocation();
     const user = location.state;
     const { name, email, id } = user;
 
     if (!user || !user.name || !user.email || !user.id) {
-        console.error("Missing location state in UserLogs.")
+        console.error("Missing location state in UserMessages.")
     }
 
     const dispatch = useDispatch();
@@ -36,37 +37,37 @@ function UserLogs() {
     // Only set state if component is mounted
     const isComponentMounted = useIsComponentMounted();
 
-    // Store logs and pagination
-    const [logs, setLogs] = useState([]);
+    // Store messages and pagination
+    const [messages, setMessages] = useState([]);
     const [curPage, setCurPage] = useState([]);
     const [tPages, setTPages] = useState([]);
 
     // Request user info upon component mount
     useEffect(() => {
-        getLogs();
+        getMessages();
     }, [])
 
-    function getLogs(pageNr = 1) {
+    function getMessages(pageNr = 1) {
         if (id === 0) {
             return
         }
         dispatch(setLoader(true))
-        getUserLogs(pageNr, id)
+        getUserMessages(pageNr, id)
             .then(response => {
                 if (isComponentMounted()) {
                     if (response.data) {
-                        setLogs(response.logs);
+                        setMessages(response.messages);
                         setCurPage(response.currentPage);
                         setTPages(response.totalPages);
                     } else {
-                        setLogs([]);
+                        setMessages([]);
                         setCurPage(1);
                         setTPages(1);
                     }
                 }
             })
             .catch(error => {
-                console.warn("getUserLogs (in UserLogs) encountered an error", error);
+                console.warn("getUserMessages (in UserMessages) encountered an error", error);
             })
             .finally(() => {
                 dispatch(setLoader(false));
@@ -75,19 +76,19 @@ function UserLogs() {
 
     function handlePagination(newPage) {
         if (Number.isInteger(newPage) && newPage >= 1 && newPage <= totalPages) {
-            getLogs(newPage);
+            getMessages(newPage);
         }
     }
 
 
 
     return (
-        <div className="Users UserLogs">
+        <div className="Users UserMessages">
             <h3>User Logs</h3>
 
-            <div className="UserLogs-btnContainer">
-                <button onClick={() => { navigate("/adminArea/users/userInfo", { state: id }) }}>Back to User's Info</button>
-                <button onClick={() => { navigate("/adminArea/users/usersTable") }}>Back to Users Table</button>
+            <div className="UserMessages-btnContainer">
+                <button onClick={() => { navigate(PATH_TO.adminArea_userInfo, { state: id }) }}>Back to User's Info</button>
+                <button onClick={() => { navigate(PATH_TO.adminArea_usersTable) }}>Back to Users Table</button>
             </div>
 
             <h4 >User</h4>
@@ -97,35 +98,25 @@ function UserLogs() {
                 <p><b>Email:</b> {email}</p>
             </div>
 
-            <h4>Logs</h4>
+            <h4>Messages</h4>
 
             {
-                logs && logs.length > 0 && (
-                    <table className="MAIN-table UserLogs-Table" role="table">
-                        <thead role="rowgroup">
-                            <tr role="row">
-                                <th role="columnheader">Date</th>
-                                <th role="columnheader">Type</th>
-                                <th role="columnheader">Activity</th>
-                                <th role="columnheader">Log message</th>
-                            </tr>
-                        </thead>
-                        <tbody role="rowgroup">
-                            {logs && (
-                                logs.map((log, index) => (
-                                    <UserLogRow
-                                        log={log}
-                                        key={index}
-                                    />
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                messages && messages.length > 0 && (
+                    <>
+                        {messages && (
+                            messages.map((message, index) => (
+                                <UserMessageContainer
+                                    theMessage={message}
+                                    key={index}
+                                />
+                            ))
+                        )}
+                    </>
                 )
             }
             {
-                ((logs && logs.length == 0) || (!logs)) && (
-                    <p className="UserLogs-bold UserLogs-noLogs"><b>No logs available.</b></p>
+                ((messages && messages.length == 0) || (!messages)) && (
+                    <p><b>No message found.</b></p>
                 )
             }
             {
@@ -140,4 +131,4 @@ function UserLogs() {
         </div>
     );
 }
-export default UserLogs;
+export default UserMessages;

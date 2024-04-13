@@ -96,3 +96,10 @@ export const USERS_TABLE_REQUEST = {
     filter_by_flag: [...FLAG_TYPES],
     search_by: ["none", "name", "email"]
 }
+
+//Requests sent to get messages' table possibilities
+export const MESSAGES_TABLE_REQUEST = {
+    order_sort: ["descending", "ascending"],
+    filter_by: ["answer_needed", "answer_not_needed", "all"],
+    include_spam: ["true", "false"],
+}

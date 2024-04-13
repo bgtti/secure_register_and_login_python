@@ -1,22 +1,44 @@
+const urlPrefix = {
+    account: "/api/account",
+    admin: "/api/admin",
+    contact: "/api/contact",
+}
+
+const adminUrl = {
+    dash: `${urlPrefix.admin}/dash`,
+    messages: `${urlPrefix.admin}/messages`,
+    userAction: `${urlPrefix.admin}/user_action`,
+    users: `${urlPrefix.admin}/users`,
+}
+
 const apiEndpoints = {
     baseURL: "http://127.0.0.1:5000",
     //contact
-    contactUs: "api/contact/contact_form", //OK
+    contactUs: `${urlPrefix.contact}/contact_form`, //OK
     //account
-    userSignUp: "api/account/signup", //OK
-    userLogIn: "/api/account/login", //OK
-    userLogOut: "/api/account/logout", //OK
-    userGetOwnAcctInfo: "/api/account/@me", //OK
-    userDeleteOwnAccount: "/api/account/delete", //MISSING
-    //admin
-    adminGetDashboardData: "/api/admin/restricted_dashboard", //MISSING
-    adminGetUsersTable: "api/admin/restricted_area/users/users_table",
-    adminGetUserInfo: "api/admin/restricted_area/users/user_information",
-    adminGetUserLogs: "api/admin/restricted_area/users/user_logs",
-    adminChangeUserFlag: "api/admin/restricted_area/users/flag_change",
-    adminChangeUserAccessType: "api/admin/restricted_area/users/access_change",
-    adminBlockUnblockUser: "api/admin/restricted_area/users/block_unblock",
-    adminDeleteUser: "api/admin/restricted_area/users/delete",
+    userSignUp: `${urlPrefix.account}/signup`, //OK
+    userLogIn: `${urlPrefix.account}/login`, //OK
+    userLogOut: `${urlPrefix.account}/logout`, //OK
+    userGetOwnAcctInfo: `${urlPrefix.account}/@me`, //OK
+    userDeleteOwnAccount: `${urlPrefix.account}/delete`, //MISSING
+    //admin - dashboard
+    adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING
+    //admin - users
+    adminGetUsersTable: `${adminUrl.users}/table`, //OK
+    adminGetUserInfo: `${adminUrl.users}/user_info`, //OK
+    adminGetUserLogs: `${adminUrl.users}/user_logs`, //OK
+    adminGetUserMessages: `${adminUrl.users}/user_messages`, // MISSING
+    //admin - user action
+    adminChangeUserFlag: `${adminUrl.userAction}/flag_change`,//OK
+    adminChangeUserAccessType: `${adminUrl.userAction}/access_change`,//OK
+    adminBlockUnblockUser: `${adminUrl.userAction}/block_unblock`,//OK
+    adminDeleteUser: `${adminUrl.userAction}/delete_user`, //OK
+    //admin - messages
+    adminMessagesTable: `${adminUrl.messages}/table`, // MISSING
+    adminMessageMarkNoAnswer: `${adminUrl.messages}/...`, //MISSING
+    adminMessageMarkAnswer: `${adminUrl.messages}/...`, //MISSING
+    adminMessageFlagChange: `${adminUrl.messages}/...`, //MISSING
+    adminMessageDelete: `${adminUrl.messages}/...`, //MISSING
 };
 
 export default apiEndpoints;

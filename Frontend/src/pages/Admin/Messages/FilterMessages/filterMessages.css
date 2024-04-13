@@ -1,0 +1,42 @@
+.FilterMessages-btn,
+.FilterMessages-form>button {
+    padding: 5px 10px;
+    font-size: 0.9em !important;
+}
+
+.FilterMessages-btn {
+    height: 2.2em;
+    min-width: 12em;
+    padding: 5px 10px;
+    font-size: 0.9em !important;
+}
+
+.FilterMessages-btn-selected {
+    background-color: var(--MiddleBlueColour);
+    margin: 0 !important;
+    border-bottom-left-radius: 0;
+}
+
+.FilterMessages-form {
+    padding: 10px 0 5px 10px !important;
+    border-left: 3px solid var(--FontColorDarker);
+    padding-left: 5px;
+    border-image: linear-gradient(180deg, var(--MiddleBlueColour), #1e292e, var(--BackgroudPrimary)) 2;
+}
+
+.FilterMessages-form>div {
+    grid-template-columns: minmax(0.5em, 10em) minmax(0.5em, 15em);
+}
+
+.FilterMessages-form>button {
+    min-width: 10em;
+    height: 1.9em;
+    margin: 5px 0 !important;
+}
+
+@media (max-width: 310px) {
+    .FilterMessages-form>div {
+        display: flex;
+        flex-direction: column;
+    }
+}

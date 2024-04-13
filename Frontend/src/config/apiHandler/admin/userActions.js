@@ -17,17 +17,17 @@ import { FLAG_TYPES, USER_TYPE_REQUEST } from "../../../utils/constants";
  * { success: false }
  */
 export function changeUserFlag(userId, flagColour) {
-    let the_id = (userId && (typeof userId === "number")) ? userId : "";
-    let the_flag = (flagColour && FLAG_TYPES.includes(flagColour)) ? flagColour : "";
+    let theId = (userId && (typeof userId === "number")) ? userId : "";
+    let theFlag = (flagColour && FLAG_TYPES.includes(flagColour)) ? flagColour : "";
 
-    if (the_id === "" || the_flag === "") {
+    if (theId === "" || theFlag === "") {
         console.warn("Invalid input. Cannot change user flag.")
         return { success: false }
     }
 
     let requestData = {
-        "user_id": the_id,
-        "new_flag_colour": the_flag
+        "user_id": theId,
+        "new_flag_colour": theFlag
     }
 
     const getData = async () => {

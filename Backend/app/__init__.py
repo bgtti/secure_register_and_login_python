@@ -26,6 +26,8 @@ def create_app(config_class=Config):
     from app.models import user
     from flask import current_app
 
+    # Registering blueprints
+    # Note admin has nested blueprits: check admin routes file
     from app.routes.account.routes import account
     from app.routes.admin.routes import admin
     from app.routes.stats.routes import stats
