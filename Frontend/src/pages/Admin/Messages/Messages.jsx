@@ -165,39 +165,48 @@ function Messages() {
         "date": "Tue, 09 Jan 2024 21:07:38 GMT",
         "senderName": "John",
         "senderEmail": "john@example.com",
+        "subject": "oops",
         "message": "Hi, I have a problem logging in.",
         "flagged": "blue",
         "answerNeeded": true,
+        "senderIsUser": true,
         "wasAnswered": false,
         "answeredBy": "",
         "answerDate": "",
-        "answer": ""
+        "answer": "",
+        "isSpam": false
     }
     let a2Message = {
         "id": 1,
         "date": "Tue, 09 Jan 2024 21:07:38 GMT",
         "senderName": "John",
         "senderEmail": "john@example.com",
+        "subject": "helooo",
         "message": "Hi, I have a problem logging in.",
         "flagged": "blue",
         "answerNeeded": false,
         "wasAnswered": true,
+        "senderIsUser": false,
         "answeredBy": "j@hhhshsidndd.com",
         "answerDate": "Tue, 09 Jan 2024 21:07:38 GMT",
-        "answer": "kdbkdvbs djhcbvhcd shbkhb sajhsbashcabv shcbdchkbcd kbkdbkdc hvhdvdlhvdc askhbckhcd"
+        "answer": "kdbkdvbs djhcbvhcd shbkhb sajhsbashcabv shcbdchkbcd kbkdbkdc hvhdvdlhvdc askhbckhcd",
+        "isSpam": true
     }
     let a3Message = {
         "id": 3,
         "date": "Tue, 09 Jan 2024 21:07:38 GMT",
         "senderName": "John",
         "senderEmail": "john@example.com",
+        "subject": "zyagss",
         "message": "Hi, I have a problem logging in.",
         "flagged": "red",
         "answerNeeded": false,
         "wasAnswered": false,
+        "senderIsUser": true,
         "answeredBy": "",
         "answerDate": "",
-        "answer": ""
+        "answer": "",
+        "isSpam": false
     }
 
     return (

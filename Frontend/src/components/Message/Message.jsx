@@ -1,5 +1,8 @@
 import PropTypes from "prop-types";
 import Flag from "../Flag/Flag";
+import iconUserKnown from "../../assets/icon_user_type_user.svg"
+import iconUserUnkown from "../../assets/icon_user_unkown.svg"
+import iconMailSpam from "../../assets/icon_mail_top_danger.svg"
 import "./message.css"
 
 /**
@@ -14,13 +17,16 @@ import "./message.css"
  * @param {string} props.theMessage.date
  * @param {string} props.theMessage.senderName
  * @param {string} props.theMessage.senderEmail
+ * @param {bool} props.theMessage.senderIsUser
  * @param {string} props.theMessage.message
+ * @param {string} props.theMessage.subject
  * @param {string} props.theMessage.flagged
  * @param {bool} props.theMessage.answerNeeded
  * @param {bool} props.theMessage.wasAnswered
  * @param {string} props.theMessage.answeredBy
  * @param {string} props.theMessage.answerDate
  * @param {string} props.theMessage.answer
+ * @param {bool} props.theMessage.isSpam
  * @param {func} [props.clickHandlerNoAnswerNeeded] //Click handler needed if isAdminComponent, should accept message id
  * @param {func} [props.clickHandlerMarkAnswer] //Click handler needed if isAdminComponent, should accept message id
  * @param {func} [props.clickHandlerChangeFlag] //Click handler needed if isAdminComponent, should accept message id
@@ -30,7 +36,7 @@ import "./message.css"
  */
 function Message(props) {
     const { theMessage, isAdminComponent, clickHandlerNoAnswerNeeded, clickHandlerMarkAnswer, clickHandlerChangeFlag, clickHandlerDeleteMessage } = props;
-    const { id, date, senderName, senderEmail, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer } = theMessage;
+    const { id, date, senderName, senderEmail, senderIsUser, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage;
 
     function getMessageStatus() {
         if (isAdminComponent) {
@@ -60,8 +66,29 @@ function Message(props) {
                 </div>
                 {
                     isAdminComponent && (
-                        <div className="Message-FlagContainer">
+                        <div className="Message-IconContainer">
+                            {isSpam && (
+                                <div className="MAIN-iconContainerCircle">
+                                    <img
+                                        className="Message-spamIcon"
+                                        alt={"This message was marked as spam"}
+                                        role="img"
+                                        title={"Marked as spam"}
+                                        src={iconMailSpam}
+                                    />
+                                </div>
+                            )}
+
                             <div className="MAIN-iconContainerCircle">
+                                <img
+                                    className={senderIsUser ? "Message-userIcon" : "Message-userIconUnkown"}
+                                    alt={senderIsUser ? "Sender is a subscribed user." : "Sender is unkown (not a subscribed user)."}
+                                    role="img"
+                                    title={senderIsUser ? "Sender is a subscribed user" : "Sender is unkown"}
+                                    src={senderIsUser ? iconUserKnown : iconUserUnkown}
+                                />
+                            </div>
+                            <div className="MAIN-iconContainerCircle Message-flagContainer">
                                 <Flag flag={flagged} />
                             </div>
                         </div>
@@ -73,7 +100,8 @@ function Message(props) {
             <hr />
 
             <section>
-                <p><b>Message</b></p>
+                <p><b>Subject:</b> {subject}</p>
+                <p className="Message-MarginTop"><b>Message:</b></p>
                 <p className="Message-MarginTop Message-WrapText">{message}</p>
             </section>
 
@@ -82,7 +110,7 @@ function Message(props) {
                     <>
                         <hr />
                         <section>
-                            <p><b>Answer</b></p>
+                            <p><b>Answer:</b></p>
                             <p className="Message-MarginTop"><b>By:</b> <span className="Message-FontDarker">{answeredBy}</span></p>
                             <p><b>Date:</b> <span className="Message-FontDarker">{answerDate}</span></p>
                             <p className="Message-MarginTop Message-WrapText">{answer}</p>
@@ -96,7 +124,7 @@ function Message(props) {
                     <>
                         <hr />
                         <div>
-                            <p><b>Actions</b></p>
+                            <p><b>Actions:</b></p>
                             <div className="Message-BtnContainer Message-MarginTop">
                                 {
                                     !answerNeeded && !wasAnswered && (
@@ -113,8 +141,13 @@ function Message(props) {
                                         <button disabled >No answer needed</button>
                                     )
                                 }
+
                                 <button onClick={() => { clickHandlerMarkAnswer(id, answeredBy, answer) }}>{wasAnswered ? "Edit answer" : "Mark as answered"}</button>
+
                                 <button onClick={() => { clickHandlerChangeFlag(id, flagged) }}>Change message flag</button>
+
+                                <button onClick={() => { console.log("spam") }}>Mark as spam</button>
+
                                 <button onClick={() => { clickHandlerDeleteMessage(id) }} className="Message-DelBtn">Delete message</button>
                             </div>
                         </div>
@@ -132,13 +165,16 @@ Message.propTypes = {
         date: PropTypes.string.isRequired,
         senderName: PropTypes.string.isRequired,
         senderEmail: PropTypes.string.isRequired,
+        subject: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
         flagged: PropTypes.string.isRequired,
         answerNeeded: PropTypes.bool.isRequired,
         wasAnswered: PropTypes.bool.isRequired,
         answeredBy: PropTypes.string.isRequired,
         answerDate: PropTypes.string.isRequired,
-        answer: PropTypes.string.isRequired
+        answer: PropTypes.string.isRequired,
+        senderIsUser: PropTypes.bool.isRequired,
+        isSpam: PropTypes.bool.isRequired
     }).isRequired,
     clickHandlerNoAnswerNeeded: PropTypes.func,
     clickHandlerMarkAnswer: PropTypes.func,

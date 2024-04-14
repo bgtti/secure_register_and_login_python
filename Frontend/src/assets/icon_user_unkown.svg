@@ -1,0 +1,59 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+ "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<!-- Source: https://freesvg.org/unknown-user-icon -->
+<!-- This svg was created as a modification to: https://freesvg.org/user-mail by bgtti -->
+<!-- Note: this svg has been modified from the original -->
+
+<svg 
+    version="1.0" 
+    xmlns="http://www.w3.org/2000/svg"
+    width="273.000000pt" 
+    height="273.000000pt"
+    viewBox="0 0 273.000000 273.000000"
+    preserveAspectRatio="xMidYMid meet"
+    
+>
+    <g 
+        transform="translate(0.000000,273.000000) scale(0.091,-0.091)"
+        fill="#000000" 
+        stroke="none">
+
+        <!-- user icon head -->
+        <path d="M844 2636 c-172 -39 -313 -158 -376 -314 -19 -48 -23 -76 -23 -172 0
+        -112 1 -117 37 -193 106 -221 366 -342 603 -282 187 48 324 174 377 348 26 88
+        21 212 -12 300 -49 130 -180 251 -319 297 -83 27 -207 34 -287 16z"
+        style="opacity:1;fill:#376073;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.18300009;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+        />
+        <!-- user icon body -->
+        <path 
+        d="M655 1590 c-206 -20 -337 -91 -441 -236 -63 -88 -98 -184 -123 -334
+        -19 -111 -44 -436 -53 -670 l-3 -85 70 -21 c39 -12 151 -46 250 -76 l180 -53
+        230 1 c311 1 768 39 945 80 36 8 102 26 148 40 l82 25 0 57 c0 31 -3 87 -6
+        123 l-7 66 -71 22 c-298 95 -496 359 -496 663 0 110 20 202 65 293 18 38 33
+        71 31 72 -1 1 -40 10 -86 18 -97 19 -577 29 -715 15z"
+        style="opacity:1;fill:#376073;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.18300009;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+        />
+
+        <!-- circle (color defines question mark, delete to have question mark the same color as background) -->
+
+        <path d="M1975 1776 c-243 -47 -440 -226 -494 -450 -17 -69 -15 -210 3 -279
+        47 -175 181 -325 354 -397 300 -126 663 2 801 284 49 100 63 156 63 266 0 359
+        -362 645 -727 576z "
+        style="opacity:1;fill:#aa0000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:7.51900005;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+        />
+
+        <!-- circle (with ? as 'hole') -->
+        <path d="M1975 1776 c-243 -47 -440 -226 -494 -450 -17 -69 -15 -210 3 -279
+        47 -175 181 -325 354 -397 300 -126 663 2 801 284 49 100 63 156 63 266 0 359
+        -362 645 -727 576z m205 -127 c131 -30 228 -137 230 -253 0 -67 -36 -123 -146
+        -230 -99 -94 -103 -100 -106 -145 l-3 -46 -80 0 -80 0 2 73 c3 93 15 113 138
+        226 92 85 95 89 94 129 -1 36 -6 47 -40 76 -36 31 -45 34 -102 34 -80 0 -96
+        -9 -142 -78 -20 -31 -43 -59 -51 -62 -7 -2 -42 -1 -76 4 -56 7 -63 11 -66 32
+        -8 56 70 174 139 212 64 35 202 48 289 28z m-19 -746 c5 -5 9 -42 7 -84 l-3
+        -74 -85 0 -85 0 -3 75 c-2 59 0 77 13 86 19 14 141 12 156 -3z"
+        style="opacity:1;fill:#B3B3B3;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:7.51900005;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+        />
+    </g>
+</svg>

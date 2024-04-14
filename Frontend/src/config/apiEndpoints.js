@@ -11,7 +11,7 @@ const adminUrl = {
     users: `${urlPrefix.admin}/users`,
 }
 
-const apiEndpoints = {
+export const apiEndpoints = {
     baseURL: "http://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK

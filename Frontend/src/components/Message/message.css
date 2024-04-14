@@ -43,6 +43,40 @@
     text-wrap: pretty;
 }
 
+.Message-IconContainer {
+    display: flex;
+    gap: 5px
+}
+
+.Message-IconContainer>div {
+    width: 2em;
+    height: 2em;
+}
+
+.Message-IconContainer>div>img {
+    width: 90%;
+    height: 90%;
+}
+
+.Message-spamIcon {
+    width: 70% !important;
+    height: 70% !important;
+}
+
+.Message-userIcon {
+    margin-left: 3px;
+    margin-bottom: 3px;
+}
+
+.Message-userIconUnkown {
+    margin-left: 6px;
+    margin-bottom: 3px;
+}
+
+.Message-flagContainer>* {
+    transform: scale(1.3);
+}
+
 .Message-BtnContainer {
     display: flex;
     flex-wrap: wrap;

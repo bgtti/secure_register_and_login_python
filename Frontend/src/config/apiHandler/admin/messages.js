@@ -1,5 +1,5 @@
 import { apiHandle404 } from "../../axios";
-import apiEndpoints from "../../apiEndpoints";
+import { apiEndpoints } from "../../apiEndpoints";
 import { MESSAGES_TABLE_REQUEST } from "../../../utils/constants";
 
 /**
