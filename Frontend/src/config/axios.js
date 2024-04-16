@@ -1,6 +1,6 @@
 import axios from "axios";
 import { redirect } from "react-router-dom";
-import apiEndpoints from "./apiEndPoints";
+import apiEndpoints from "./apiEndpoints";
 
 const urlBase = apiEndpoints.baseURL
 

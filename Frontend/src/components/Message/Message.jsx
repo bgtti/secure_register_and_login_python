@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import Flag from "../Flag/Flag";
 import iconUserKnown from "../../assets/icon_user_type_user.svg"
@@ -38,15 +39,36 @@ function Message(props) {
     const { theMessage, isAdminComponent, clickHandlerNoAnswerNeeded, clickHandlerMarkAnswer, clickHandlerChangeFlag, clickHandlerDeleteMessage } = props;
     const { id, date, senderName, senderEmail, senderIsUser, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage;
 
+    const [showOptions, setShowOptions] = useState(false);
+    function toggleShowOptions() {
+        setShowOptions(!showOptions);
+    }
+
+    function messageData() {
+        let dataObj = {
+            id: id,
+            senderEmail: senderEmail,
+            senderIsUser: senderIsUser,
+            flagged: flagged,
+            answerNeeded: answerNeeded,
+            wasAnswered: wasAnswered,
+            answeredBy: answeredBy,
+            answerDate: answerDate,
+            answer: answer,
+            isSpam: isSpam
+        }
+    }
+
     function getMessageStatus() {
         if (isAdminComponent) {
-            if (wasAnswered) { return "answered" }
-            if (answerNeeded) { return "answer needed" }
-            if (!answerNeeded) { return "no answer needed" }
+            if (isSpam) { return ["marked as spam", "FontBlue"] }
+            if (wasAnswered) { return ["answered", "FontDarker"] }
+            if (answerNeeded) { return ["answer needed", "FontYellow"] }
+            if (!answerNeeded) { return ["no answer needed", "FontDarker"] }
             console.error(`Inconsistent message status: wasAnswered = ${wasAnswered}, answerNeeded = ${answerNeeded}`)
-            return "status error"
+            return ["status error", "FontBlue"]
         } else {
-            return (wasAnswered ? "message received a reply" : "message sent")
+            return [(wasAnswered ? "message received a reply" : "message sent"), "FontDarker"]
         }
     }
 
@@ -54,6 +76,8 @@ function Message(props) {
 
     return (
         <div className="Message">
+
+            {/* Section 1: basic message info */}
             <section className={isAdminComponent ? "Message-Sect1" : ""} >
                 <div>
                     <p><b>Date:</b> <span className="Message-FontDarker">{date}</span></p>
@@ -62,7 +86,7 @@ function Message(props) {
                             <p><b>Sender:</b> <span className="Message-FontDarker">{senderName} | {senderEmail}</span> </p>
                         )
                     }
-                    <p><b>Status:</b> <span className={answerNeeded && isAdminComponent ? "Message-StrongFontColour" : "Message-FontDarker"}>{messageStatus}</span></p>
+                    <p><b>Status:</b> <span className={`Message-${messageStatus[1]}`}>{messageStatus[0]}</span></p>
                 </div>
                 {
                     isAdminComponent && (
@@ -94,67 +118,125 @@ function Message(props) {
                         </div>
                     )
                 }
-
             </section >
 
             <hr />
 
+            {/* Section 2: message subject and 'show more' button */}
             <section>
-                <p><b>Subject:</b> {subject}</p>
-                <p className="Message-MarginTop"><b>Message:</b></p>
-                <p className="Message-MarginTop Message-WrapText">{message}</p>
+                <p className="Message-MarginTop"><b>Subject:</b> {subject}</p>
+                <button
+                    className="Message-MarginTop Message-ShowMoreBtn"
+                    onClick={toggleShowOptions}>
+                    {showOptions ? "Show less..." : "Show more..."}
+                </button>
             </section>
 
+            {/* Message, answer, and action buttons */}
             {
-                wasAnswered && (
-                    <>
+                showOptions && (
+                    <div>
                         <hr />
+
+                        {/* Section 3: message text */}
                         <section>
-                            <p><b>Answer:</b></p>
-                            <p className="Message-MarginTop"><b>By:</b> <span className="Message-FontDarker">{answeredBy}</span></p>
-                            <p><b>Date:</b> <span className="Message-FontDarker">{answerDate}</span></p>
-                            <p className="Message-MarginTop Message-WrapText">{answer}</p>
+                            <p className="Message-MarginTop"><b>Message:</b></p>
+                            <p className="Message-MarginTop Message-WrapText">{message}</p>
                         </section>
-                    </>
+
+                        {/* Section 4: message answer */}
+                        {
+                            wasAnswered && (
+                                <>
+                                    <hr />
+                                    <section>
+                                        <p><b>Answer:</b></p>
+                                        <p className="Message-MarginTop"><b>By:</b> <span className="Message-FontDarker">{answeredBy}</span></p>
+                                        <p><b>Date:</b> <span className="Message-FontDarker">{answerDate}</span></p>
+                                        <p className="Message-MarginTop Message-WrapText">{answer}</p>
+                                    </section>
+                                </>
+                            )
+                        }
+
+                        {/* Section 5: action buttons */}
+                        {
+                            isAdminComponent && (
+                                <>
+                                    <hr />
+                                    <div>
+                                        <p><b>Actions:</b></p>
+                                        <div className="Message-BtnContainer Message-MarginTop">
+                                            {senderIsUser && (
+                                                <>
+                                                    <button
+                                                        onClick={() => { console.log("hello") }}>
+                                                        User info
+                                                    </button>
+                                                    <br />
+                                                </>
+
+                                            )}
+                                            <div className="Message-BtnSubContainer Message-MarginTop">
+                                                <button
+                                                    onClick={() => { console.log("hello") }}>
+                                                    Mark as...
+                                                </button>
+
+                                                <button
+                                                    onClick={() => { console.log("hello") }}>
+                                                    {wasAnswered ? "Edit answer" : "Record answer"}
+                                                </button>
+
+                                                <button
+                                                    onClick={() => { console.log("hello") }}>
+                                                    Change flag
+                                                </button>
+
+                                                <button
+                                                    className="Message-DelBtn"
+                                                    onClick={() => { console.log("hello") }}
+                                                >
+                                                    Delete message
+                                                </button>
+                                            </div>
+
+
+
+
+
+                                            {/* 
+                                            {
+                                                !answerNeeded && !wasAnswered && (
+                                                    <button onClick={() => { clickHandlerNoAnswerNeeded(id, false) }}>Answer needed</button>
+                                                )
+                                            }
+                                            {
+                                                answerNeeded && !wasAnswered && (
+                                                    <button onClick={() => { clickHandlerNoAnswerNeeded(id, true) }}>No answer needed</button>
+                                                )
+                                            }
+                                            {
+                                                wasAnswered && (
+                                                    <button disabled >No answer needed</button>
+                                                )
+                                            }
+
+                                            <button onClick={() => { clickHandlerMarkAnswer(id, answeredBy, answer) }}>{wasAnswered ? "Edit answer" : "Mark as answered"}</button>
+
+                                            <button onClick={() => { clickHandlerChangeFlag(id, flagged) }}>Change message flag</button>
+
+                                            <button onClick={() => { console.log("spam") }}>Mark as spam</button>
+
+                                            <button onClick={() => { clickHandlerDeleteMessage(id) }} className="Message-DelBtn">Delete message</button> */}
+                                        </div>
+                                    </div>
+                                </>
+                            )
+                        }
+                    </div>
                 )
             }
-
-            {
-                isAdminComponent && (
-                    <>
-                        <hr />
-                        <div>
-                            <p><b>Actions:</b></p>
-                            <div className="Message-BtnContainer Message-MarginTop">
-                                {
-                                    !answerNeeded && !wasAnswered && (
-                                        <button onClick={() => { clickHandlerNoAnswerNeeded(id, false) }}>Answer needed</button>
-                                    )
-                                }
-                                {
-                                    answerNeeded && !wasAnswered && (
-                                        <button onClick={() => { clickHandlerNoAnswerNeeded(id, true) }}>No answer needed</button>
-                                    )
-                                }
-                                {
-                                    wasAnswered && (
-                                        <button disabled >No answer needed</button>
-                                    )
-                                }
-
-                                <button onClick={() => { clickHandlerMarkAnswer(id, answeredBy, answer) }}>{wasAnswered ? "Edit answer" : "Mark as answered"}</button>
-
-                                <button onClick={() => { clickHandlerChangeFlag(id, flagged) }}>Change message flag</button>
-
-                                <button onClick={() => { console.log("spam") }}>Mark as spam</button>
-
-                                <button onClick={() => { clickHandlerDeleteMessage(id) }} className="Message-DelBtn">Delete message</button>
-                            </div>
-                        </div>
-                    </>
-                )
-            }
-
         </div >
     );
 };

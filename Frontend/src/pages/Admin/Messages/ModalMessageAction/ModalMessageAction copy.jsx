@@ -5,7 +5,6 @@ import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
 import { markMessageNoAnswerNeeded, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
 import { FLAG_TYPES } from "../../../../utils/constants.js";
-import ActionChangeFlag from "./ActionChangeFlag.jsx"
 // import "./modalUserAction.css"
 
 const ACTION_TITLE = {
@@ -67,8 +66,7 @@ const MARK_AS_OPTS = {
  * )
  */
 function ModalMessageAction(props) {
-    const { action, messageData, modalToggler, setUpdateData } = props;
-    const { id, senderEmail, senderIsUser, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = messageData;
+    const { action, id, flag = "blue", answeredBy = "", answer = "", modalToggler, setUpdateData } = props;
 
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
@@ -148,12 +146,28 @@ function ModalMessageAction(props) {
 
             {
                 action === "changeFlag" && (
-                    <ActionChangeFlag
-                        messageFlag={messageFlag}
-                        changesWereMade={changesWereMade}
-                        setMessageFlag={setMessageFlag}
-                    />
-
+                    <>
+                        <p>Select the flag colour of the message:</p>
+                        <br />
+                        <p><b className="ModalMessageAction-Bold" >Flag: </b> {flag}</p>
+                        <br />
+                        <div className="MAIN-form-display-table ModalMessageAction-displayTable">
+                            <label htmlFor="changeFlag">Select new flag colour:</label>
+                            <select
+                                className="ModalMessageAction-Select"
+                                name="changeFlag"
+                                id="changeFlag"
+                                defaultValue={messageFlag}
+                                disabled={changesWereMade ? true : false}
+                                onChange={(e) => { setMessageFlag(e.target.value) }}>
+                                {
+                                    FLAG_TYPES.map((item, index) => (
+                                        <option value={item} key={index}>{item}</option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+                    </>
                 )
             }
 

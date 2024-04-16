@@ -10,7 +10,7 @@ import { MESSAGES_TABLE_REQUEST } from "../../../utils/constants";
  * Given an invalid id or error response, will return an empty object.
  * 
  * Sends the key 'data' as a boolean to indicate whether there is response data or not.
- * 
+ * @async
  * @param {object} data 
  * @param {number} [data.pageNr = 1] integer, must be positive
  * @param {number} [data.itemsPerPage = 25] integer between 5 and 50, must be multiple of 5

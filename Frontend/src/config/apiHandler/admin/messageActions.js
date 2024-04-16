@@ -1,5 +1,5 @@
 import { apiHandle404 } from "../../axios";
-import apiEndpoints from "../../apiEndPoints";
+import apiEndpoints from "../../apiEndpoints";
 import { emailValidation } from "../../../utils/validation"
 import { INPUT_LENGTH, FLAG_TYPES } from "../../../utils/constants"
 
@@ -58,7 +58,7 @@ export function markMessageNoAnswerNeeded(id, markNoAnswer) {
 
 }
 
-export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText) {
+export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, messageAnswerDate = "") {
     let theId = (id && Number.isInteger(id)) ? id : false;
     let theEmail = (messageAnsweredBy && emailValidation(messageAnsweredBy)) ? messageAnsweredBy : false;
     let theText = (messageAnsweredText && (typeof messageAnsweredText === "string") && messageAnsweredText.length <= INPUT_LENGTH.contactMessage.maxValue) ? messageAnsweredText : false;
@@ -67,6 +67,8 @@ export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText) 
         console.warn("Wrong parameter provided to markMessageAnswered.")
         return { success: false }
     }
+
+    let theDate  messageAnswerDate = ""
 
     let requestData = {
         "message_id": theId,
