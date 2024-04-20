@@ -2,6 +2,7 @@ import { apiHandle404 } from "../../axios";
 import apiEndpoints from "../../apiEndpoints";
 import { emailValidation } from "../../../utils/validation"
 import { INPUT_LENGTH, FLAG_TYPES } from "../../../utils/constants"
+import { getUTCString } from "../../../utils/helpers"
 
 /**
  * Function makes api call to set a message status to 'no answer needed' or back to 'answer needed.
@@ -68,13 +69,16 @@ export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, 
         return { success: false }
     }
 
-    let theDate  messageAnswerDate = ""
-
     let requestData = {
         "message_id": theId,
-        "answeredBy": theEmail,
+        "answered_by": theEmail,
         "answer": theText
     }
+
+    let theDate = getUTCString(messageAnswerDate)
+
+    if (theDate) { requestData["answer_date"] = theDate }
+
     const getData = async () => {
         try {
             const response = await apiHandle404.post(apiEndpoints.adminMessageMarkAnswer, requestData)

@@ -142,9 +142,13 @@ export const USERS_TABLE_REQUEST = {
  * Object of possibilities array to validate input for requests sent to get messages' table
  * @readonly
  * @enum {object}
+ * 
+ * - order_sort: ["descending", "ascending"]
+ * - filter_by: ["answer_needed", "answer_not_needed", "all"]
+ * - include_spam: [true, false]
  */
 export const MESSAGES_TABLE_REQUEST = {
     order_sort: ["descending", "ascending"],
     filter_by: ["answer_needed", "answer_not_needed", "all"],
-    include_spam: ["true", "false"],
+    include_spam: [true, false],
 }

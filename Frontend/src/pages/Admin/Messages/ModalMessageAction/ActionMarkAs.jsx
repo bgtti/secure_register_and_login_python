@@ -24,10 +24,10 @@ const ALL_OPTS = [...Object.keys(SPAM_OPTS), ...Object.keys(ANS_OPTS)]
  * @param {bool} props.wasAnswered
  * @param {bool} props.senderIsUser
  * @param {bool} props.changesWereMade 
- * @returns {React.ReactElement}
+ * @returns {React.ReactFragment}
  *
  */
-function ActionChangeFlag(props) {
+function ActionMarkAs(props) {
     const { isSpam, answerNeeded, wasAnswered, senderIsUser, changesWereMade } = props;
 
     const [markedSpam, setMarkedSpam] = useState(isSpam);
@@ -75,16 +75,12 @@ function ActionChangeFlag(props) {
         }
     }
 
-
-
     return (
         <>
-            <p>Mark message as...</p>
-            <br />
-            <div className="MAIN-form-display-table ModalMessageAction-displayTable">
+            <div className="Modal-displayTable">
                 <label htmlFor="changeStatus">Select new status:</label>
                 <select
-                    className="ModalMessageAction-Select"
+                    className="Modal-Select"
                     name="changeStatus"
                     id="changeStatus"
                     defaultValue={currentStatus}
@@ -100,10 +96,10 @@ function ActionChangeFlag(props) {
 
             {/* If message was originally marked as spam, but user unmarks as spam, allow user to decide whether message requires an answer (if message has not yet been answered)*/}
             {isSpam && spamMarkChange && !wasAnswered && (
-                <div className="MAIN-form-display-table ModalMessageAction-displayTable">
+                <div className="Modal-displayTable">
                     <label htmlFor="ansStatus">Set answer requirement:</label>
                     <select
-                        className="ModalMessageAction-Select"
+                        className="Modal-Select"
                         name="ansStatus"
                         id="ansStatus"
                         defaultValue={currentStatus}
@@ -134,10 +130,10 @@ function ActionChangeFlag(props) {
                         </>
                     )}
                     <br />
-                    <div className="MAIN-form-display-table ModalMessageAction-displayTable">
+                    <div className="Modal-displayTable">
                         <label htmlFor="spamList">Spammer list:</label>
                         <select
-                            className="ModalMessageAction-Select"
+                            className="Modal-Select"
                             name="spamList"
                             id="spamList"
                             defaultValue={markSenderAsSpammer}
@@ -160,8 +156,8 @@ function ActionChangeFlag(props) {
         </>
     );
 };
-ActionChangeFlag.propTypes = {
+ActionMarkAs.propTypes = {
     changesWereMade: PropTypes.bool.isRequired,
 };
 
-export default ActionChangeFlag;
+export default ActionMarkAs;

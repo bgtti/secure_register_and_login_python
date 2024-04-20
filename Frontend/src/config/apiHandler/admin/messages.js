@@ -16,7 +16,7 @@ import { MESSAGES_TABLE_REQUEST } from "../../../utils/constants";
  * @param {number} [data.itemsPerPage = 25] integer between 5 and 50, must be multiple of 5
  * @param {string} [data.orderSort = "descending"] enum: ["descending", "ascending"]
  * @param {string} [data.filterBy = "all"] enum: ["answer_needed", "answer_not_needed", "all"]
- * @param {string} [data.includeSpam = "false"] enum: ["true", "false"]
+ * @param {boolean} [data.includeSpam = false] 
  * @returns {object}
  * 
  * @example
@@ -84,7 +84,6 @@ import { MESSAGES_TABLE_REQUEST } from "../../../utils/constants";
 export function getAllMessages(data = {}) {
     const SORT = MESSAGES_TABLE_REQUEST.order_sort;
     const FILTER = MESSAGES_TABLE_REQUEST.filter_by;
-    const SPAM = MESSAGES_TABLE_REQUEST.include_spam;
 
     // validate data - if validation fails, defaults are set
     let pageNr = parseInt(data.pageNr);
@@ -94,15 +93,15 @@ export function getAllMessages(data = {}) {
     itemsPerPage = (data.itemsPerPage && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : 25;
 
     let orderSort = (data.orderSort && SORT.includes(data.orderSort)) ? data.orderSort : "descending";
-    let filterBy = (data.filterBy && FILTER.includes(data.filterBy)) ? data.filterBy : "answer_needed";
-    let includeSpam = (data.includeSpam && SPAM.includes(data.includeSpam)) ? data.includeSpam : "false";
+    let filterBy = (data.filterBy && FILTER.includes(data.filterBy)) ? data.filterBy : "all";
+    let includeSpam = (typeof data.includeSpam === "boolean") ? data.includeSpam : false;
 
     let requestData = {
         "page_nr": pageNr,
         "items_per_page": itemsPerPage,
         "order_sort": orderSort,
         "filter_by": filterBy,
-        "includeSpam": includeSpam
+        "include_spam": includeSpam
     }
 
     const emptyObj = {
@@ -117,7 +116,7 @@ export function getAllMessages(data = {}) {
             const response = await apiHandle404.post(apiEndpoints.adminMessagesTable, requestData)
             if (response.status === 200 && response.data.messages.length > 0) {
                 const javaScriptifiedMessageFields = response.data.messages.map(message => {
-                    const { sender_name: senderName, sender_email: senderEmail, sender_is_user: senderIsUser, answer_needed: answerNeeded, was_answered: wasAnswered, answered_by: answeredBy, answer_date: answerDate, is_spam: isSpam, ...rest } = message;
+                    const { sender_name: senderName, sender_email: senderEmail, sender_is_user: senderIsUser, answer_needed: answerNeeded, was_answered: wasAnswered, answered_by: answeredBy, answer_date: answerDate, is_spam: isSpam, user_id: userId, ...rest } = message;
                     // Format date
                     const dateFormat = {
                         day: "numeric",
@@ -136,14 +135,15 @@ export function getAllMessages(data = {}) {
                         senderEmail,
                         senderIsUser,
                         answerDate: formattedDateAnswer,
-                        answerNeeded: answerNeeded === "false" ? false : true,
-                        wasAnswered: wasAnswered === "false" ? false : true,
+                        answerNeeded,
+                        wasAnswered,
                         answeredBy,
+                        userId,
                         isSpam
                     };
                 });
                 return {
-                    message: javaScriptifiedMessageFields,
+                    messages: javaScriptifiedMessageFields,
                     totalPages: response.data.total_pages,
                     currentPage: response.data.current_page,
                     data: true,

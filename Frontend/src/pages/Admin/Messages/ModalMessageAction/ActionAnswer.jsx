@@ -1,29 +1,34 @@
 import { useState } from "react";
 import { PropTypes } from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
-import { FLAG_TYPES } from "../../../../utils/constants.js";
+import { useSelector } from "react-redux";
+import { getTodaysDate, dateToYYYYMMDD } from "../../../../utils/helpers"
+import { INPUT_LENGTH } from "../../../../utils/constants"
 
 /**
- * Component returns fragment of flag selection
+ * Component returns fragment of message answer recording or edditing
  * 
- * @visibleName Message action: flag change
+ * @visibleName Message action: record/edit answer
  * @param {object} props 
- * @param {string} props.messageFlag //one of FLAG_TYPES
+ * @param {bool} props.wasAnswered
+ * @param {string} [props.answeredBy=""]
+ * @param {string} [props.answerDate=""]
+ * @param {string} [props.answer=""]
  * @param {bool} props.changesWereMade 
- * @param {func} props.setMessageFlag 
- * @returns {React.ReactElement}
+ * @returns {React.ReactFragment}
  *
  */
 function ActionAnswer(props) {
-    const { wasAnswered, answeredBy, answerDate, answer, changesWereMade } = props;
+    const { wasAnswered, answeredBy = "", answerDate = "", answer = "", changesWereMade = "" } = props;
 
     const userEmail = useSelector((state) => state.user.email);
 
     const today = new Date()
+    let tomorrow = today.setDate(today.getDate() + 1)
+    tomorrow = dateToYYYYMMDD(tomorrow)
 
     const [answerData, setAnswerData] = useState({
         answeredBy: wasAnswered ? answeredBy : userEmail,
-        answerDate: wasAnswered ? answerDate : today.toJSON().slice(0, 10),
+        answerDate: wasAnswered ? answerDate : getTodaysDate(),
         answer: wasAnswered ? answer : ""
     });
 
@@ -37,51 +42,64 @@ function ActionAnswer(props) {
 
     return (
         <>
-            <br />
-            <div className="MAIN-form-display-table ModalMessageAction-displayTable">
-                <label htmlFor="answeredBy">Answered by:</label>
+            <div className="Modal-displayTable">
+                <label htmlFor="answeredBy">Answered by:<span className="MAIN-form-star"> *</span></label>
                 <input
                     id="answeredBy"
                     defaultValue={answerData.answeredBy}
                     disabled={changesWereMade ? true : false}
                     name="answeredBy"
                     type="text"
-                    onChange={handleChange} />
+                    onChange={handleChange}
+                    minLength={INPUT_LENGTH.email.minValue}
+                    maxLength={INPUT_LENGTH.email.maxValue}
+                    required
+                />
             </div>
 
             <br />
-            <div className="MAIN-form-display-table ModalMessageAction-displayTable">
-                <label htmlFor="answerDate">Select new flag colour:</label>
+            <div className="Modal-displayTable">
+                <label htmlFor="answerDate">Answer date:<span className="MAIN-form-star"> *</span></label>
                 <input
                     id="answerDate"
                     defaultValue={answerData.answerDate}
                     disabled={changesWereMade ? true : false}
                     name="answerDate"
                     type="date"
-                    min="2017-04-01"
-                    max={(today.getDate() + 1).toJSON().slice(0, 10)}
-                    onChange={handleChange} />
+                    min="2024-01-01"
+                    max={tomorrow}
+                    onChange={handleChange}
+                    required
+                />
             </div>
 
             <br />
 
-            <div className="MAIN-form-display-table ModalMessageAction-displayTable">
-                <label htmlFor="answerText">Select new flag colour:</label>
-                <input
-                    id="answerText"
-                    defaultValue={messageAnsweredText}
+            <div className="Modal-displayTable">
+                <label htmlFor="answer">Answer text:<span className="MAIN-form-star"> *</span></label>
+                <textarea
+                    id="answer"
+                    defaultValue={answerData.answer}
                     disabled={changesWereMade ? true : false}
-                    name="answerText"
+                    name="answer"
                     type="text"
-                    onChange={(e) => { setMessageAnsweredText(e.target.value) }} />
+                    onChange={handleChange}
+                    rows="4"
+                    minLength={INPUT_LENGTH.contactMessage.minValue}
+                    maxLength={INPUT_LENGTH.contactMessage.maxValue}
+                    required
+                >
+                </textarea>
             </div>
         </>
     );
 };
 ActionAnswer.propTypes = {
-    messageFlag: PropTypes.PropTypes.oneOf(FLAG_TYPES).isRequired,
-    changesWereMade: PropTypes.bool.isRequired,
-    setMessageFlag: PropTypes.func.isRequired
+    wasAnswered: PropTypes.bool.isRequired,
+    answeredBy: PropTypes.string,
+    answerDate: PropTypes.string,
+    answer: PropTypes.string,
+    changesWereMade: PropTypes.bool.isRequired
 };
 
 export default ActionAnswer;

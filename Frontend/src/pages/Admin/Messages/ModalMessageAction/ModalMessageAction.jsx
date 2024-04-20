@@ -5,8 +5,13 @@ import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
 import { markMessageNoAnswerNeeded, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
 import { FLAG_TYPES } from "../../../../utils/constants.js";
-import ActionChangeFlag from "./ActionChangeFlag.jsx"
+import ActionAnswer from "./ActionAnswer.jsx";
+import ActionChangeFlag from "./ActionChangeFlag.jsx";
+import ActionDeleteMessage from "./ActionDelete.jsx";
+import ActionMarkAs from "./ActionMarkAs.jsx";
 // import "./modalUserAction.css"
+
+const MESSAGE_ACTIONS = ["answer", "delete", "flag", "markAs"]
 
 const ACTION_TITLE = {
     noAnswerNeeded: "No answer needed",
@@ -46,13 +51,24 @@ const MARK_AS_OPTS = {
  * 
  * @visibleName Admin Area: Messages: ModalMessageAction
  * @param {object} props
- * @param {string} props.action accepts only one of ["noAnswerNeeded", "answerNeeded", "markAnswered", "changeFlag", "deleteMessage"]
- * @param {number} props.id message id as an int
- * @param {string} [props.flag] pass flag color as a parameter if action === "changeFlag"
- * @param {string} [props.answeredBy] pass answeredBy as a parameter if action === "markAnswered"
- * @param {string} [props.answer] pass answer as a parameter if action === "markAnswered"
+ * @param {string} props.action accepts one of ["answer", "delete", "flag", "markAs"]
+ * @param {object} props.theMessage
+ * @param {number} props.theMessage.id message id as a positive int
+ * @param {string} props.theMessage.date //..
+ * @param {string} props.theMessage.senderName //..
+ * @param {string} props.theMessage.senderEmail
+ * @param {bool} props.theMessage.senderIsUser
+ * @param {string} props.theMessage.message //..
+ * @param {string} props.theMessage.subject //..
+ * @param {string} props.theMessage.flagged
+ * @param {bool} props.theMessage.answerNeeded
+ * @param {bool} props.theMessage.wasAnswered
+ * @param {string} props.theMessage.answeredBy
+ * @param {string} props.theMessage.answerDate
+ * @param {string} props.theMessage.answer
+ * @param {bool} props.theMessage.isSpam
  * @param {func} props.toggleModal 
- * @param {func} props.setUpdateData 
+ * @param {func} props.setUpdateData //..
  * @returns {React.ReactElement}
  * 
  * @example
@@ -67,140 +83,107 @@ const MARK_AS_OPTS = {
  * )
  */
 function ModalMessageAction(props) {
-    const { action, messageData, modalToggler, setUpdateData } = props;
-    const { id, senderEmail, senderIsUser, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = messageData;
+    const { action, theMessage, modalToggler, setUpdateData = "" } = props; //toggleModal instead of modalToggler ??????
+    const { id, date, senderName, senderEmail, senderIsUser, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage; //previously messageData
 
-    const isComponentMounted = useIsComponentMounted();
-    const dispatch = useDispatch();
+    let originalState;
 
-    const [errorMessage, setErroMessage] = useState("")
+    switch (action) {
+        case "answer":
+            originalState = {
+                answeredBy: wasAnswered ? answeredBy : useSelector((state) => state.user.email),
+                answerDate: wasAnswered ? answerDate : new Date().toJSON().slice(0, 10),
+                answer: wasAnswered ? answer : ""
+            };
+            break
+        case "markAs":
+            originalState = {
+                isSpam: isSpam,
+                answerNeeded: answerNeeded,
+                markSenderAsSpammer: false
+            };
+            break
+        case "flag":
+            originalState = flagged;
+            break
+        case "delete":
+            originalState = false;
+            break
+        default:
+            originalState = false;
+            console.error("Wrong action input in ModalMessageAction.")
+    }
+
+    const [newState, setNewState] = useState(originalState)
     const [changesWereMade, setChangesWereMade] = useState(false)
+    const [errorMessage, setErroMessage] = useState("")
 
-    const [messageFlag, setMessageFlag] = useState(flag)//only used when changing flag color
-
-    const [messageAnsweredBy, setMessageAnsweredBy] = useState(answeredBy)//only used when marking message as answered
-    const [messageAnsweredText, setMessageAnsweredText] = useState(answer)//only used when marking message as answered
+    function stateHasChanged() {
+        if (JSON.stringify(originalState) === JSON.stringify(newState)) { return true }
+        else { return false }
+    }
 
     function clickHandler() {
-        dispatch(setLoader(true));
-
-        const handleResponse = (response, successMessage) => {
-            if (isComponentMounted()) {
-                setErroMessage(response.success ? successMessage : "An error occurred. Please reload the page and try again.");
-                if (response.success) {
-                    setChangesWereMade(true);
-                    setUpdateData(true);
-                }
-            }
-        };
-
-        const handleError = (error) => {
-            console.warn("clickHandler in modal encountered an error", error);
-        };
-
-        const handleFinally = () => {
-            dispatch(setLoader(false));
-        };
-
-        let requestAction;
-        let responseActionMessage;
-
-        switch (action) {
-            case "noAnswerNeeded":
-                requestAction = function () { return markMessageNoAnswerNeeded(id, true) };
-                responseActionMessage = "Message marked as no answer needed!";
-                break
-            case "answerNeeded":
-                requestAction = function () { return markMessageNoAnswerNeeded(id, false) };
-                responseActionMessage = "Message marked as answer needed!";
-                break
-            case "markAnswered":
-                requestAction = function () { return markMessageAnswered(id, messageAnsweredBy, messageAnsweredText) };
-                responseActionMessage = "Message marked as answered!";
-                break
-            case "changeFlag":
-                requestAction = function () { return changeMessageFlag(id, messageFlag) };
-                responseActionMessage = "Message flag changed successfully!";
-                break
-            case "deleteMessage":
-                requestAction = function () { return deleteMessage(id) };
-                responseActionMessage = "Message deleted successfully!";
-                break
-            default:
-                requestAction = function () { return console.error("Wrong action input in ModalMessageAction.") };
-                responseActionMessage = "An error occurred: action input invalid.";
-        }
-        try {
-            requestAction()
-                .then(response => handleResponse(response, responseActionMessage))
-                .catch(handleError)
-                .finally(handleFinally);
-        } catch {
-            console.error("Error in ModalMessageAction", error);
-            dispatch(setLoader(false));
-        }
+        console.log(`action = ${action}`)
+        console.log(`state changed = ${stateHasChanged()}`)
+        console.log(`new state = ${newState}`)
+        console.log(`************************************`)
     }
+
+
 
     return (
         <>
             <p>{ACTION_TEXT.action}</p>
             <br />
+            {
+                action === "answer" && (
+                    <ActionAnswer
+                        changesWereMade={changesWereMade}
+                        wasAnswered={wasAnswered}
+                        answeredBy={answeredBy}
+                        answerDate={answerDate}
+                        answer={answer}
+                    />
+                )
+            }
+            {
+                action === "delete" && (
+                    <ActionDeleteMessage
+                        isSpam={isSpam}
+                        senderName={senderName}
+                        senderEmail={senderEmail}
+                    />
+                )
+            }
 
             {
-                action === "changeFlag" && (
+                action === "flag" && (
                     <ActionChangeFlag
-                        messageFlag={messageFlag}
+                        messageFlag={flagged}
                         changesWereMade={changesWereMade}
-                        setMessageFlag={setMessageFlag}
+                        setMessageFlag={setNewState}
                     />
 
                 )
             }
-
             {
-                action === "markAnswered" && (
-                    <>
-                        <br />
-                        <div className="MAIN-form-display-table ModalMessageAction-displayTable">
-                            <label htmlFor="answeredBy">Select new flag colour:</label>
-                            <input
-                                id="answeredBy"
-                                defaultValue={messageAnsweredBy}
-                                disabled={changesWereMade ? true : false}
-                                name="answeredBy"
-                                type="text"
-                                onChange={(e) => { setMessageAnsweredBy(e.target.value) }} />
-                        </div>
-                        <br />
-
-                        <div className="MAIN-form-display-table ModalMessageAction-displayTable">
-                            <label htmlFor="answerText">Select new flag colour:</label>
-                            <input
-                                id="answerText"
-                                defaultValue={messageAnsweredText}
-                                disabled={changesWereMade ? true : false}
-                                name="answerText"
-                                type="text"
-                                onChange={(e) => { setMessageAnsweredText(e.target.value) }} />
-                        </div>
-                    </>
-                )
-            }
-
-            {
-                action === "deleteMessage" && (
-                    <>
-                        <br />
-                        <p>This action cannot be undone.</p>
-                    </>
+                action === "markAs" && (
+                    <ActionMarkAs
+                        changesWereMade={changesWereMade}
+                        isSpam={isSpam}
+                        answerNeeded={answerNeeded}
+                        wasAnswered={wasAnswered}
+                        senderIsUser={senderIsUser}
+                    />
                 )
             }
 
             {!changesWereMade && (
                 <>
                     <br />
-                    <div className="ModalMessageAction-BtnContainer">
-                        <button className="ModalMessageAction-ActionBtn" disabled={(errorMessage !== "")} onClick={clickHandler}>{action === "deleteMessage" ? "Delete" : "Save changes"}
+                    <div className="Modal-BtnContainer">
+                        <button className={action === "delete" ? "Modal-ActionDanger" : "Modal-ActionBtn"} disabled={(errorMessage !== "")} onClick={clickHandler}>{action === "delete" ? "Delete" : "Save changes"}
                         </button>
                         <button disabled={(errorMessage !== "")} onClick={modalToggler}>Cancel</button>
                     </div>
@@ -222,13 +205,25 @@ function ModalMessageAction(props) {
 };
 
 ModalMessageAction.propTypes = {
-    action: PropTypes.oneOf(["noAnswerNeeded", "answerNeeded", "markAnswered", "changeFlag", "deleteMessage"]),
-    id: PropTypes.number.isRequired,
-    flag: PropTypes.string,
-    answeredBy: PropTypes.string,
-    answer: PropTypes.string,
+    action: PropTypes.oneOf(["answer", "delete", "flag", "markAs"]),
+    theMessage: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        date: PropTypes.string.isRequired, //dont really need
+        senderName: PropTypes.string.isRequired, //dont really need
+        senderEmail: PropTypes.string.isRequired,
+        subject: PropTypes.string.isRequired, //dont really need
+        message: PropTypes.string.isRequired, //dont really need
+        flagged: PropTypes.string.isRequired,
+        answerNeeded: PropTypes.bool.isRequired,
+        wasAnswered: PropTypes.bool.isRequired,
+        answeredBy: PropTypes.string.isRequired,
+        answerDate: PropTypes.string.isRequired,
+        answer: PropTypes.string.isRequired,
+        senderIsUser: PropTypes.bool.isRequired,
+        isSpam: PropTypes.bool.isRequired
+    }).isRequired,
     modalToggler: PropTypes.func.isRequired,
-    setUpdateData: PropTypes.func.isRequired,
+    // setUpdateData: PropTypes.func.isRequired,
 };
 
 export default ModalMessageAction;

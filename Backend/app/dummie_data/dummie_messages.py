@@ -59,7 +59,9 @@ def create_dummie_messages():
     for i, user in enumerate(users):
         subject = faker.text(max_nb_chars=25)
         message = faker.text(max_nb_chars=90)
-        new_message = Message(sender_name=user.name, sender_email=user.email, subject=subject, message=message, user_id=user.id, date=user.last_seen)
+        new_message = Message(sender_name=user.name, sender_email=user.email, subject=subject, message=message)
+        new_message.user_id=user.id
+        new_message.date=user.last_seen
         db.session.add(new_message)
 
         if i < 19:  # Mark as no reply needed for the first 19 messages

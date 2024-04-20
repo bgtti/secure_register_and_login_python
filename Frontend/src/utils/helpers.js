@@ -51,6 +51,24 @@ export function getTodaysDate() {
     return formattedDate;
 }
 
+/**
+ * Function that returns a date in the format YYYY-MM-DD
+ * @param {string} dateString - a date in string format
+ * @returns {string}
+ * Note: this function will not validate the dateString input.
+ * If you need date input validation see the {@link validateDate} function in utils helpers
+ * @example
+ * dateToYYYYMMDD(23 Feb 2024); -> "2024-02-23"
+ */
+export function dateToYYYYMMDD(dateString) {
+    const date = new Date(dateString);
+
+    // Format the date as YYYY-MM-DD
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+
+    return formattedDate;
+}
+
 
 //An alternative to the function bellow would have been to combine all regex cases into one for the case of "any" or "all":
 // isValid = /^(?:\d{4}[-/.](?:0[1-9]|1[0-2])[-/.](?:0[1-9]|[12][0-9]|3[01])|(?:0[1-9]|[12][0-9]|3[01])[-/.](?:0[1-9]|1[0-2])[-/.]\d{4}|(?:0[1-9]|[12][0-9]|3[01]) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}|(?:0[1-9]|[12][0-9]|3[01]) (?:January|February|March|April|May|June|July|August|September|October|November|December) \d{4}|(?:0[1-9]|1[0-2])[-/.](?:0[1-9]|[12][0-9]|3[01])[-/.]\d{4}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z|\d{2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}, \d{2}:\d{2} (?:GMT|UTC|[A-Z]{3})([+-]\d{2}))$/.test(dateString);
@@ -187,12 +205,34 @@ export function validateDate(dateString, format = "any") {
  * @param {string} [format="any"] - if not given, defaults to "any"
  * @returns {string | boolean} - returns string or false (if fails to generate a UTC date)
  * 
- * Note: the date input will be validaded with the {@link validateDate}
+ * Note: the date input will be validaded with the {@link validateDate} function
  * 
  * @example
  * getUTCString("2018-11-10"); -> "2018-11-10T00:00:00+00:00"
  * getUTCString("2018-11-10", "local"); -> false
  * 
+ * //Accepted format parameter values: 
+ * formats = [
+    "yyyy-mm-dd",
+    "yyyy/mm/dd",
+    "yyyy.mm.dd",
+    "YDM", // YMD checks for "yyyy-mm-dd", "yyyy/mm/dd", or "yyyy.mm.dd"
+    "dd-mm-yyyy",
+    "dd/mm/yyyy",
+    "dd.mm.yyyy",
+    "DMY", // DMY checks for "dd-mm-yyyy", "dd/mm/yyyy", or "dd.mm.yyyy"
+    "dd mmm yyyy",
+    "dd/mmm/yyyy",
+    "dd mmmm yyyy",
+    "mm-dd-yyyy",
+    "mm/dd/yyyy",
+    "mm.dd.yyyy",
+    "MDY", // MDY checks for "mm-dd-yyyy", "mm/dd/yyyy", or "mm.dd.yyyy"
+    "iso", // ISO standard: YYYY-MM-DDTHH:MN:SS.MSSZ
+    "local", // local checks for "dd mmm yyyy, HH:MN Z", where Z is the shortOffset timeZoneName(ex: "GMT-8" or "UTC+1")
+    "any", // will check all formats (not recommended)
+    "all"// will check all formats (not recommended)
+];
  */
 export function getUTCString(dateString, format = "any") {
 

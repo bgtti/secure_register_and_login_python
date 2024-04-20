@@ -42,23 +42,25 @@ class Message(UserMixin, db.Model):
         return f"<New message: {self.sender_name} from {self.sender_email}>"
     
     def serialize_message_table(self):
-        the_date = self.answer_date
-        if the_date is None:
-            the_date = ""
+        answer_date = self.answer_date if self.answer_date is not None else ""
+        answer_needed = self.answer_needed.value == "true"
+        is_spam = self.is_spam.value == "true"
+        was_answered = self.was_answered.value == "true"
         return {
             "id": self.id,
             "date": self.date,
             "sender_is_user": self.user_id != 0,
+            "user_id": self.user_id,
             "sender_name": self.sender_name,
             "sender_email": self.sender_email,
             "subject": self.subject,
             "message": self.message,
             "flagged": self.flagged.value,
-            "is_spam": self.is_spam.value,
-            "answer_needed": self.answer_needed.value,
-            "was_answered":self.was_answered.value,
+            "is_spam": is_spam,
+            "answer_needed": answer_needed ,
+            "was_answered":was_answered,
             "answered_by": self.answered_by,
-            "answer_date": the_date,
+            "answer_date": answer_date,
             "answer": self.answer
         }
     

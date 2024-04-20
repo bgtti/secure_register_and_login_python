@@ -9,7 +9,7 @@ import { FLAG_TYPES } from "../../../../utils/constants.js";
  * @param {string} props.messageFlag //one of FLAG_TYPES
  * @param {bool} props.changesWereMade 
  * @param {func} props.setMessageFlag 
- * @returns {React.ReactElement}
+ * @returns {React.ReactFragment}
  *
  */
 function ActionChangeFlag(props) {
@@ -17,14 +17,12 @@ function ActionChangeFlag(props) {
 
     return (
         <>
-            <p>Select the flag colour of the message:</p>
+            <p><b>Current flag: </b> {messageFlag}</p>
             <br />
-            <p><b className="ModalMessageAction-Bold" >Flag: </b> {flag}</p>
-            <br />
-            <div className="MAIN-form-display-table ModalMessageAction-displayTable">
+            <div className="Modal-displayTable Modal-displayTable-32">
                 <label htmlFor="changeFlag">Select new flag colour:</label>
                 <select
-                    className="ModalMessageAction-Select"
+                    className="Modal-Select"
                     name="changeFlag"
                     id="changeFlag"
                     defaultValue={messageFlag}

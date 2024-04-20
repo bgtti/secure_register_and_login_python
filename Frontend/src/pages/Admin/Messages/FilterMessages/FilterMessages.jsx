@@ -29,8 +29,18 @@ const ORDER_BY_DATE = ["descending", "ascending"];
 */
 const FILTER_BY = {
     answer_needed: "answer needed",
-    answered_not_needed: "answer not needed",
+    answer_not_needed: "answer not needed",
     all: "all",
+}
+
+/** 
+ * Constants object for defining selection whether spam should be shown
+ * @constant
+ * @type {object}
+*/
+const SHOW_SPAM = {
+    true: "show spam",
+    false: "hide spam",
 }
 
 /*******************  THE COMPONENT  ********************/
@@ -42,9 +52,10 @@ const FILTER_BY = {
  * @param {object} props
  * @param {function} props.setFilterOptions updates props.filterOptions
  * @param {object} props.filterOptions state in parent
- * @param {string} props.filterOptions.itemsPerPage string containing int
- * @param {string} props.filterOptions.orderByDate string 
+ * @param {number} props.filterOptions.itemsPerPage positive int
+ * @param {string} props.filterOptions.orderSort string 
  * @param {string} props.filterOptions.filterBy string 
+ * @param {boolean} props.filterOptions.showSpam boolean 
  *
  * @returns {React.ReactElement}
  */
@@ -56,8 +67,9 @@ function FilterMessages(props) {
 
     const [formData, setFormData] = useState({
         itemsPerPage: filterOptions.itemsPerPage,
-        orderByDate: filterOptions.orderByDate,
-        filterBy: filterOptions.filterBy
+        orderSort: filterOptions.orderSort,
+        filterBy: filterOptions.filterBy,
+        showSpam: filterOptions.showSpam
     });
 
     function toggleShowOptions() {
@@ -65,7 +77,10 @@ function FilterMessages(props) {
     }
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        let { name, value } = e.target;
+        if (name === "showSpam" && value === "true") { value = true }
+        if (name === "showSpam" && value === "false") { value = false }
+        if (name === "itemsPerPage") { value = parseInt(value) }
         setFormData((prevData) => ({
             ...prevData,
             [name]: value,
@@ -77,11 +92,12 @@ function FilterMessages(props) {
         //Check data
         let itemsPerPage = parseInt(formData.itemsPerPage)
         itemsPerPage = (formData.itemsPerPage && Number.isInteger(itemsPerPage) && itemsPerPage >= 5 && itemsPerPage <= 50 && itemsPerPage % 5 === 0) ? itemsPerPage : false;
-        let orderByDate = (formData.orderByDate && ORDER_BY_DATE.includes(formData.orderByDate)) ? formData.orderByDate : false;
+        let orderSort = (formData.orderSort && ORDER_BY_DATE.includes(formData.orderSort)) ? formData.orderSort : false;
         let filter = (formData.filterBy && formData.filterBy in FILTER_BY) ? formData.filterBy : false;
+        let spam = (typeof formData.showSpam === "boolean")
 
         //Make sure form is valid and that fields were changed
-        let formIsValid = itemsPerPage && orderByDate && filter
+        let formIsValid = itemsPerPage && orderSort && filter && spam
         let stateChanged = JSON.stringify(filterOptions) !== JSON.stringify(formData)
 
         if (formIsValid && stateChanged) {
@@ -114,8 +130,8 @@ function FilterMessages(props) {
                             </select>
                         </div>
                         <div className="MAIN-form-display-table">
-                            <label htmlFor="orderByDate">Sort order:</label>
-                            <select name="orderByDate" id="orderByDate" defaultValue={formData.orderByDate} onChange={handleChange}>
+                            <label htmlFor="orderSort">Sort order:</label>
+                            <select name="orderSort" id="orderSort" defaultValue={formData.orderSort} onChange={handleChange}>
                                 {
                                     ORDER_BY_DATE.map((item, index) => (
                                         <option value={item} key={index}>{item}</option>
@@ -129,6 +145,16 @@ function FilterMessages(props) {
                                 {
                                     Object.keys(FILTER_BY).map((key, index) => (
                                         <option value={key} key={index}>{FILTER_BY[key]}</option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+                        <div className="MAIN-form-display-table">
+                            <label htmlFor="showSpam">Spam preference:</label>
+                            <select name="showSpam" id="showSpam" defaultValue={formData.showSpam} onChange={handleChange}>
+                                {
+                                    Object.keys(SHOW_SPAM).map((key, index) => (
+                                        <option value={key} key={index}>{SHOW_SPAM[key]}</option>
                                     ))
                                 }
                             </select>
@@ -151,9 +177,10 @@ function FilterMessages(props) {
 FilterMessages.propTypes = {
     setFilterOptions: PropTypes.func.isRequired,
     filterOptions: PropTypes.shape({
-        itemsPerPage: PropTypes.string.isRequired,
-        orderByDate: PropTypes.string.isRequired,
+        itemsPerPage: PropTypes.number.isRequired,
+        orderSort: PropTypes.string.isRequired,
         filterBy: PropTypes.string.isRequired,
+        showSpam: PropTypes.bool.isRequired,
     })
 };
 

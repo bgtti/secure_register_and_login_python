@@ -38,7 +38,7 @@ def admin_messages_table():
     Optional parameters:
     - "filter_by": one of ["answer_needed", "answer_not_needed", "all"]
     - "order_sort": one of ["order_sort", "descending"]
-    - "include_spam": one of ["true", "false"]
+    - "include_spam": boolean
 
     Returns a JSON object with a "response" field. messages and other information only sent if response is 200.
     ----------------------------------------------------------
@@ -48,7 +48,7 @@ def admin_messages_table():
         "items_per_page": 25,
         "filter_by": "answer_needed",
         "order_sort": "descending",
-        "include_spam": "false"
+        "include_spam": false
     }
     ----------------------------------------------------------
     Response examples:
@@ -90,9 +90,9 @@ def admin_messages_table():
     # Get info from JSON payload
     page_nr = json_data["page_nr"] # > 0
     items_per_page = json_data["items_per_page"] # >= 5 and <=50, multiple of 5
-    order_sort = json_data["order_sort", "descending"] # one of: ["descending", "ascending"]
-    filter_by = json_data["filter_by", "answer_needed"] # one of: ["answer_needed", "answer_not_needed", "all"]
-    include_spam = json_data["include_spam", "false"] # one of: ["true", "false"]
+    order_sort = json_data["order_sort"] # one of: ["descending", "ascending"]
+    filter_by = json_data["filter_by"] # one of: ["answer_needed", "answer_not_needed", "all"]
+    include_spam = json_data["include_spam"] # boolean
 
     # Determine the ordering based on user input
     ordering = Message.__dict__.get("date", None)
@@ -102,23 +102,39 @@ def admin_messages_table():
     else:
         ordering = ordering.asc()
 
-    if include_spam == "false":
-        spam_included = modelBool.FALSE
-    else:
+    if include_spam:
         spam_included = modelBool.TRUE
+    else:
+        spam_included = modelBool.FALSE
 
     match filter_by:
         case "all":
             messages = Message.query.filter_by(is_spam=spam_included).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
         case "answer_needed":
             messages = Message.query.filter(Message.is_spam == spam_included, Message.answer_needed == modelBool.TRUE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
+            # if not messages:
+            #     print("No messages available")
+            # else:
+            #     for message in messages:
+            #         # Process each message as needed
+            #         print(message)
         case "answer_not_needed":
             messages = Message.query.filter(Message.is_spam == spam_included, Message.answer_needed == modelBool.FALSE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
         case _:
             logging.error(f"Message table could not be retrieved as criteria was not met.")
             return jsonify({"response": "Could not match search criteria"}), 404
         
+    
+        
     if not messages.items:
+        # print("before")
+        # print(messages)
+        # messages = Message.query.all()
+        # print("how many items: ")
+        # print(len(messages))
+        # for message in messages:
+        #     # Process each message as needed
+        #     print(message)
         return jsonify({"response": "Requested page out of range"}), 404
     
     response_data ={

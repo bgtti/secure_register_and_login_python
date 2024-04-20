@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../redux/loader/loaderSlice";
 import { PATH_TO } from "../../../router/routePaths.js";
+import { getAllMessages } from "../../../config/apiHandler/admin/messages.js";
 import Modal from "../../../components/Modal/Modal.jsx";
 import ModalMessageAction from "./ModalMessageAction/ModalMessageAction.jsx";
 import Message from "../../../components/Message/Message.jsx";
@@ -15,12 +16,12 @@ import "./messages.css"
 
 
 const ACTIONS = {
-    noAnswerNeeded: "No answer needed",
-    answerNeeded: "Answer needed",
-    markAnswered: "Message answered",
-    changeFlag: "Change message flag",
-    deleteMessage: "Delete message"
+    answer: "Admin answer",
+    delete: "Delete message",
+    flag: "Change message flag",
+    markAs: "Mark message as..."
 }
+
 
 /**
  * Component returns all messages received through the contact form
@@ -42,8 +43,9 @@ function Messages() {
     // Filter
     const [filterOptions, setFilterOptions] = useState({
         itemsPerPage: 25,
-        orderByDate: "descending",
-        filterBy: "answer needed"
+        orderSort: "descending",
+        filterBy: "answer_needed",
+        showSpam: false,
     });
 
     // If messages do not exist, filter will not be displayed
@@ -51,7 +53,7 @@ function Messages() {
 
     // Selected Action
     const [selectedAction, setSelectedAction] = useState("")
-    const [selectedMessageId, setSelectedMessageId] = useState(0)
+    const [selectedMessage, setSelectedMessage] = useState(false)
 
     // Some actions require more data to be passed on from the Mesage component to the modal executing the action. To mark a message as answered, markAnswered data is needed . To change a message flag, markColourChange is needed.
     const [markAnswered, setMarkAnswered] = useState({ answeredBy: "", answer: "" })
@@ -65,21 +67,25 @@ function Messages() {
 
     displayModal ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
 
-    const modalCanBeDisplayed = (displayModal && selectedAction !== "" && selectedMessageId !== 0)
+    const modalCanBeDisplayed = (displayModal && selectedAction !== "" && selectedMessage)
     const modalContent = modalCanBeDisplayed && (
-        <ModalMessageAction id={selectedMessageId} action={selectedAction} modalToggler={toggleModal} setUpdateData={setUpdateData} />
+        <ModalMessageAction
+            theMessage={selectedMessage}
+            action={selectedAction}
+            modalToggler={toggleModal}
+            setUpdateData={setUpdateData} />
     );
 
     // Request messages upon component mount and after changes are made
     useEffect(() => {
-        getAllMessages();
-    }, [])
+        getMessages();
+    }, [filterOptions])
 
     useEffect(() => {
         if (updateData) {
             setSelectedAction("");
-            setSelectedMessageId(0);
-            getAllMessages();
+            setSelectedMessage(false);
+            getMessages();
             setUpdateData(false);
         }
     }, [updateData])
@@ -97,30 +103,27 @@ function Messages() {
      * @param {number} [pageNr = 1] integer, must be positive
      * @returns {void} 
      */
-    function getAllMessages(pageNr = 1) {
-        console.log("hello")
-        // dispatch(setLoader(true))
-        // getMessages(pageNr, id)
-        //     .then(response => {
-        //         if (isComponentMounted()) {
-        //             if (response.data) {
-        //                 setMessages(response.messages);
-        //                 setCurPage(response.currentPage);
-        //                 setTPages(response.totalPages);
-        //             } else {
-        //                 setMessages([]);
-        //                 setCurPage(1);
-        //                 setTPages(1);
-        //             }
-
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.warn("getAllMessages encountered an error", error);
-        //     })
-        //     .finally(() => {
-        //         dispatch(setLoader(false));
-        //     })
+    function getMessages(pageNr = 1) {
+        // console.log("hello")
+        dispatch(setLoader(true))
+        const queryObj = {
+            pageNr: pageNr,
+            itemsPerPage: filterOptions.itemsPerPage,
+            orderSort: filterOptions.orderByDate,
+            filterBy: filterOptions.filterBy,
+            includeSpam: filterOptions.showSpam
+        }
+        getAllMessages(queryObj)
+            .then(response => {
+                if (isComponentMounted()) {
+                    setMessages(response.messages);
+                    setCurPage(response.currentPage);
+                    setTPages(response.totalPages);
+                    if (!response.data) { console.warn("No message data") }
+                }
+            })
+            .catch(error => { console.warn("getAllMessages encountered an error", error); })
+            .finally(() => { dispatch(setLoader(false)); })
     }
 
     /**
@@ -131,34 +134,40 @@ function Messages() {
      */
     function handlePagination(newPage) {
         if (Number.isInteger(newPage) && newPage >= 1 && newPage <= totalPages) {
-            getAllMessages(newPage);
+            getMessages(newPage);
         }
     }
 
     // Click handlers to be sent to Message component
+    function clickHandler(messageObj, action) {
+        if (!ACTIONS.hasOwnProperty(action)) { console.error("Invalid message action."); return }
+        setDisplayModal(true);
+        setSelectedAction(action);
+        setSelectedMessage(messageObj);
+    }
 
-    function clickHandlerNoAnswerNeeded(/**Number*/ id, /**Bool*/ markNoAnswer) {
-        markNoAnswer ? setSelectedAction(ACTIONS.noAnswerNeeded) : setSelectedAction(ACTIONS.answerNeeded);
-        setSelectedMessageId(id);
-        setDisplayModal(true);
-    }
-    function clickHandlerMarkAnswer(/**Number*/ id, /**String*/ answeredBy = "", /**String*/ answer = "") {
-        setSelectedAction(ACTIONS.markAnswered);
-        setSelectedMessageId(id);
-        setMarkAnswered({ answeredBy: answeredBy, answer: answer });
-        setDisplayModal(true);
-    }
-    function clickHandlerChangeFlag(/**Number*/ id, /**String*/ currentFlagColour) {
-        setSelectedAction(ACTIONS.changeFlag);
-        setSelectedMessageId(id);
-        setMarkColourChange({ currentFlagColour: currentFlagColour })
-        setDisplayModal(true);
-    }
-    function clickHandlerDeleteMessage(/**Number*/ id) {
-        setSelectedAction(ACTIONS.deleteMessage);
-        setSelectedMessageId(id);
-        setDisplayModal(true);
-    }
+    // function clickHandlerNoAnswerNeeded(/**Number*/ id, /**Bool*/ markNoAnswer) {
+    //     markNoAnswer ? setSelectedAction(ACTIONS.noAnswerNeeded) : setSelectedAction(ACTIONS.answerNeeded);
+    //     setSelectedMessageId(id);
+    //     setDisplayModal(true);
+    // }
+    // function clickHandlerMarkAnswer(/**Number*/ id, /**String*/ answeredBy = "", /**String*/ answer = "") {
+    //     setSelectedAction(ACTIONS.markAnswered);
+    //     setSelectedMessageId(id);
+    //     setMarkAnswered({ answeredBy: answeredBy, answer: answer });
+    //     setDisplayModal(true);
+    // }
+    // function clickHandlerChangeFlag(/**Number*/ id, /**String*/ currentFlagColour) {
+    //     setSelectedAction(ACTIONS.changeFlag);
+    //     setSelectedMessageId(id);
+    //     setMarkColourChange({ currentFlagColour: currentFlagColour })
+    //     setDisplayModal(true);
+    // }
+    // function clickHandlerDeleteMessage(/**Number*/ id) {
+    //     setSelectedAction(ACTIONS.deleteMessage);
+    //     setSelectedMessageId(id);
+    //     setDisplayModal(true);
+    // }
 
     let aMessage = {
         "id": 1,
@@ -174,7 +183,8 @@ function Messages() {
         "answeredBy": "",
         "answerDate": "",
         "answer": "",
-        "isSpam": false
+        "isSpam": false,
+        "userId": 5
     }
     let a2Message = {
         "id": 1,
@@ -190,7 +200,8 @@ function Messages() {
         "answeredBy": "j@hhhshsidndd.com",
         "answerDate": "Tue, 09 Jan 2024 21:07:38 GMT",
         "answer": "kdbkdvbs djhcbvhcd shbkhb sajhsbashcabv shcbdchkbcd kbkdbkdc hvhdvdlhvdc askhbckhcd",
-        "isSpam": true
+        "isSpam": true,
+        "userId": 0
     }
     let a3Message = {
         "id": 3,
@@ -206,7 +217,8 @@ function Messages() {
         "answeredBy": "",
         "answerDate": "",
         "answer": "",
-        "isSpam": false
+        "isSpam": false,
+        "userId": 8
     }
 
     return (
@@ -233,21 +245,52 @@ function Messages() {
             </section>
 
             <section className="Messages-MessageBoxSection">
-                <Message
+                {
+                    messages && messages.length > 0 && (
+                        messages.map((item, index) => (
+                            <Message
+                                isAdminComponent={true}
+                                theMessage={item}
+                                clickHandler={clickHandler}
+                                key={index}
+                            />
+                        ))
+                    )
+                }
+                {
+                    ((messages && messages.length == 0) || (!messages)) && (
+                        <p><b>No message found.</b></p>
+                    )
+                }
+                {/* <Message
                     isAdminComponent={true}
                     theMessage={aMessage}
-                    clickHandlerNoAnswerNeeded={clickHandlerNoAnswerNeeded}
-                    clickHandlerMarkAnswer={clickHandlerMarkAnswer}
-                    clickHandlerChangeFlag={clickHandlerChangeFlag}
-                    clickHandlerDeleteMessage={clickHandlerDeleteMessage}
+                    clickHandler={clickHandler}
                 />
                 <Message
                     isAdminComponent={true}
-                    theMessage={a2Message} />
+                    theMessage={a2Message}
+                    clickHandler={clickHandler}
+                />
                 <Message
                     isAdminComponent={true}
-                    theMessage={a3Message} />
+                    theMessage={a3Message}
+                    clickHandler={clickHandler}
+                /> */}
             </section>
+
+            {/* {
+                messages && messages.length <0 && (
+                    messages.map((item, index) => (
+                        <Message
+                            isAdminComponent={true}
+                            theMessage={item}
+                            clickHandler={clickHandler}
+                            key={index}
+                        />
+                    ))
+                )
+            } */}
 
 
             {/* {

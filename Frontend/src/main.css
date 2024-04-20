@@ -170,6 +170,8 @@ textarea {
     color: var(--FontColorInput);
 }
 
+
+
 /* **********************************************************
 *                                                           *
 *                   SHARED CLASSES                          *
@@ -235,12 +237,12 @@ textarea {
     grid-gap: 10px;
 }
 
-@media (min-width: 600px) {
+/* @media (min-width: 600px) {
     .MAIN-form-display-table {
-        /* grid-template-columns => adapt in component's own css as needed */
+        grid-template-columns => adapt in component's own css as needed
         grid-template-columns: 200px 300px;
     }
-}
+} */
 
 /* Table-tag classes
     - MAIN-table: used in table-tags. 

@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import Flag from "../Flag/Flag";
 import iconUserKnown from "../../assets/icon_user_type_user.svg"
 import iconUserUnkown from "../../assets/icon_user_unkown.svg"
 import iconMailSpam from "../../assets/icon_mail_top_danger.svg"
+import { PATH_TO } from "../../router/routePaths"
 import "./message.css"
 
 /**
@@ -19,6 +21,7 @@ import "./message.css"
  * @param {string} props.theMessage.senderName
  * @param {string} props.theMessage.senderEmail
  * @param {bool} props.theMessage.senderIsUser
+ * @param {number} props.theMessage.userId
  * @param {string} props.theMessage.message
  * @param {string} props.theMessage.subject
  * @param {string} props.theMessage.flagged
@@ -28,16 +31,15 @@ import "./message.css"
  * @param {string} props.theMessage.answerDate
  * @param {string} props.theMessage.answer
  * @param {bool} props.theMessage.isSpam
- * @param {func} [props.clickHandlerNoAnswerNeeded] //Click handler needed if isAdminComponent, should accept message id
- * @param {func} [props.clickHandlerMarkAnswer] //Click handler needed if isAdminComponent, should accept message id
- * @param {func} [props.clickHandlerChangeFlag] //Click handler needed if isAdminComponent, should accept message id
- * @param {func} [props.clickHandlerDeleteMessage] //Click handler needed if isAdminComponent, should accept message id
+ * @param {func} [props.clickHandler] //Click handler needed if isAdminComponent, should accept the message obj and action
  * 
  * @returns {React.ReactElement}
  */
 function Message(props) {
-    const { theMessage, isAdminComponent, clickHandlerNoAnswerNeeded, clickHandlerMarkAnswer, clickHandlerChangeFlag, clickHandlerDeleteMessage } = props;
-    const { id, date, senderName, senderEmail, senderIsUser, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage;
+    const { theMessage, isAdminComponent, clickHandler = false } = props;
+    const { id, date, senderName, senderEmail, senderIsUser, userId, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage;
+
+    const navigate = useNavigate();
 
     const [showOptions, setShowOptions] = useState(false);
     function toggleShowOptions() {
@@ -170,7 +172,7 @@ function Message(props) {
                                             {senderIsUser && (
                                                 <>
                                                     <button
-                                                        onClick={() => { console.log("hello") }}>
+                                                        onClick={() => { navigate(PATH_TO.adminArea_userInfo, { state: userId }) }}>
                                                         User info
                                                     </button>
                                                     <br />
@@ -179,23 +181,23 @@ function Message(props) {
                                             )}
                                             <div className="Message-BtnSubContainer Message-MarginTop">
                                                 <button
-                                                    onClick={() => { console.log("hello") }}>
+                                                    onClick={() => { clickHandler(theMessage, "markAs") }}>
                                                     Mark as...
                                                 </button>
 
                                                 <button
-                                                    onClick={() => { console.log("hello") }}>
+                                                    onClick={() => { clickHandler(theMessage, "answer") }}>
                                                     {wasAnswered ? "Edit answer" : "Record answer"}
                                                 </button>
 
                                                 <button
-                                                    onClick={() => { console.log("hello") }}>
+                                                    onClick={() => { clickHandler(theMessage, "flag") }}>
                                                     Change flag
                                                 </button>
 
                                                 <button
                                                     className="Message-DelBtn"
-                                                    onClick={() => { console.log("hello") }}
+                                                    onClick={() => { clickHandler(theMessage, "delete") }}
                                                 >
                                                     Delete message
                                                 </button>
@@ -247,6 +249,7 @@ Message.propTypes = {
         date: PropTypes.string.isRequired,
         senderName: PropTypes.string.isRequired,
         senderEmail: PropTypes.string.isRequired,
+        userId: PropTypes.number.isRequired,
         subject: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
         flagged: PropTypes.string.isRequired,
