@@ -88,6 +88,11 @@
     grid-template-columns: 3fr 2fr !important;
 }
 
+.Modal-displayTable-3auto {
+    max-width: 28em;
+    grid-template-columns: 3fr auto !important;
+}
+
 .Modal-displayTable>input,
 .Modal-displayTable>textarea {
     width: 11em;

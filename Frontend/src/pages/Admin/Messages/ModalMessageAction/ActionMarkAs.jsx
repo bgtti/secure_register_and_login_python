@@ -117,23 +117,25 @@ function ActionMarkAs(props) {
             {/* If message was originally marked as spam, but user unmarks as spam, allow user to decide whether to remove sender from spammers list*/}
             {spamMarkChange && (
                 <>
-                    {isSpam && (
+                    {markedSpam && (
                         <>
+                            <br />
                             <p> Would you like to include the sender's email to the spammer's list?</p>
                             <p> Future messages received by the sender will be automatically marked as spam and no longer forwarded to the site's admin email address. </p>
                         </>
                     )}
-                    {!isSpam && (
+                    {!markedSpam && (
                         <>
+                            <br />
                             <p> If you included the sender's email address in the spammers list, would you like to remove it?</p>
                             <p> Messages received by spammers are automatically marked as spam and are not forwarded to the site's admin email address. </p>
                         </>
                     )}
                     <br />
-                    <div className="Modal-displayTable">
+                    <div className="Modal-displayTable Modal-displayTable-3auto">
                         <label htmlFor="spamList">Spammer list:</label>
                         <select
-                            className="Modal-Select"
+                            className=""
                             name="spamList"
                             id="spamList"
                             defaultValue={markSenderAsSpammer}

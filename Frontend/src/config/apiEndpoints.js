@@ -12,7 +12,7 @@ const adminUrl = {
 }
 
 export const apiEndpoints = {
-    baseURL: "http://127.0.0.1:5000",
+    baseURL: "https://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
     //account
