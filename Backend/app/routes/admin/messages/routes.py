@@ -112,12 +112,6 @@ def admin_messages_table():
             messages = Message.query.filter_by(is_spam=spam_included).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
         case "answer_needed":
             messages = Message.query.filter(Message.is_spam == spam_included, Message.answer_needed == modelBool.TRUE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
-            # if not messages:
-            #     print("No messages available")
-            # else:
-            #     for message in messages:
-            #         # Process each message as needed
-            #         print(message)
         case "answer_not_needed":
             messages = Message.query.filter(Message.is_spam == spam_included, Message.answer_needed == modelBool.FALSE).order_by(ordering).paginate(page=page_nr, per_page=items_per_page, error_out=False)
         case _:
@@ -127,14 +121,6 @@ def admin_messages_table():
     
         
     if not messages.items:
-        # print("before")
-        # print(messages)
-        # messages = Message.query.all()
-        # print("how many items: ")
-        # print(len(messages))
-        # for message in messages:
-        #     # Process each message as needed
-        #     print(message)
         return jsonify({"response": "Requested page out of range"}), 404
     
     response_data ={

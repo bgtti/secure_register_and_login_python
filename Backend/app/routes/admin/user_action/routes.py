@@ -88,7 +88,7 @@ def change_user_flag():
             log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, integrity error raised.")
         except Exception as e:
             logging.error(f"Error prevented user flag change log to be saved: {e}")
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error changing user flag - integrity error", "error": str(e)}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user flag change: {e}")

@@ -36,5 +36,5 @@ contact_form_schema = {
         },
     },
     "additionalProperties": False,
-    "required": ["name","email", "subject","message", "is_user", "honeypot"]
+    "required": ["name","email", "message", "is_user", "honeypot"]
 }

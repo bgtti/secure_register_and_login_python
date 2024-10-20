@@ -304,6 +304,7 @@ def login_user():
 
     # Use Flask-Login to log in the user
     flask_login_user(user)
+    print(f"Session after login: {session}")
 
     # event and system logs
     logging.info("A user logged in.")

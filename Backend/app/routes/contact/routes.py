@@ -40,7 +40,7 @@ def contactForm():
     json_data = request.get_json()
     name = json_data["name"]
     email = json_data["email"]
-    subject = json_data["subject"]
+    subject = json_data.get("subject", "no subject")
     message = json_data["message"]
     is_user = json_data["is_user"]
     honeypot = json_data["honeypot"]

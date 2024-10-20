@@ -22,6 +22,7 @@ from flask import Blueprint, request, jsonify, session
 # from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 from app.routes.admin.dashboard.routes import admin_dash
+from app.routes.admin.message_action.routes import message_action
 from app.routes.admin.messages.routes import messages
 from app.routes.admin.user_action.routes import user_action
 from app.routes.admin.users.routes import users
@@ -29,6 +30,7 @@ from app.routes.admin.users.routes import users
 admin = Blueprint('admin', __name__)
 
 admin.register_blueprint(admin_dash, url_prefix='/dash')
+admin.register_blueprint(message_action, url_prefix='/message_action')
 admin.register_blueprint(messages, url_prefix='/messages')
 admin.register_blueprint(user_action, url_prefix='/user_action')
 admin.register_blueprint(users, url_prefix='/users')

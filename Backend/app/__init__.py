@@ -15,13 +15,13 @@ def create_app(config_class=Config):
     dictConfig(LOGGING_CONFIG)
     system_logger = logging.getLogger("system_log")
 
-    extensions.flask_bcrypt.init_app(app)
     extensions.cors.init_app(app, supports_credentials=True, resources=r"/api/*", origins=["http://localhost:5173"]) # consider adding allowed origin from requests: https://flask-cors.corydolphin.com/en/latest/api.html#extension
-    extensions.login_manager.init_app(app)
-    # extensions.server_session.init_app(app)
     extensions.db.init_app(app)
+    extensions.flask_bcrypt.init_app(app)
     extensions.limiter.init_app(app)
+    extensions.login_manager.init_app(app)
     extensions.mail.init_app(app)
+    extensions.server_session.init_app(app)
 
     from app.models import user
     from flask import current_app
