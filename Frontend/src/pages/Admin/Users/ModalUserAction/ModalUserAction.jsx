@@ -49,11 +49,11 @@ function ModalUserAction(props) {
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
 
-    const [errorMessage, setErrroMessage] = useState("")
+    const [errorMessage, setErroMessage] = useState("")
     const [changesWereMade, setChangesWereMade] = useState(false)
 
     const [userFlag, setUserFlag] = useState(flagged)//only used when changing flag color
-    const userTypeIsAdmin = useState(access == USER_TYPE_REQUEST.admin)//only used when changing user type
+    const userTypeIsAdmin = (access == USER_TYPE_REQUEST.admin)//only used when changing user type
 
     const actionLowerCase = action.toLowerCase()
     const actionCapitalized = actionLowerCase.charAt(0).toUpperCase() + actionLowerCase.slice(1);
@@ -73,7 +73,7 @@ function ModalUserAction(props) {
 
         const handleResponse = (response, successMessage) => {
             if (isComponentMounted()) {
-                setErrroMessage(response.success ? successMessage : "An error occurred. Please reload the page and try again.");
+                setErroMessage(response.success ? successMessage : "An error occurred. Please reload the page and try again.");
                 if (response.success) {
                     setChangesWereMade(true);
                     setUpdateData(true);
@@ -182,7 +182,7 @@ function ModalUserAction(props) {
             {
                 changesWereMade && action === "flag" && (
                     <>
-                        <p>The type of the following user was changed:</p>
+                        <p>The flag colour of the following user was changed:</p>
                         <br />
                         {userBaseInfo}
                         <br />

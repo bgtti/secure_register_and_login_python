@@ -1,21 +1,22 @@
-from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from flask_session import Session
-from flask_login import LoginManager
-from sqids import Sqids
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from faker import Faker
+from flask_login import LoginManager
 from flask_mail import Mail
+from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
+from faker import Faker
+from sqids import Sqids
 
+# The extensions bellow are used in the __init__ file, where the app is created.
 
 db = SQLAlchemy()
-flask_bcrypt = Bcrypt()
 cors = CORS()
-# server_session = Session()
-login_manager = LoginManager()
-limiter = Limiter(key_func=get_remote_address)
-sqids = Sqids(min_length=8)
 faker = Faker()
+flask_bcrypt = Bcrypt()
+limiter = Limiter(key_func=get_remote_address)
+login_manager = LoginManager()#info here
 mail = Mail()
+server_session = Session() #Session Middleware. Without it, Flask defaults to client-side cookies
+sqids = Sqids(min_length=8)

@@ -20,6 +20,6 @@
 
     .UserLogs-Table>thead>tr,
     .UserLogs-Table>tbody>tr {
-        grid-template-columns: repeat(3, 7em) auto;
+        grid-template-columns: 7em 5em 13em auto !important;
     }
 }

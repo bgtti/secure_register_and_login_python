@@ -16,6 +16,9 @@ def console_warn(message, color="BLUE"):
 
     console_warn("hello", "GREEN") -> prints message in green
     console_warn("hello console") -> prints message in blue once
+    ------------------------------------------------------------
+    Colour options:
+        "BLUE", "CYAN", "MAGENTA", "RED", "GREEN", "YELLOW", "WHITE".
     """
     colors = {
         "BLUE": Fore.BLUE,

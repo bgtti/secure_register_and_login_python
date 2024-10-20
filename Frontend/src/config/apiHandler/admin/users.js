@@ -1,5 +1,5 @@
 import { apiHandle404 } from "../../axios";
-import apiEndpoints from "../../apiEndPoints";
+import apiEndpoints from "../../apiEndpoints";
 import { INPUT_LENGTH, USERS_TABLE_REQUEST } from "../../../utils/constants";
 import { validateDateFormat } from "../../../utils/validation";
 import { getLastMonthDate } from "../../../utils/helpers";

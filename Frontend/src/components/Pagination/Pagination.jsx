@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import "./pagination.css"
 
 /**
- * Component for displaying pagination at the bottom of a table component
+ * Component for displaying pagination at the bottom of a table (or similar) component
  * Returns a div element with nested p and button elements
  * @param {object} props
  * @param {number} props.currentPage should be int

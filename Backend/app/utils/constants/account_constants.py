@@ -19,6 +19,10 @@ INPUT_LENGTH = {
         "minValue": 1,
         "maxValue": 300
     },
+    "contact_message_subject":{
+        "minValue": 1,
+        "maxValue": 50
+    },
     "honeypot":{
         "minValue": 0,
         "maxValue": 15

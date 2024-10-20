@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv  # getting .env variables
 import redis
-import datetime
+# import datetime
 import json
+from datetime import timedelta
 from enum import Enum
 from app.utils.rate_limit_utils.rate_limit_exceeded import rate_limit_exceeded
 from app.config_constants import pepper_array, secret_key, admin_credentials, user_id_salt, email_credentials
@@ -39,7 +40,9 @@ class Config:
 
     # Flask-Session configuration
     SESSION_TYPE = "redis"
-    SESSION_PERMANENT = False
+    SESSION_PERMANENT = True # set to False later
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1) #comment out later
+    # SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True 
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = "None" 

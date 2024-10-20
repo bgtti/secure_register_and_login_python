@@ -20,6 +20,9 @@ function AdminArea() {
                         <NavLink to="users" >Users</NavLink>
                     </li>
                     <li>
+                        <NavLink to="messages" >Messages</NavLink>
+                    </li>
+                    <li>
                         <NavLink to="adminSettings" >Settings</NavLink>
                     </li>
                 </ul>
