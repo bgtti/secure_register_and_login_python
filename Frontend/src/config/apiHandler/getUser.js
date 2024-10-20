@@ -1,5 +1,5 @@
 import { api } from "../axios.js";
-import apiEndpoints from "../apiEndPoints.js";
+import apiEndpoints from "../apiEndpoints.js";
 import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
 
 /**

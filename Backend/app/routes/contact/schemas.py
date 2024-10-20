@@ -13,7 +13,13 @@ contact_form_schema = {
             "type": "string", 
             "minLength": INPUT_LENGTH['email']['minValue'], 
             "maxLength": INPUT_LENGTH['email']['maxValue'], 
-            "pattern": EMAIL_PATTERN},
+            "pattern": EMAIL_PATTERN
+            },
+        "subject": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['contact_message_subject']['minValue'], 
+            "maxLength": INPUT_LENGTH['contact_message_subject']['maxValue'],
+        },
         "message": {
             "type": "string", 
             "minLength":  INPUT_LENGTH['contact_message']['minValue'], 

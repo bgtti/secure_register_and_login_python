@@ -4,9 +4,9 @@ from app.extensions import mail
 from app.config import EMAIL_CREDENTIALS
 from app.utils.console_warning.print_warning import console_warn
 
-def contact_form_email_forwarding(sender_name, sender_email, message, is_user=False, email_in_db=""):
+def contact_form_email_forwarding(sender_name, sender_email, subject, message, is_user=False, email_in_db=""):
     """
-    contact_form_email_forwarding(sender_name: str, sender_email: str, message: str, is_user: bool, email_in_db: str) -> bool
+    contact_form_email_forwarding(sender_name: str, sender_email: str, subject: str, message: str, is_user: bool, email_in_db: str) -> bool
     -----------------------------------------------------------------------------
     Function forwards information received via contact form to the site admin's email address.
     Email forwarding will only work if email credentials were set up in the .env file correctly.
@@ -33,13 +33,15 @@ def contact_form_email_forwarding(sender_name, sender_email, message, is_user=Fa
     <b>Sender's email:</b> {sender_email}<br>
     <em>{is_registered}</em><br>
     ********************************************************************<br>
+    <b>Subject:</b> {subject}<br>
+    <br>
     <b>Message received:</b><br>
     <br>
     {message}
 
     """
     new_email = EmailMessage(
-        f"[SafeDev] New contact form message from {sender_name}",
+        f"[SafeDev] New message from {sender_name}: {subject}",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [EMAIL_CREDENTIALS["email_address"]]
     )

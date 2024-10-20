@@ -1,6 +1,6 @@
 .Modal {
-    height: 100vh;
-    width: 100vw;
+    min-height: 100vh;
+    min-width: 100vw;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -39,7 +39,80 @@
     }
 }
 
+/* Class should be added to the document's body when modal is active */
 .Modal-active {
-    overflow: hidden;
-    overflow-y: hidden;
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+}
+
+/* The following classes can be used on the Modal component's children */
+/* Example of such child: ModalMessageAction.jsx */
+
+/* Use on element which is the action button's container */
+.Modal-BtnContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.Modal-BtnContainer>* {
+    min-width: 10em;
+    max-width: 15em;
+}
+
+/* Use on modal buttons if there is action ('save'/'delete') */
+
+.Modal-ActionBtn {
+    background-color: var(--YellowColor);
+}
+
+.Modal-ActionDanger {
+    background-color: var(--RedColor);
+    color: var(--FontColorInput);
+}
+
+/* Use on container of elements which should be displayed as grid */
+
+.Modal-displayTable {
+    min-width: 10em;
+    max-width: 23em;
+    display: grid;
+    grid-template-columns: 3fr 4fr !important;
+    align-items: center;
+    grid-gap: 5px;
+}
+
+.Modal-displayTable-32 {
+    grid-template-columns: 3fr 2fr !important;
+}
+
+.Modal-displayTable-3auto {
+    max-width: 28em;
+    grid-template-columns: 3fr auto !important;
+}
+
+.Modal-displayTable>input,
+.Modal-displayTable>textarea {
+    width: 11em;
+}
+
+.Modal-Select {
+    min-width: 120px;
+    max-width: 180px;
+}
+
+@media (min-width: 600px) {
+
+    .Modal-displayTable>input,
+    .Modal-displayTable>textarea {
+        width: 13em;
+    }
+
+    /* Use on select element */
+    .Modal-Select {
+        min-width: 120px;
+        max-width: 180px;
+    }
 }

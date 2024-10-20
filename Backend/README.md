@@ -177,3 +177,25 @@ This error occurs when the logging system attempts to rotate the log file, but i
 # setting up gmail:
 Password needs to be app password, not the usual account password
 2-factor must be enabled for this: https://support.google.com/mail/answer/185833?hl=en
+
+# https:
+It is possible (and probable) that the browser blocks session cookies due to strict thrid-party cooky policy. This will make requests to the server fail.
+Make sure you allow third-party cookies for https://127.0.0.1:5000/ (or whichever other port you are runnning this application from). Sometimes this can be done by acessing the address, then clicking to bypass blocking of unsecure sites. 
+
+A folder called ssl_certificate is included along with files that got uploaded to Github. These files will probably not be accepted by your browser, which may still flag the source as unsecure.
+
+If you delete the ssl_certificate folder, the app will re-create it and will try to generate SSL certificate to run HTTPS. Should it fail (which it probably will), this is what can be done:
+1) Fix the code and/or install OpenSSL so that the certificate is generated; or
+2) Manually place a certificate in the correct folder
+3) Run it HTTP (recommended)
+
+1)
+Make sure you have OpenSSL inatalled. If you dont, install it.
+I got the installation link from this site: https://slproweb.com/products/Win32OpenSSL.html
+There is an installation guide for windows here: https://www.xolphin.com/support/OpenSSL/OpenSSL_-_Installation_under_Windows
+You can copy the path to your openssl.exe file and paste it in create_ssl_certificate(update=False), replacing the current "openssl_path" variable.
+Run the code again. If it still doesn't work, try openssl_path = "openssl". If that doesn't solve the problem then consider another option.
+2)
+Add a certificate named "cert.pem" and a key named "key.pem" to the ssl_certificate folder manually. 
+3)
+Just run the code as HTTP. This will happen automatically, but if it does, don't forget to change the API route in the React frontend as well. https://127.0.0.1:5000/ to http://127.0.0.1:5000/ (or whichever port you are runnning this application from). Also here, you may have to the browser third-party-cookie thing as well, an perhaps change a thing or two in the Config file regarding session cookies.

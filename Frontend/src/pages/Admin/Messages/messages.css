@@ -1,0 +1,12 @@
+.Messages>h3 {
+    margin-top: 0;
+    border-left: 2px solid var(--BlueColour);
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--BackgroudPrimary)) 2;
+    padding: 10px 0 10px 7px;
+    color: var(--FontColorSecondary);
+}
+
+.Messages>section,
+.Messages-MessageBoxSection>* {
+    margin-bottom: 10px;
+}

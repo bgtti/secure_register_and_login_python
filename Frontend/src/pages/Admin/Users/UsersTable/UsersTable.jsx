@@ -9,7 +9,7 @@ import ModalUserAction from "../ModalUserAction/ModalUserAction";
 import FilterTable from "./FilterTable/FilterTable"
 import SearchTable from "./SearchTable/SearchTable";
 import Table from "./Table/Table";
-import Pagination from "../Pagination/Pagination"
+import Pagination from "../../../../components/Pagination/Pagination"
 import "./usersTable.css"
 
 /**

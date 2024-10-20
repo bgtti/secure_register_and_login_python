@@ -5,7 +5,7 @@ import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice";
 import { getUserLogs } from "../../../../config/apiHandler/admin/userLogs.js"
 import UserLogRow from "./UserLogRow.jsx"
-import Pagination from "../Pagination/Pagination.jsx";
+import Pagination from "../../../../components/Pagination/Pagination.jsx";
 import "./userLogs.css"
 
 /**

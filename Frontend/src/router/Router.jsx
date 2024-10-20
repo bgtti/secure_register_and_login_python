@@ -13,13 +13,15 @@ import Contact from "../pages/Contact/Contact";
 //Pages: protected route (registered users)
 import Dashboard from "../pages/Dashboard/Dashboard";
 import UserSettings from "../pages/UserSettings/UserSettings";
-//Pages: admin protected
+//Pages: admin protected (admin users only)
 import AdminArea from "../pages/Admin/AdminArea";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import Users from "../pages/Admin/Users/Users";
+import UsersTable from "../pages/Admin/Users/UsersTable/UsersTable";
 import UserInfo from "../pages/Admin/Users/UserInfo/UserInfo";
 import UserLogs from "../pages/Admin/Users/UserLogs/UserLogs";
-import UsersTable from "../pages/Admin/Users/UsersTable/UsersTable";
+import UserMessages from "../pages/Admin/Users/UserMessages/UserMessages";
+import Messages from "../pages/Admin/Messages/Messages";
 import AdminSettings from "../pages/Admin/Settings/AdminSettings";
 //Pages: error pages
 import ErrorPage from '../pages/ErrorPage/ErrorPage';
@@ -65,7 +67,9 @@ const Router = () => {
                             <Route path="usersTable" element={<UsersTable />} />
                             <Route path="userInfo" element={<UserInfo />} />
                             <Route path="userLogs" element={<UserLogs />} />
+                            <Route path="userMessages" element={<UserMessages />} />
                         </Route>
+                        <Route path="messages" element={<Messages />} />
                         <Route path="adminSettings" element={<AdminSettings />} />
                     </Route>
                 </Route>

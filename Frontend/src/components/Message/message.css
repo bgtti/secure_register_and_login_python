@@ -1,0 +1,125 @@
+.Message {
+    border: 2px solid var(--FontColorDarker);
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+}
+
+.Message>* {
+    font-size: .9em;
+}
+
+.Message>section {
+    margin-bottom: 10px;
+}
+
+.Message hr {
+    border: 1px solid var(--BackgroundInput);
+}
+
+.Message-Sect1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.Message-FontDarker {
+    color: var(--FontColorSecondary);
+}
+
+.Message-FontYellow,
+.Message-FontBlue {
+    font-weight: bold;
+}
+
+.Message-FontYellow {
+    color: var(--YellowColor);
+}
+
+.Message-FontBlue {
+    color: var(--BlueColour);
+}
+
+.Message-MarginTop {
+    margin-top: 10px;
+}
+
+.Message-WrapText {
+    max-width: 97%;
+    text-wrap: pretty;
+}
+
+.Message-ShowMoreBtn {
+    background-color: var(--MiddleBlueColour);
+    font-size: .8em;
+    padding: 5px;
+    width: 100px;
+}
+
+.Message-IconContainer {
+    display: flex;
+    gap: 5px
+}
+
+.Message-IconContainer>div {
+    width: 2em;
+    height: 2em;
+}
+
+.Message-IconContainer>div>img {
+    width: 90%;
+    height: 90%;
+}
+
+.Message-spamIcon {
+    width: 70% !important;
+    height: 70% !important;
+}
+
+.Message-userIcon {
+    margin-left: 3px;
+    margin-bottom: 3px;
+}
+
+.Message-userIconUnkown {
+    margin-left: 6px;
+    margin-bottom: 3px;
+}
+
+.Message-flagContainer>* {
+    transform: scale(1.3);
+}
+
+.Message-BtnContainer button {
+    font-size: .8em;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 100px;
+}
+
+.Message-BtnSubContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.Message-BtnSubContainer>* {
+    background-color: var(--YellowColor);
+}
+
+.Message-DelBtn {
+    background-color: var(--RedColor);
+    color: var(--FontColorPrimary);
+}
+
+@media (min-width: 600px) {
+    .Message>* {
+        font-size: 1em;
+    }
+
+    .Message-BtnContainer button {
+        font-size: 13px;
+        width: 125px;
+    }
+}

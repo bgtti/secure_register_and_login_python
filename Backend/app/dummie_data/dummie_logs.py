@@ -1,6 +1,6 @@
 from sqlalchemy import insert
 from app.extensions import db
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.user import User
 from app.models.log_event import LogEvent
 
@@ -45,8 +45,8 @@ def create_dummie_logs():
     for user in users:
         log_list.extend([create_log_dic(0, user.id, user.created_at), create_log_dic(1, user.id, user.last_seen)])
     log_list.extend([
-        create_log_dic(2, 0, datetime.utcnow()),
-        create_log_dic(3, 0, datetime.utcnow())
+        create_log_dic(2, 0, datetime.now(timezone.utc)),
+        create_log_dic(3, 0, datetime.now(timezone.utc))
     ])
 
     db.session.execute(insert(LogEvent), log_list)
