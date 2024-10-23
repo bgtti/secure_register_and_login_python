@@ -237,6 +237,8 @@ textarea {
     grid-gap: 10px;
 }
 
+
+
 /* @media (min-width: 600px) {
     .MAIN-form-display-table {
         grid-template-columns => adapt in component's own css as needed

@@ -7,7 +7,7 @@ import { PATH_TO } from "../../../../router/routePaths.js";
 import Pagination from "../../../../components/Pagination/Pagination.jsx";
 import { getUserMessages } from "../../../../config/apiHandler/admin/userMessages.js"
 import UserMessageContainer from "./UserMessageContainer.jsx";
-// import "./userLogs.css"
+import "./userMessages.css"
 
 /**
  * Component returns HTML div with selected user's messages
@@ -84,7 +84,7 @@ function UserMessages() {
 
     return (
         <div className="Users UserMessages">
-            <h3>User Logs</h3>
+            <h3>User Messages</h3>
 
             <div className="UserMessages-btnContainer">
                 <button onClick={() => { navigate(PATH_TO.adminArea_userInfo, { state: id }) }}>Back to User's Info</button>

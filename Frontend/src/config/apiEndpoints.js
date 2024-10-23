@@ -27,7 +27,7 @@ export const apiEndpoints = {
     adminGetUsersTable: `${adminUrl.users}/table`, //OK
     adminGetUserInfo: `${adminUrl.users}/user_info`, //OK
     adminGetUserLogs: `${adminUrl.users}/user_logs`, //OK
-    adminGetUserMessages: `${adminUrl.users}/user_messages`, // MISSING
+    adminGetUserMessages: `${adminUrl.users}/user_messages`, // MISSING ---WORKING NOW
     //admin - user action
     adminChangeUserFlag: `${adminUrl.userAction}/flag_change`,//OK
     adminChangeUserAccessType: `${adminUrl.userAction}/access_change`,//OK

@@ -120,7 +120,7 @@ export function getUserMessages(pageNr, userId) {
                     };
                 });
                 return {
-                    message: javaScriptifiedMessageFields,
+                    messages: javaScriptifiedMessageFields,
                     totalPages: response.data.total_pages,
                     currentPage: response.data.current_page,
                     data: true,

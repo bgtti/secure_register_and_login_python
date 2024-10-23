@@ -1,0 +1,16 @@
+.UserMessages>h4 {
+    font-size: 1.4em;
+    margin: 10px 0;
+}
+
+.UserMessages-btnContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 230px;
+}
+
+.UserMessages-noMessages {
+    margin-top: 10px;
+    color: var(--FontColorDarker);
+}

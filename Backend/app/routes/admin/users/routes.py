@@ -363,7 +363,7 @@ def admin_user_messages():
     
     response_data ={
             "response":"success",
-            "messages": [message.serialize_user_messages() for message in user_messages.items],
+            "messages": [message.serialize_message_table() for message in user_messages.items],
             "total_pages": user_messages.pages,
             "current_page": user_messages.page,
             "query":{
@@ -373,5 +373,7 @@ def admin_user_messages():
                 "order_sort": "descending",
             }
         }
+    
+    print(response_data)
     
     return jsonify(response_data)

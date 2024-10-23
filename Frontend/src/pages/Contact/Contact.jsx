@@ -144,7 +144,7 @@ function Contact() {
                 <meta name="description" content="Contact us" />
             </Helmet>
             <h2>Contact us</h2>
-            <form onSubmit={handleSubmit} className='MAIN-form'>
+            <form onSubmit={handleSubmit} className="MAIN-form">
                 <div className="MAIN-form-display-table">
                     <label htmlFor="name">Name:<span className="MAIN-form-star"> *</span></label>
                     <input
@@ -197,7 +197,7 @@ function Contact() {
                         onChange={handleChange}
                         required
                         value={formData.message}
-                        cols="30"
+                        cols="23"
                         rows="10">
                     </textarea>
                 </div>
