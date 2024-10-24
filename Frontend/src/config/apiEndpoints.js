@@ -21,22 +21,25 @@ export const apiEndpoints = {
     userLogOut: `${urlPrefix.account}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.account}/@me`, //OK
     userDeleteOwnAccount: `${urlPrefix.account}/delete`, //MISSING
+    userChangeEmail: `${urlPrefix.account}/...`, //MISSING
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING
     //admin - users
     adminGetUsersTable: `${adminUrl.users}/table`, //OK
     adminGetUserInfo: `${adminUrl.users}/user_info`, //OK
     adminGetUserLogs: `${adminUrl.users}/user_logs`, //OK
-    adminGetUserMessages: `${adminUrl.users}/user_messages`, // MISSING ---WORKING NOW
+    adminGetUserMessages: `${adminUrl.users}/user_messages`, //OK
     //admin - user action
     adminChangeUserFlag: `${adminUrl.userAction}/flag_change`,//OK
     adminChangeUserAccessType: `${adminUrl.userAction}/access_change`,//OK
     adminBlockUnblockUser: `${adminUrl.userAction}/block_unblock`,//OK
     adminDeleteUser: `${adminUrl.userAction}/delete_user`, //OK
     //admin - messages
-    adminMessagesTable: `${adminUrl.messages}/table`, // MISSING
-    adminMessageMarkNoAnswer: `${adminUrl.messages}/...`, //MISSING
+    adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter...)
+    adminMessageMarkAs: `${adminUrl.messages}/mark_as`, //MISSING ---WORKING NOW
     adminMessageMarkAnswer: `${adminUrl.messages}/...`, //MISSING
+    adminMessageMarkNoAnswer: `${adminUrl.messages}/...`, //MISSING
+    adminMessageAnswer: `${adminUrl.messages}/...`, //MISSING
     adminMessageFlagChange: `${adminUrl.messages}/...`, //MISSING
     adminMessageDelete: `${adminUrl.messages}/...`, //MISSING
 };
