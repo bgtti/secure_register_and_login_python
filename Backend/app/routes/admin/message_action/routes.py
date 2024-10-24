@@ -48,6 +48,7 @@ def mark_message_as():
         "message_id": 6,
         "answer_needed": true,
         "is_spam": false
+        "sender_is_spammer": false
     }
     ----------------------------------------------------------
     Response examples:
@@ -58,7 +59,8 @@ def mark_message_as():
     "requested":{
         "message_id": 6,
         "answer_needed": true,
-        "is_spam": false
+        "is_spam": false,
+        "sender_is_spammer": false
     }
     }
     """
@@ -80,12 +82,15 @@ def mark_message_as():
         
         if is_spam:
             the_message.mark_spam()
+            if sender_is_spammer:
+                print("mark sender as spammer functionality missing missing") # => do this!!!
         else:
             if the_message.is_spam == modelBool.TRUE:
                 the_message.is_spam = modelBool.FALSE
-            if answer_needed:
+                the_message.flagged = UserFlag.BLUE
+            if answer_needed is True:
                 the_message.reply_needed()
-            if not answer_needed:
+            if answer_needed is False:
                 the_message.no_reply_needed()
         
         db.session.commit()
