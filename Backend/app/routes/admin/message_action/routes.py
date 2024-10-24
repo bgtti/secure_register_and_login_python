@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone, timedelta
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.extensions import limiter, db
 from sqlalchemy.exc import IntegrityError
 import logging
@@ -13,6 +13,7 @@ from app.utils.detect_html.detect_html import check_for_html
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.routes.admin.message_action.schemas import admin_message_action_mark_as
+from app.routes.admin.message_action.helpers import set_spammer
 
 
 message_action = Blueprint('message_action', __name__)
@@ -23,7 +24,7 @@ message_action = Blueprint('message_action', __name__)
 
 # View functions in this file provide and/or modify information in the db
 
-# ----- MESSAGES TABLE -----
+# ----- MESSAGES MARK AS -----
 @message_action.route("/mark_as", methods=["POST"])
 @login_required
 @admin_only
@@ -80,10 +81,14 @@ def mark_message_as():
             logging.info(f"Message id={message_id} could not be found, 404 not found.") 
             return jsonify({"response": "Message not found"}), 404
         
-        if is_spam:
+        if is_spam is True:
             the_message.mark_spam()
-            if sender_is_spammer:
-                print("mark sender as spammer functionality missing missing") # => do this!!!
+            if sender_is_spammer is True:
+                admin_id = current_user.id
+                spammer_added = set_spammer(admin_id, the_message.sender_email)
+                if not spammer_added:
+                    logging.error(f"Setting Spammer failed: returning error 500 from mark_message_as api.")
+                    return jsonify({"response": "Failed to mark sender as spammer"}), 500
         else:
             if the_message.is_spam == modelBool.TRUE:
                 the_message.is_spam = modelBool.FALSE
