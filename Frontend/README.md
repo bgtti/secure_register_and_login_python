@@ -23,6 +23,10 @@ npm run test
 Implement OWASP's top 10.
 Link: https://www.cloudflare.com/en-gb/learning/security/threats/owasp-top-10/
 
+## Code
+This code makes use of JSDoc
+Link: https://jsdoc.app/
+
 ## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

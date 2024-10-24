@@ -31,9 +31,21 @@ import "./message.css"
  * @param {string} props.theMessage.answerDate
  * @param {string} props.theMessage.answer
  * @param {bool} props.theMessage.isSpam
- * @param {func} [props.clickHandler] //Click handler needed if isAdminComponent, should accept the message obj and action
+ * @param {function} [props.clickHandler] // required if isAdminComponent, should accept the message obj and action
  * 
  * @returns {React.ReactElement}
+ * 
+ * @example
+ * //See example in: pages > Admin> Messages > Messages.jsx
+ * 1. import Message from "[...]/components/Message/Message.jsx";
+ * 2. declare function clickHandler(messageObj, action){...}
+ * 3. display component inside return statement like 
+ *      <Message
+            isAdminComponent={true} //=> boolean
+            theMessage={item} //=> message object
+            clickHandler={clickHandler} //=> optional function
+            //if inside a map method: key={index}
+        />
  */
 function Message(props) {
     const { theMessage, isAdminComponent, clickHandler = false } = props;
@@ -63,14 +75,14 @@ function Message(props) {
 
     function getMessageStatus() {
         if (isAdminComponent) {
-            if (isSpam) { return ["marked as spam", "FontBlue"] }
-            if (wasAnswered) { return ["answered", "FontDarker"] }
-            if (answerNeeded) { return ["answer needed", "FontYellow"] }
-            if (!answerNeeded) { return ["no answer needed", "FontDarker"] }
+            if (isSpam) { return ["Message marked as spam.", "FontBlue"] }
+            if (wasAnswered) { return ["Message answered.", "FontDarker"] }
+            if (answerNeeded) { return ["Answer needed!", "FontYellow"] }
+            if (!answerNeeded) { return ["No answer needed.", "FontDarker"] }
             console.error(`Inconsistent message status: wasAnswered = ${wasAnswered}, answerNeeded = ${answerNeeded}`)
-            return ["status error", "FontBlue"]
+            return ["Status error.", "FontBlue"]
         } else {
-            return [(wasAnswered ? "message received a reply" : "message sent"), "FontDarker"]
+            return [(wasAnswered ? "Message received a reply." : "message sent"), "FontDarker"]
         }
     }
 
@@ -82,14 +94,42 @@ function Message(props) {
             {/* Section 1: basic message info */}
             <section className={isAdminComponent ? "Message-Sect1" : ""} >
                 <div>
-                    <p><b>Date:</b> <span className="Message-FontDarker">{date}</span></p>
+                    <p>
+                        {/* <b>Status: </b> */}
+                        <span className={`Message-${messageStatus[1]}`}>{messageStatus[0]}</span>
+                    </p>
+                    <p>
+                        {/* <b>Date: </b> */}
+                        <span><b>{date.split(',')[0]}</b></span>
+                        <span className="Message-FontDarker Message-FontSmall">  {date.split(',')[1]}</span>
+                    </p>
+                    <p>
+                        {/* <b>Subject:</b>  */}
+                        {
+                            subject === "no subject" && (
+                                <b className="Message-FontDarker Message-FontSmall">no subject</b>
+                            )
+                        }
+                        {
+                            subject !== "no subject" && (
+                                <>
+                                    <i className="Message-FontDarker MessageQuote">" </i>
+                                    <b >{subject}</b>
+                                    <i className="Message-FontDarker MessageQuote"> "</i>
+                                </>
+                            )
+                        }
+                    </p>
                     {
                         isAdminComponent && (
-                            <p><b>Sender:</b> <span className="Message-FontDarker">{senderName} | {senderEmail}</span> </p>
+                            <p>
+                                {/* <b>Sender:</b>  */}
+                                <span className="Message-FontDarker Message-FontSmall">{senderName} ( {senderEmail} )</span>
+                            </p>
                         )
                     }
-                    <p><b>Status:</b> <span className={`Message-${messageStatus[1]}`}>{messageStatus[0]}</span></p>
                 </div>
+                {/* Icons */}
                 {
                     isAdminComponent && (
                         <div className="Message-IconContainer">
@@ -122,11 +162,10 @@ function Message(props) {
                 }
             </section >
 
-            <hr />
 
-            {/* Section 2: message subject and 'show more' button */}
+
+            {/* Section 2: 'show more' button */}
             <section>
-                <p className="Message-MarginTop"><b>Subject:</b> {subject}</p>
                 <button
                     className="Message-MarginTop Message-ShowMoreBtn"
                     onClick={toggleShowOptions}>
@@ -134,16 +173,21 @@ function Message(props) {
                 </button>
             </section>
 
+            {/* <hr /> */}
+
             {/* Message, answer, and action buttons */}
             {
                 showOptions && (
                     <div>
                         <hr />
-
                         {/* Section 3: message text */}
                         <section>
-                            <p className="Message-MarginTop"><b>Message:</b></p>
-                            <p className="Message-MarginTop Message-WrapText">{message}</p>
+                            <p className="Message-MarginTop Message-MarginBottom">
+                                <b>Message</b>
+                            </p>
+                            <div className="Message-MessageBlock">
+                                <p className="Message-WrapText">{message}</p>
+                            </div>
                         </section>
 
                         {/* Section 4: message answer */}
@@ -151,11 +195,21 @@ function Message(props) {
                             wasAnswered && (
                                 <>
                                     <hr />
-                                    <section>
-                                        <p><b>Answer:</b></p>
-                                        <p className="Message-MarginTop"><b>By:</b> <span className="Message-FontDarker">{answeredBy}</span></p>
-                                        <p><b>Date:</b> <span className="Message-FontDarker">{answerDate}</span></p>
-                                        <p className="Message-MarginTop Message-WrapText">{answer}</p>
+                                    <section className="Message-Answer">
+                                        <p className="Message-MarginTop Message-MarginBottom">
+                                            <b>Answer</b>
+                                        </p>
+                                        <div className="Message-MessageBlock">
+                                            <p className="Message-WrapText">sample{answer}</p>
+                                        </div>
+
+                                        <p className="Message-FontDarker Message-FontSmall Message-MarginTop">
+                                            <i>Answered by: {answeredBy}</i>
+                                        </p>
+                                        <p className="Message-FontDarker Message-FontSmall">
+                                            <i>Date: {answerDate}</i>
+                                        </p>
+
                                     </section>
                                 </>
                             )
@@ -167,7 +221,9 @@ function Message(props) {
                                 <>
                                     <hr />
                                     <div>
-                                        <p><b>Actions:</b></p>
+                                        <p className="Message-MarginTop Message-MarginBottom">
+                                            <b>Actions</b>
+                                        </p>
                                         <div className="Message-BtnContainer Message-MarginTop">
                                             {senderIsUser && (
                                                 <>

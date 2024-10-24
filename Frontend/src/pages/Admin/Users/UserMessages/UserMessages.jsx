@@ -6,7 +6,7 @@ import { setLoader } from "../../../../redux/loader/loaderSlice";
 import { PATH_TO } from "../../../../router/routePaths.js";
 import Pagination from "../../../../components/Pagination/Pagination.jsx";
 import { getUserMessages } from "../../../../config/apiHandler/admin/userMessages.js"
-import UserMessageContainer from "./UserMessageContainer.jsx";
+import Message from "../../../../components/Message/Message.jsx";
 import "./userMessages.css"
 
 /**
@@ -74,13 +74,21 @@ function UserMessages() {
             })
     }
 
+    // Click handlers to be sent to Message component
+    function clickHandler(messageObj, action) {
+        console.log(`messageObj: ${messageObj}`)
+        console.log(`action: ${action}`)
+        // if (!ACTIONS.hasOwnProperty(action)) { console.error("Invalid message action."); return }
+        // setDisplayModal(true);
+        // setSelectedAction(action);
+        // setSelectedMessage(messageObj);
+    }
+
     function handlePagination(newPage) {
         if (Number.isInteger(newPage) && newPage >= 1 && newPage <= totalPages) {
             getMessages(newPage);
         }
     }
-
-
 
     return (
         <div className="Users UserMessages">
@@ -105,8 +113,10 @@ function UserMessages() {
                     <>
                         {messages && (
                             messages.map((message, index) => (
-                                <UserMessageContainer
+                                <Message
+                                    isAdminComponent={true}
                                     theMessage={message}
+                                    clickHandler={clickHandler}
                                     key={index}
                                 />
                             ))
