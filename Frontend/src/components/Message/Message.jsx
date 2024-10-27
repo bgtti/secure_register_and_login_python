@@ -31,7 +31,7 @@ import "./message.css"
  * @param {string} props.theMessage.answerDate
  * @param {string} props.theMessage.answer
  * @param {bool} props.theMessage.isSpam
- * @param {function} [props.clickHandler] // required if isAdminComponent, should accept the message obj and action
+ * @param {function} [props.clickHandler] 
  * 
  * @returns {React.ReactElement}
  * 
@@ -43,7 +43,7 @@ import "./message.css"
  *      <Message
             isAdminComponent={true} //=> boolean
             theMessage={item} //=> message object
-            clickHandler={clickHandler} //=> optional function
+            clickHandler={clickHandler} //=> optional function, required if isAdminComponent (to handle action buttons), should accept the message obj and action
             //if inside a map method: key={index}
         />
  */

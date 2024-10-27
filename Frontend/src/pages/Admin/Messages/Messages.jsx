@@ -11,7 +11,6 @@ import Message from "../../../components/Message/Message.jsx";
 import Pagination from "../../../components/Pagination/Pagination.jsx";
 import FilterMessages from "./FilterMessages/FilterMessages.jsx";
 //import { getMessages } from "../../../../config/apiHandler/admin/userMessages.js" ///CHAANGE
-// import UserMessageContainer from "./UserMessageContainer.jsx";
 import "./messages.css"
 
 

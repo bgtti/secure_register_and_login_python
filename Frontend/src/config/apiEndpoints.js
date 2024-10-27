@@ -6,6 +6,7 @@ const urlPrefix = {
 
 const adminUrl = {
     dash: `${urlPrefix.admin}/dash`,
+    messageAction: `${urlPrefix.admin}/message_action`,
     messages: `${urlPrefix.admin}/messages`,
     userAction: `${urlPrefix.admin}/user_action`,
     users: `${urlPrefix.admin}/users`,
@@ -36,7 +37,7 @@ export const apiEndpoints = {
     adminDeleteUser: `${adminUrl.userAction}/delete_user`, //OK
     //admin - messages
     adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter...)
-    adminMessageMarkAs: `${adminUrl.messages}/mark_as`, //MISSING ---WORKING NOW
+    adminMessageMarkAs: `${adminUrl.messageAction}/mark_message_as`, //MISSING ---WORKING NOW
     adminMessageMarkAnswer: `${adminUrl.messages}/...`, //MISSING
     adminMessageMarkNoAnswer: `${adminUrl.messages}/...`, //MISSING
     adminMessageAnswer: `${adminUrl.messages}/...`, //MISSING

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PropTypes } from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { markMessageNoAnswerNeeded, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
+import { markMessageAs, markMessageNoAnswerNeeded, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
 import { FLAG_TYPES } from "../../../../utils/constants.js";
 import ActionAnswer from "./ActionAnswer.jsx";
 import ActionChangeFlag from "./ActionChangeFlag.jsx";
@@ -43,32 +43,34 @@ const MARK_AS_OPTS = {
     markNoAnswerNeeded: "No answer is needed"
 }
 
+//=> MISSING: sender is spammer!!
 
 /**
  * Component returns fragment with action that can be carried out on a message.
  * 
  * This component should be included inside the modal wrapper found at src>components>Modal through props.
+ * This component is itself a wrapper as well, it's content being a fragment imported from a component in the same folder whose name starts with 'Action'. The 'action' passed as prop to this component will determine it's content.
  * 
  * @visibleName Admin Area: Messages: ModalMessageAction
  * @param {object} props
  * @param {string} props.action accepts one of ["answer", "delete", "flag", "markAs"]
  * @param {object} props.theMessage
  * @param {number} props.theMessage.id message id as a positive int
- * @param {string} props.theMessage.date //..
- * @param {string} props.theMessage.senderName //..
- * @param {string} props.theMessage.senderEmail
- * @param {bool} props.theMessage.senderIsUser
- * @param {string} props.theMessage.message //..
- * @param {string} props.theMessage.subject //..
- * @param {string} props.theMessage.flagged
- * @param {bool} props.theMessage.answerNeeded
- * @param {bool} props.theMessage.wasAnswered
- * @param {string} props.theMessage.answeredBy
- * @param {string} props.theMessage.answerDate
- * @param {string} props.theMessage.answer
- * @param {bool} props.theMessage.isSpam
+ * @param {string} props.theMessage.date //.. WHY
+ * @param {string} props.theMessage.senderName //..WHY
+ * @param {string} props.theMessage.senderEmail //..WHY
+ * @param {bool} props.theMessage.senderIsUser //required for 'marked as'
+ * @param {string} props.theMessage.message //..WHY
+ * @param {string} props.theMessage.subject //..WHY
+ * @param {string} props.theMessage.flagged //required for flag change
+ * @param {bool} props.theMessage.answerNeeded //required for answer recording
+ * @param {bool} props.theMessage.wasAnswered //required for 'marked as'
+ * @param {string} props.theMessage.answeredBy //required for answer recording
+ * @param {string} props.theMessage.answerDate //required for answer recording
+ * @param {string} props.theMessage.answer //required for answer recording
+ * @param {bool} props.theMessage.isSpam //required to 'mark as'
  * @param {func} props.toggleModal 
- * @param {func} props.setUpdateData //..
+ * @param {func} props.setUpdateData //..set to true when api request sent
  * @returns {React.ReactElement}
  * 
  * @example
@@ -83,54 +85,100 @@ const MARK_AS_OPTS = {
  * )
  */
 function ModalMessageAction(props) {
-    const { action, theMessage, modalToggler, setUpdateData = "" } = props; //toggleModal instead of modalToggler ??????
+    const { action: originalAction, theMessage, modalToggler, setUpdateData = "" } = props; //toggleModal instead of modalToggler ??????
     const { id, date, senderName, senderEmail, senderIsUser, subject, message, flagged, answerNeeded, wasAnswered, answeredBy, answerDate, answer, isSpam } = theMessage; //previously messageData
 
-    let originalState;
+    const dispatch = useDispatch();
 
-    switch (action) {
-        case "answer":
-            originalState = {
-                answeredBy: wasAnswered ? answeredBy : useSelector((state) => state.user.email),
-                answerDate: wasAnswered ? answerDate : new Date().toJSON().slice(0, 10),
-                answer: wasAnswered ? answer : ""
-            };
-            break
-        case "markAs":
-            originalState = {
-                isSpam: isSpam,
-                answerNeeded: answerNeeded,
-                markSenderAsSpammer: false
-            };
-            break
-        case "flag":
-            originalState = flagged;
-            break
-        case "delete":
-            originalState = false;
-            break
-        default:
-            originalState = false;
-            console.error("Wrong action input in ModalMessageAction.")
+    //making sure action does not change when component re-renders
+    const actionRef = useRef(originalAction);
+    const action = actionRef.current;
+
+    //setting the initial state
+    function getOriginalState() {
+        let oState;
+        switch (action) {
+            case "answer"://=> Not ready
+                oState = {
+                    answeredBy: wasAnswered ? answeredBy : useSelector((state) => state.user.email),
+                    answerDate: wasAnswered ? answerDate : new Date().toJSON().slice(0, 10),
+                    answer: wasAnswered ? answer : ""
+                };
+                break
+            case "markAs"://=> Should be ok
+                oState = {
+                    isSpam: isSpam,
+                    answerNeeded: answerNeeded,
+                    markSenderAsSpammer: false
+                };
+                break
+            case "flag": //=> Not ready
+                oState = flagged;
+                break
+            case "delete": //=> Not ready
+                oState = false;
+                break
+            default:
+                oState = false;
+                console.error("Wrong action input in ModalMessageAction.")
+        }
+        return oState;
     }
 
+    const originalState = getOriginalState();
+
+
     const [newState, setNewState] = useState(originalState)
-    const [changesWereMade, setChangesWereMade] = useState(false)
+    const [changesWereMade, setChangesWereMade] = useState(false) //possibly DELETE ==> no need
     const [errorMessage, setErroMessage] = useState("")
 
+    //if no changes are detected, do not make api call
     function stateHasChanged() {
-        if (JSON.stringify(originalState) === JSON.stringify(newState)) { return true }
-        else { return false }
+        return JSON.stringify(originalState) !== JSON.stringify(newState);
+    }
+
+    //Check if an object has certain keys (used to make sure newState format is valid)
+    function checkObjKeys(obj, keys) {
+        return keys.every(key => obj.hasOwnProperty(key));
     }
 
     function clickHandler() {
-        console.log(`action = ${action}`)
-        console.log(`state changed = ${stateHasChanged()}`)
-        console.log(`new state = ${newState}`)
-        console.log(`************************************`)
+        if (!stateHasChanged()) {
+            return console.warn("No updates to message.") //=> THEN CLOSE MODAL (after asll cases are tested...)
+        }
+        //console.log(JSON.stringify(newState))
+        switch (action) {
+            case "answer":
+                console.log(`action = ${action}`)
+                break
+            case "markAs":
+                if (!checkObjKeys(newState, ["answerNeeded", "isSpam", "markSenderAsSpammer"])) {
+                    return console.error("ModalMessageAction: newState rejected.")
+                }
+                dispatch(setLoader(true))
+                markMessageAs(id, newState.answerNeeded, newState.isSpam, newState.markSenderAsSpammer)
+                    .then(response => {
+                        if (response.success) {
+                            setUpdateData(true)
+                            modalToggler()
+                        } else {
+                            console.error("Could not update message mark.")
+                        }
+                    })
+                    .catch(error => { console.warn("markMessageAs encountered an error", error); })
+                    .finally(() => { dispatch(setLoader(false)); })
+                break
+            case "flag": //=> WORKING ON THIS NOW
+                console.log(`action = ${action}`)
+                break
+            case "delete":
+                console.log(`action = ${action}`)
+                break
+            default:
+                console.log(`action = ${action}`)
+                console.error("Wrong action input in ModalMessageAction clickHandler.")
+        }
     }
-
-
 
     return (
         <>
@@ -170,15 +218,13 @@ function ModalMessageAction(props) {
             {
                 action === "markAs" && (
                     <ActionMarkAs
-                        changesWereMade={changesWereMade}
-                        isSpam={isSpam}
-                        answerNeeded={answerNeeded}
-                        wasAnswered={wasAnswered}
+                        currentState={newState}
+                        changeState={setNewState}
                         senderIsUser={senderIsUser}
+                        wasAnswered={wasAnswered}
                     />
                 )
             }
-
             {!changesWereMade && (
                 <>
                     <br />
@@ -189,7 +235,6 @@ function ModalMessageAction(props) {
                     </div>
                 </>
             )}
-
             {
                 errorMessage !== "" && (
                     <>
@@ -208,11 +253,11 @@ ModalMessageAction.propTypes = {
     action: PropTypes.oneOf(["answer", "delete", "flag", "markAs"]),
     theMessage: PropTypes.shape({
         id: PropTypes.number.isRequired,
-        date: PropTypes.string.isRequired, //dont really need
-        senderName: PropTypes.string.isRequired, //dont really need
+        date: PropTypes.string.isRequired, //dont really need (?)
+        senderName: PropTypes.string.isRequired, //dont really need (?)
         senderEmail: PropTypes.string.isRequired,
-        subject: PropTypes.string.isRequired, //dont really need
-        message: PropTypes.string.isRequired, //dont really need
+        subject: PropTypes.string.isRequired, //dont really need (?)
+        message: PropTypes.string.isRequired, //dont really need (?)
         flagged: PropTypes.string.isRequired,
         answerNeeded: PropTypes.bool.isRequired,
         wasAnswered: PropTypes.bool.isRequired,

@@ -25,7 +25,7 @@ message_action = Blueprint('message_action', __name__)
 # View functions in this file provide and/or modify information in the db
 
 # ----- MESSAGES MARK AS -----
-@message_action.route("/mark_as", methods=["POST"])
+@message_action.route("/mark_message_as", methods=["POST"])
 @login_required
 @admin_only
 @validate_schema(admin_message_action_mark_as)
