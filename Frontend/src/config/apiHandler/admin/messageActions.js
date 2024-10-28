@@ -72,60 +72,60 @@ export function markMessageAs(messageId, answerNeeded, isSpam = false, senderIsS
 
 
 
-/**
- * Function makes api call to set a message status to 'no answer needed' or back to 'answer needed.
- * 
- * The message's id and markNoAnswer are required parameters. markNoAnswer is true to mark message as no reply needed, or false to mark as reply needed.
- * 
- * @param {number} id (the message's id)
- * @param {bool} markNoAnswer (true to mark as no reply needed, false to mark as reply needed)
- * @returns {object}
- * 
- * @example
- * //Usage:
- * markMessageNoAnswerNeeded(55)
- * 
- * //Success response:
- * {
- *  success: true
- * }
- * 
- * //Error response:
- * {
- *  success: false
- * }
- */
-export function markMessageNoAnswerNeeded(id, markNoAnswer) {
-    let theId = (id && Number.isInteger(id)) ? id : "";
-    let theMark = (markNoAnswer && (typeof markNoAnswer === "boolean")) ? markNoAnswer : "";
+// /**
+//  * Function makes api call to set a message status to 'no answer needed' or back to 'answer needed.
+//  * 
+//  * The message's id and markNoAnswer are required parameters. markNoAnswer is true to mark message as no reply needed, or false to mark as reply needed.
+//  * 
+//  * @param {number} id (the message's id)
+//  * @param {bool} markNoAnswer (true to mark as no reply needed, false to mark as reply needed)
+//  * @returns {object}
+//  * 
+//  * @example
+//  * //Usage:
+//  * markMessageNoAnswerNeeded(55)
+//  * 
+//  * //Success response:
+//  * {
+//  *  success: true
+//  * }
+//  * 
+//  * //Error response:
+//  * {
+//  *  success: false
+//  * }
+//  */
+// export function markMessageNoAnswerNeeded(id, markNoAnswer) {
+//     let theId = (id && Number.isInteger(id)) ? id : "";
+//     let theMark = (markNoAnswer && (typeof markNoAnswer === "boolean")) ? markNoAnswer : "";
 
-    if (theId === "" || theMark === "") {
-        console.warn("No message id provided to markMessageNoAnswerNeeded.")
-        return { success: false }
-    }
+//     if (theId === "" || theMark === "") {
+//         console.warn("No message id provided to markMessageNoAnswerNeeded.")
+//         return { success: false }
+//     }
 
-    let requestData = {
-        "message_id": theId,
-        "mark_no_answer_needed": theMark
-    }
-    const getData = async () => {
-        try {
-            const response = await apiHandle404.post(apiEndpoints.adminMessageMarkNoAnswer, requestData)
-            if (response.status === 200) {
-                return { success: true }
-            } else {
-                return { success: false }
-            }
-        }
-        catch (error) {
-            console.error("Error marking message as no answer needed:", error);
-            return { success: false }
-        }
-    }
+//     let requestData = {
+//         "message_id": theId,
+//         "mark_no_answer_needed": theMark
+//     }
+//     const getData = async () => {
+//         try {
+//             const response = await apiHandle404.post(apiEndpoints.adminMessageMarkNoAnswer, requestData)
+//             if (response.status === 200) {
+//                 return { success: true }
+//             } else {
+//                 return { success: false }
+//             }
+//         }
+//         catch (error) {
+//             console.error("Error marking message as no answer needed:", error);
+//             return { success: false }
+//         }
+//     }
 
-    return getData();
+//     return getData();
 
-}
+// }
 
 export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, messageAnswerDate = "") {
     let theId = (id && Number.isInteger(id)) ? id : false;
@@ -177,7 +177,7 @@ export function changeMessageFlag(id, flagColour) {
 
     let requestData = {
         "message_id": theId,
-        "flag_colour": theFlag,
+        "message_flag": theFlag,
     }
     const getData = async () => {
         try {

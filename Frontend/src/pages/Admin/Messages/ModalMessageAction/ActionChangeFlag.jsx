@@ -1,19 +1,29 @@
 import { PropTypes } from "prop-types";
 import { FLAG_TYPES } from "../../../../utils/constants.js";
 
+
 /**
  * Component returns fragment of flag selection
  * 
  * @visibleName Message action: flag change
  * @param {object} props 
  * @param {string} props.messageFlag //one of FLAG_TYPES
- * @param {bool} props.changesWereMade 
- * @param {func} props.setMessageFlag 
+ * @param {func} props.changeState
  * @returns {React.ReactFragment}
  *
  */
 function ActionChangeFlag(props) {
-    const { messageFlag, changesWereMade, setMessageFlag } = props;
+    const { messageFlag, changeState } = props;
+
+
+    function handleChange(value) {
+        // ps:value being of type Flag is being checked by parent
+        if (value) {
+            return changeState(value);
+        } else {
+            return console.warn("No value handled in ActionChangeFlag.")
+        }
+    }
 
     return (
         <>
@@ -26,8 +36,7 @@ function ActionChangeFlag(props) {
                     name="changeFlag"
                     id="changeFlag"
                     defaultValue={messageFlag}
-                    disabled={changesWereMade ? true : false}
-                    onChange={(e) => { setMessageFlag(e.target.value) }}>
+                    onChange={(e) => { handleChange(e.target.value) }}>
                     {
                         FLAG_TYPES.map((item, index) => (
                             <option value={item} key={index}>{item}</option>
@@ -40,8 +49,7 @@ function ActionChangeFlag(props) {
 };
 ActionChangeFlag.propTypes = {
     messageFlag: PropTypes.PropTypes.oneOf(FLAG_TYPES).isRequired,
-    changesWereMade: PropTypes.bool.isRequired,
-    setMessageFlag: PropTypes.func.isRequired
+    changeState: PropTypes.func.isRequired
 };
 
 export default ActionChangeFlag;

@@ -37,12 +37,10 @@ export const apiEndpoints = {
     adminDeleteUser: `${adminUrl.userAction}/delete_user`, //OK
     //admin - messages
     adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter...)
-    adminMessageMarkAs: `${adminUrl.messageAction}/mark_message_as`, //MISSING ---WORKING NOW
-    adminMessageMarkAnswer: `${adminUrl.messages}/...`, //MISSING
-    adminMessageMarkNoAnswer: `${adminUrl.messages}/...`, //MISSING
-    adminMessageAnswer: `${adminUrl.messages}/...`, //MISSING
-    adminMessageFlagChange: `${adminUrl.messages}/...`, //MISSING
-    adminMessageDelete: `${adminUrl.messages}/...`, //MISSING
+    adminMessageMarkAs: `${adminUrl.messageAction}/mark_as`, //OK 
+    adminMessageAnswer: `${adminUrl.messageAction}/...`, //MISSING
+    adminMessageFlagChange: `${adminUrl.messageAction}/flag_change`, //MISSING ------------WORKING NOW
+    adminMessageDelete: `${adminUrl.messageAction}/...`, //MISSING
 };
 
 export default apiEndpoints;

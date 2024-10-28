@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { markMessageAs, markMessageNoAnswerNeeded, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
+import { markMessageAs, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
 import { FLAG_TYPES } from "../../../../utils/constants.js";
 import ActionAnswer from "./ActionAnswer.jsx";
 import ActionChangeFlag from "./ActionChangeFlag.jsx";
@@ -90,6 +90,7 @@ function ModalMessageAction(props) {
 
     const dispatch = useDispatch();
 
+
     //making sure action does not change when component re-renders
     const actionRef = useRef(originalAction);
     const action = actionRef.current;
@@ -112,7 +113,7 @@ function ModalMessageAction(props) {
                     markSenderAsSpammer: false
                 };
                 break
-            case "flag": //=> Not ready
+            case "flag": //=> Should be ok
                 oState = flagged;
                 break
             case "delete": //=> Not ready
@@ -168,10 +169,24 @@ function ModalMessageAction(props) {
                     .catch(error => { console.warn("markMessageAs encountered an error", error); })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
-            case "flag": //=> WORKING ON THIS NOW
-                console.log(`action = ${action}`)
+            case "flag":
+                if (!(newState && FLAG_TYPES.includes(newState))) {
+                    return console.error("ModalMessageAction: newState rejected.")
+                }
+                dispatch(setLoader(true))
+                changeMessageFlag(id, newState)
+                    .then(response => {
+                        if (response.success) {
+                            setUpdateData(true)
+                            modalToggler()
+                        } else {
+                            console.error("Could not update message mark.")
+                        }
+                    })
+                    .catch(error => { console.warn("markMessageAs encountered an error", error); })
+                    .finally(() => { dispatch(setLoader(false)); })
                 break
-            case "delete":
+            case "delete": //=> WORKING ON THIS NOW
                 console.log(`action = ${action}`)
                 break
             default:
@@ -209,10 +224,8 @@ function ModalMessageAction(props) {
                 action === "flag" && (
                     <ActionChangeFlag
                         messageFlag={flagged}
-                        changesWereMade={changesWereMade}
-                        setMessageFlag={setNewState}
+                        changeState={setNewState}
                     />
-
                 )
             }
             {

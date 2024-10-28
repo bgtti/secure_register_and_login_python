@@ -12,7 +12,7 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.routes.admin.message_action.schemas import admin_message_action_mark_as
+from app.routes.admin.message_action.schemas import admin_message_action_mark_as, admin_message_action_flag_change
 from app.routes.admin.message_action.helpers import set_spammer
 
 
@@ -24,14 +24,15 @@ message_action = Blueprint('message_action', __name__)
 
 # View functions in this file provide and/or modify information in the db
 
-# ----- MESSAGES MARK AS -----
-@message_action.route("/mark_message_as", methods=["POST"])
+
+# ----- MESSAGES MARK AS ----- #---------------------># TODO: block user that is marked as spammer
+@message_action.route("/mark_as", methods=["POST"])
 @login_required
 @admin_only
 @validate_schema(admin_message_action_mark_as)
-def mark_message_as():
+def mark_as():
     """
-    mark_message_as() -> JsonType
+    mark_as() -> JsonType
     ----------------------------------------------------------
     Route to mark a message as spam or answer needed.
     Takes a JSON payload with the following required parameters:
@@ -120,3 +121,143 @@ def mark_message_as():
         }
     
     return jsonify(response_data)
+
+
+# ----- MESSAGES FLAG CHANGE -----
+@message_action.route("/flag_change", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(admin_message_action_flag_change)
+def flag_change():
+    """
+    flag_change() -> JsonType
+    ----------------------------------------------------------
+    Route to mark a message as spam or answer needed.
+    Takes a JSON payload with the following required parameters:
+    - "message_id": the id of the message to be marked (int)
+    - "message_flag": the new flag colour that must be value from UserFlag enum class (str)
+    
+    Returns a JSON object with a "response" field.
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "message_id": 6,
+        "message_flag": "blue"
+    }
+    ----------------------------------------------------------
+    Response examples:
+
+    {"response":"success",
+    "requested":{
+        "message_id": 6,
+        "answer_needed": true,
+        "is_spam": false,
+        "sender_is_spammer": false
+    }
+    }
+
+    {"response": "Message not found"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get info from JSON payload
+    message_id = json_data["message_id"] 
+    message_flag = json_data["message_flag"] 
+
+    # Make sure flag exists
+    flag = map_string_to_enum(message_flag, UserFlag)
+    if flag == None:
+        return jsonify({"response": "Flag colour not found"}), 404
+
+    try:
+        the_message = Message.query.filter_by(id=message_id).first()
+
+        if not the_message:
+            logging.info(f"Message id={message_id} could not be found, 404 not found.") 
+            return jsonify({"response": "Message not found"}), 404
+        
+        the_message.flag_change(message_flag)
+        
+        db.session.commit()
+        
+    except IntegrityError as e:
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented message to be flagged: {e}")
+        return jsonify({"response": "Integrity error prevented message to be flagged.", "error": str(e)}), 500
+    
+    except Exception as e:
+        logging.error(f"Error prevented message to be flagged: {e}")
+        return jsonify({"response": "Error prevented message to be flagged.", "error": str(e)}), 500
+
+    response_data ={
+            "response":"success",
+            "requested":{
+                "message_id": message_id,
+                "message_flag": message_flag,
+            }
+        }
+    
+    return jsonify(response_data)
+
+# ----- ACTION: DELETE Message ----- ###----->>>>>>> TODO
+@message_action.route("/delete_message", methods=["POST"])
+@login_required
+@admin_only
+#@validate_schema(admin_message_action_flag_change) ###----->>>>>>> TODO
+def delete_message():
+    """
+    delete_message() -> JsonType
+    ----------------------------------------------------------
+    Route to delete a message by id.
+    Takes a JSON payload with the following parameters:
+    - "message_id": Message's id to be deleted.
+
+    Returns a JSON object with a "response" field:
+    - If deletion is successful: {"response": "success"}
+    - If the id is not found: {"response": "Message not found"}
+    - If an error occurs during deletion: {"response": "Error deleting message", "error": "Details of the error"}
+
+    ----------------------------------------------------------
+    Request example:
+    json_payload = {
+        "message_id": 12345
+    }
+    ----------------------------------------------------------
+    Response examples:
+    {"response": "success"}
+    {"response": "Message not found"}
+    {"response": "Error deleting message", "error": "Details of the error"}
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get id from JSON payload
+    message_id = json_data["message_id"]
+
+    try:
+        the_message = Message.query.filter_by(id=message_id).first()
+
+        if not the_message:
+            logging.info(f"Message id={message_id} could not be found, 404 not found.") 
+            return jsonify({"response": "Message not found"}), 404
+        
+        db.session.delete(the_message)
+        
+        db.session.commit()
+        
+        logging.info("Message deleted successfully.")
+        #log_event("ADMIN_DELETE_USER","deletion successful",user.id, f"Admin action from: {current_user.email}.")
+
+        return jsonify({"response": "success"})
+
+    except IntegrityError as e:
+        db.session.rollback()
+        logging.error(f"DB integrity error prevented message deletion: {e}")
+        #log_event("ADMIN_DELETE_USER","deletion problem",user.id)
+        return jsonify({"response": "Error deleting message", "error": str(e)}), 500
+
+    except Exception as e:
+        logging.error(f"Error prevented message deletion: {e}")
+        #log_event("ADMIN_DELETE_USER","deletion problem",user.id)
+        return jsonify({"response": "Error deleting message", "error": str(e)}), 500
