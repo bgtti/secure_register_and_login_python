@@ -200,7 +200,7 @@ function Message(props) {
                                             <b>Answer</b>
                                         </p>
                                         <div className="Message-MessageBlock">
-                                            <p className="Message-WrapText">sample{answer}</p>
+                                            <p className="Message-WrapText">{answer}</p>
                                         </div>
 
                                         <p className="Message-FontDarker Message-FontSmall Message-MarginTop">
@@ -243,7 +243,7 @@ function Message(props) {
 
                                                 <button
                                                     onClick={() => { clickHandler(theMessage, "answer") }}>
-                                                    {wasAnswered ? "Edit answer" : "Record answer"}
+                                                    {wasAnswered ? "Edit answer" : "Answer"}
                                                 </button>
 
                                                 <button

@@ -21,6 +21,10 @@ INPUT_LENGTH = {
     },
     "contact_message_subject":{
         "minValue": 1,
+        "maxValue": 45
+    },
+    "contact_message_answer_subject":{
+        "minValue": 1,
         "maxValue": 50
     },
     "honeypot":{
@@ -51,6 +55,9 @@ EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 # {%d,%d}: Specifies the minimum and maximum length based on your constants.
 # $: Asserts the end of the string.
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
+
+# DATE_PATTERN for YYYY-MM-DD
+DATE_PATTERN =r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
 
 # Most common password list based on: https://nordpass.com/most-common-passwords-list/
 # IMPORTANT:

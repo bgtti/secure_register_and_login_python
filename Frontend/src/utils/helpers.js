@@ -171,7 +171,7 @@ export function validateDate(dateString, format = "any") {
             break
         case "any":
         case "all":
-            if (isNaN(Date.parse(stringDate))) { break }
+            if (isNaN(Date.parse(dateString))) { break }
             isValid = /^\d{4}[-/.](?:0[1-9]|1[0-2])[-/.](?:0[1-9]|[12][0-9]|3[01])$/.test(dateString)
             if (isValid) { break }
             isValid = /^(?:0[1-9]|[12][0-9]|3[01])[-/.](?:0[1-9]|1[0-2])[-/.]\d{4}$/.test(dateString)
@@ -190,9 +190,9 @@ export function validateDate(dateString, format = "any") {
             console.warn("Date format input not valid.")
             return false
     }
-    if (!isValid && !isNaN(Date.parse(stringDate))) {
+    if (!isValid && !isNaN(Date.parse(dateString))) {
         console.log("Date did not pass the validation test, but Date.parse indicates the input could be a date.")
-        console.log(`Date input: ${stringDate}. If input is a valid date, check format parameter.`)
+        console.log(`Date input: ${dateString}. If input is a valid date, check format parameter.`)
     }
     return isValid;
 }

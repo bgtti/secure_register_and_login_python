@@ -9,6 +9,7 @@ import ActionAnswer from "./ActionAnswer.jsx";
 import ActionChangeFlag from "./ActionChangeFlag.jsx";
 import ActionDeleteMessage from "./ActionDelete.jsx";
 import ActionMarkAs from "./ActionMarkAs.jsx";
+import { getTodaysDate, dateToYYYYMMDD } from "../../../../utils/helpers.js";
 // import "./modalUserAction.css"
 
 const MESSAGE_ACTIONS = ["answer", "delete", "flag", "markAs"]
@@ -61,10 +62,10 @@ const MARK_AS_OPTS = {
  * @param {string} props.theMessage.senderEmail //..WHY
  * @param {bool} props.theMessage.senderIsUser //required for 'marked as'
  * @param {string} props.theMessage.message //..WHY
- * @param {string} props.theMessage.subject //..WHY
+ * @param {string} props.theMessage.subject //required for answer recording
  * @param {string} props.theMessage.flagged //required for flag change
  * @param {bool} props.theMessage.answerNeeded //required for answer recording
- * @param {bool} props.theMessage.wasAnswered //required for 'marked as'
+ * @param {bool} props.theMessage.wasAnswered //required for 'marked as' & answer
  * @param {string} props.theMessage.answeredBy //required for answer recording
  * @param {string} props.theMessage.answerDate //required for answer recording
  * @param {string} props.theMessage.answer //required for answer recording
@@ -100,10 +101,14 @@ function ModalMessageAction(props) {
         let oState;
         switch (action) {
             case "answer"://=> Not ready
+                const sub = subject === "no subject" ? "Contact Form Message" : subject
+                const defaultSubjt = `Re: ${sub}`
                 oState = {
                     answeredBy: wasAnswered ? answeredBy : useSelector((state) => state.user.email),
-                    answerDate: wasAnswered ? answerDate : new Date().toJSON().slice(0, 10),
-                    answer: wasAnswered ? answer : ""
+                    answerDate: wasAnswered ? dateToYYYYMMDD(answerDate) : getTodaysDate(),
+                    answer: wasAnswered ? answer : "",
+                    answerSend: wasAnswered ? false : true,
+                    answerSubject: defaultSubjt
                 };
                 break
             case "markAs"://=> Should be ok
@@ -116,7 +121,7 @@ function ModalMessageAction(props) {
             case "flag": //=> Should be ok
                 oState = flagged;
                 break
-            case "delete": //=> Not ready
+            case "delete": //=> Should be ok
                 oState = false;
                 break
             default:
@@ -132,6 +137,7 @@ function ModalMessageAction(props) {
     const [newState, setNewState] = useState(originalState)
     const [changesWereMade, setChangesWereMade] = useState(false) //possibly DELETE ==> no need
     const [errorMessage, setErroMessage] = useState("")
+    const [buttonText, setButtonText] = useState((action === "delete" ? "Delete" : "Save changes"))
 
     //if no changes are detected, do not make api call
     function stateHasChanged() {
@@ -142,20 +148,32 @@ function ModalMessageAction(props) {
     function checkObjKeys(obj, keys) {
         return keys.every(key => obj.hasOwnProperty(key));
     }
+    function checkStateKeys(keys) {
+        const hasKeys = keys.every(key => newState.hasOwnProperty(key));
+        if (!hasKeys) { console.error("ModalMessageAction: newState rejected.") }
+        return hasKeys
+    }
+
+    //Handle response
+    function responseSuccess() { setUpdateData(true); modalToggler(); }
+    function responseFail() { console.error("ModalMessageAction: No message updates were possible.") }
 
     function clickHandler() {
-        if (!stateHasChanged()) {
+        if (action !== "delete" && !stateHasChanged()) {
             return console.warn("No updates to message.") //=> THEN CLOSE MODAL (after asll cases are tested...)
         }
-        //console.log(JSON.stringify(newState))
+
         switch (action) {
-            case "answer":
-                console.log(`action = ${action}`)
+            case "answer": //=> TODO: adapt markMessageAnswered && payload
+                if (!checkStateKeys(["answeredBy", "answerDate", "answer"])) { return }
+                dispatch(setLoader(true))
+                markMessageAnswered(id, newState.answeredBy, newState.answer, newState.answerDate)
+                    .then(res => { res.success ? responseSuccess() : responseFail() })
+                    .catch(error => { console.warn("markMessageAnswered encountered an error", error); })
+                    .finally(() => { dispatch(setLoader(false)); })
                 break
             case "markAs":
-                if (!checkObjKeys(newState, ["answerNeeded", "isSpam", "markSenderAsSpammer"])) {
-                    return console.error("ModalMessageAction: newState rejected.")
-                }
+                if (!checkStateKeys(["answerNeeded", "isSpam", "markSenderAsSpammer"])) { return }
                 dispatch(setLoader(true))
                 markMessageAs(id, newState.answerNeeded, newState.isSpam, newState.markSenderAsSpammer)
                     .then(response => {
@@ -180,14 +198,25 @@ function ModalMessageAction(props) {
                             setUpdateData(true)
                             modalToggler()
                         } else {
-                            console.error("Could not update message mark.")
+                            console.error("Could not change message flag.")
                         }
                     })
-                    .catch(error => { console.warn("markMessageAs encountered an error", error); })
+                    .catch(error => { console.warn("changeMessageFlag encountered an error", error); })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
             case "delete": //=> WORKING ON THIS NOW
-                console.log(`action = ${action}`)
+                dispatch(setLoader(true))
+                deleteMessage(id)
+                    .then(response => {
+                        if (response.success) {
+                            setUpdateData(true)
+                            modalToggler()
+                        } else {
+                            console.error("Could not delete message.")
+                        }
+                    })
+                    .catch(error => { console.warn("deleteMessage encountered an error", error); })
+                    .finally(() => { dispatch(setLoader(false)); })
                 break
             default:
                 console.log(`action = ${action}`)
@@ -202,11 +231,10 @@ function ModalMessageAction(props) {
             {
                 action === "answer" && (
                     <ActionAnswer
-                        changesWereMade={changesWereMade}
+                        currentState={newState}
+                        changeState={setNewState}
+                        changeBtnText={setButtonText}
                         wasAnswered={wasAnswered}
-                        answeredBy={answeredBy}
-                        answerDate={answerDate}
-                        answer={answer}
                     />
                 )
             }
@@ -242,7 +270,7 @@ function ModalMessageAction(props) {
                 <>
                     <br />
                     <div className="Modal-BtnContainer">
-                        <button className={action === "delete" ? "Modal-ActionDanger" : "Modal-ActionBtn"} disabled={(errorMessage !== "")} onClick={clickHandler}>{action === "delete" ? "Delete" : "Save changes"}
+                        <button className={action === "delete" ? "Modal-ActionDanger" : "Modal-ActionBtn"} disabled={(errorMessage !== "")} onClick={clickHandler}>{buttonText}
                         </button>
                         <button disabled={(errorMessage !== "")} onClick={modalToggler}>Cancel</button>
                     </div>

@@ -46,7 +46,7 @@ export function getUserData() {
     // making the request
     const getUser = async () => {
         try {
-            const response = await api.post(apiEndpoints.userGetOwnAcctInfo);
+            const response = await api.get(apiEndpoints.userGetOwnAcctInfo);
 
             let responseStatus = response.request.status;
 

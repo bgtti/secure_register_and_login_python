@@ -19,7 +19,7 @@ contact = Blueprint("contact", __name__)
 @contact.route("/contact_form", methods=["POST"])
 @limiter.limit("10/day")
 @validate_schema(contact_form_schema)
-def contactForm():
+def contactForm():  #---------------------> name not in python standard TODO
     """
     contactForm() -> JsonType
     ----------------------------------------------------------

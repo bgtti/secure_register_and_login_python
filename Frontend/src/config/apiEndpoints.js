@@ -38,9 +38,9 @@ export const apiEndpoints = {
     //admin - messages
     adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter...)
     adminMessageMarkAs: `${adminUrl.messageAction}/mark_as`, //OK 
-    adminMessageAnswer: `${adminUrl.messageAction}/...`, //MISSING
-    adminMessageFlagChange: `${adminUrl.messageAction}/flag_change`, //MISSING ------------WORKING NOW
-    adminMessageDelete: `${adminUrl.messageAction}/...`, //MISSING
+    adminMessageAnswer: `${adminUrl.messageAction}/mark_answer`, //------------WORKING NOW
+    adminMessageFlagChange: `${adminUrl.messageAction}/flag_change`, //OK
+    adminMessageDelete: `${adminUrl.messageAction}/delete_message`, //MISSING
 };
 
 export default apiEndpoints;

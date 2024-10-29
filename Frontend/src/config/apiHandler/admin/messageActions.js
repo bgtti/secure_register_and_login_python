@@ -2,7 +2,7 @@ import { apiHandle404 } from "../../axios";
 import apiEndpoints from "../../apiEndpoints";
 import { emailValidation } from "../../../utils/validation"
 import { INPUT_LENGTH, FLAG_TYPES } from "../../../utils/constants"
-import { getUTCString } from "../../../utils/helpers"
+import { getUTCString, validateDate, dateToYYYYMMDD } from "../../../utils/helpers"
 
 /**
  * Function makes api call to set the status of a message (whether an answer is needed or if it is spam) and whether the sender should be marked as a spammer.
@@ -127,7 +127,7 @@ export function markMessageAs(messageId, answerNeeded, isSpam = false, senderIsS
 
 // }
 
-export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, messageAnswerDate = "") {
+export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, messageAnswerDate = false) {
     let theId = (id && Number.isInteger(id)) ? id : false;
     let theEmail = (messageAnsweredBy && emailValidation(messageAnsweredBy)) ? messageAnsweredBy : false;
     let theText = (messageAnsweredText && (typeof messageAnsweredText === "string") && messageAnsweredText.length <= INPUT_LENGTH.contactMessage.maxValue) ? messageAnsweredText : false;
@@ -143,13 +143,14 @@ export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, 
         "answer": theText
     }
 
-    let theDate = getUTCString(messageAnswerDate)
+    let today = dateToYYYYMMDD(new Date())
+    let theDate = messageAnswerDate && validateDate(messageAnswerDate, "yyyy/mm/dd") && messageAnswerDate !== today
 
-    if (theDate) { requestData["answer_date"] = theDate }
+    if (theDate) { requestData["answer_date"] = messageAnswerDate }
 
     const getData = async () => {
         try {
-            const response = await apiHandle404.post(apiEndpoints.adminMessageMarkAnswer, requestData)
+            const response = await apiHandle404.post(apiEndpoints.adminMessageAnswer, requestData)
             if (response.status === 200) {
                 return { success: true }
             } else {
