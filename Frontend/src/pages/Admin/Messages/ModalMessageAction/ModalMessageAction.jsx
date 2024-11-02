@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { markMessageAs, markMessageAnswered, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
+import { markMessageAs, answerMessage, changeMessageFlag, deleteMessage } from "../../../../config/apiHandler/admin/messageActions.js"
 import { FLAG_TYPES } from "../../../../utils/constants.js";
 import ActionAnswer from "./ActionAnswer.jsx";
 import ActionChangeFlag from "./ActionChangeFlag.jsx";
@@ -44,7 +44,7 @@ const MARK_AS_OPTS = {
     markNoAnswerNeeded: "No answer is needed"
 }
 
-//=> MISSING: sender is spammer!!
+//**** */=> MISSING: sender is spammer!!
 
 /**
  * Component returns fragment with action that can be carried out on a message.
@@ -100,7 +100,7 @@ function ModalMessageAction(props) {
     function getOriginalState() {
         let oState;
         switch (action) {
-            case "answer"://=> Not ready
+            case "answer":
                 const sub = subject === "no subject" ? "Contact Form Message" : subject
                 const defaultSubjt = `Re: ${sub}`
                 oState = {
@@ -111,17 +111,17 @@ function ModalMessageAction(props) {
                     answerSubject: defaultSubjt
                 };
                 break
-            case "markAs"://=> Should be ok
+            case "markAs":
                 oState = {
                     isSpam: isSpam,
                     answerNeeded: answerNeeded,
                     markSenderAsSpammer: false
                 };
                 break
-            case "flag": //=> Should be ok
+            case "flag":
                 oState = flagged;
                 break
-            case "delete": //=> Should be ok
+            case "delete":
                 oState = false;
                 break
             default:
@@ -135,7 +135,7 @@ function ModalMessageAction(props) {
 
 
     const [newState, setNewState] = useState(originalState)
-    const [changesWereMade, setChangesWereMade] = useState(false) //possibly DELETE ==> no need
+    const [changesWereMade, setChangesWereMade] = useState(false) //possibly DELETE ==> no need?
     const [errorMessage, setErroMessage] = useState("")
     const [buttonText, setButtonText] = useState((action === "delete" ? "Delete" : "Save changes"))
 
@@ -145,9 +145,6 @@ function ModalMessageAction(props) {
     }
 
     //Check if an object has certain keys (used to make sure newState format is valid)
-    function checkObjKeys(obj, keys) {
-        return keys.every(key => obj.hasOwnProperty(key));
-    }
     function checkStateKeys(keys) {
         const hasKeys = keys.every(key => newState.hasOwnProperty(key));
         if (!hasKeys) { console.error("ModalMessageAction: newState rejected.") }
@@ -155,36 +152,38 @@ function ModalMessageAction(props) {
     }
 
     //Handle response
-    function responseSuccess() { setUpdateData(true); modalToggler(); }
-    function responseFail() { console.error("ModalMessageAction: No message updates were possible.") }
+    const eText = "An error ocurred, please close this modal and try again."
+    function responseSuccess() { setErroMessage(""); setUpdateData(true); modalToggler(); }
+    function responseFail() { console.warn("ModalMessageAction: No message updates were possible."); setErroMessage(eText) }
+    function warnError(action, error) { console.error(`Clickhandler case ${action} encountered an error`, error); setErroMessage(eText) }
 
     function clickHandler() {
         if (action !== "delete" && !stateHasChanged()) {
-            return console.warn("No updates to message.") //=> THEN CLOSE MODAL (after asll cases are tested...)
+            return console.warn("No updates to message.") //=> TODO: THEN CLOSE MODAL (after asll cases are tested...)
         }
 
         switch (action) {
-            case "answer": //=> TODO: adapt markMessageAnswered && payload
-                if (!checkStateKeys(["answeredBy", "answerDate", "answer"])) { return }
+            case "answer":
+                if (!checkStateKeys(["answeredBy", "answerDate", "answer", "answerSend", "answerSubject"])) { return }
+                let obj = {
+                    id: id,
+                    answer: newState.answer,
+                    subject: newState.answerSubject,
+                    answeredBy: newState.answeredBy,
+                    answerDate: newState.answerDate
+                }
                 dispatch(setLoader(true))
-                markMessageAnswered(id, newState.answeredBy, newState.answer, newState.answerDate)
+                answerMessage(obj, newState.answerSend)
                     .then(res => { res.success ? responseSuccess() : responseFail() })
-                    .catch(error => { console.warn("markMessageAnswered encountered an error", error); })
+                    .catch(error => { warnError(action, error) })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
             case "markAs":
                 if (!checkStateKeys(["answerNeeded", "isSpam", "markSenderAsSpammer"])) { return }
                 dispatch(setLoader(true))
                 markMessageAs(id, newState.answerNeeded, newState.isSpam, newState.markSenderAsSpammer)
-                    .then(response => {
-                        if (response.success) {
-                            setUpdateData(true)
-                            modalToggler()
-                        } else {
-                            console.error("Could not update message mark.")
-                        }
-                    })
-                    .catch(error => { console.warn("markMessageAs encountered an error", error); })
+                    .then(res => { res.success ? responseSuccess() : responseFail() })
+                    .catch(error => { warnError(action, error); })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
             case "flag":
@@ -193,34 +192,19 @@ function ModalMessageAction(props) {
                 }
                 dispatch(setLoader(true))
                 changeMessageFlag(id, newState)
-                    .then(response => {
-                        if (response.success) {
-                            setUpdateData(true)
-                            modalToggler()
-                        } else {
-                            console.error("Could not change message flag.")
-                        }
-                    })
-                    .catch(error => { console.warn("changeMessageFlag encountered an error", error); })
+                    .then(res => { res.success ? responseSuccess() : responseFail() })
+                    .catch(error => { warnError(action, error); })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
-            case "delete": //=> WORKING ON THIS NOW
+            case "delete":
                 dispatch(setLoader(true))
                 deleteMessage(id)
-                    .then(response => {
-                        if (response.success) {
-                            setUpdateData(true)
-                            modalToggler()
-                        } else {
-                            console.error("Could not delete message.")
-                        }
-                    })
-                    .catch(error => { console.warn("deleteMessage encountered an error", error); })
+                    .then(res => { res.success ? responseSuccess() : responseFail() })
+                    .catch(error => { warnError(action, error) })
                     .finally(() => { dispatch(setLoader(false)); })
                 break
             default:
-                console.log(`action = ${action}`)
-                console.error("Wrong action input in ModalMessageAction clickHandler.")
+                console.error(`Wrong input in ModalMessageAction clickHandler. Action = ${action}`)
         }
     }
 

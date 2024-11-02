@@ -1,12 +1,15 @@
 import logging
+import re
 from flask_login import UserMixin
 from datetime import datetime, timezone
 from sqlalchemy import Enum
+from app.config import EMAIL_CREDENTIALS
 from app.extensions import db
 from app.utils.constants.enum_class import UserFlag, modelBool
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_helpers import map_string_to_enum
 from app.utils.console_warning.print_warning import console_warn
+from app.utils.constants.account_constants import EMAIL_PATTERN
 
 # Saves messages sent through the contact form
 
@@ -30,9 +33,13 @@ class Message(UserMixin, db.Model):
     is_spam = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     answer_needed = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False)
     was_answered = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    answered_by = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), default="", nullable=True) # email of the admin who answered message
-    answer_date = db.Column(db.DateTime, nullable=True) # date the answer was sent
+    answered_by = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), default="", nullable=True) # email of the admin who answered message or email of the main account used to set up system messaging
+    answerer_name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), default="", nullable=True) # name of the admin who answered message
+    answerer_id = db.Column(db.Integer, nullable=True) # id of the admin who answered message
+    answer_date = db.Column(db.DateTime, nullable=True) # date the answer was sent (as input by admin if answer was recorded)
+    answer_subject = db.Column(db.String(INPUT_LENGTH['contact_message_subject']['maxValue']), default="", nullable=True) # subject of the answer
     answer = db.Column(db.String(INPUT_LENGTH['contact_message']['maxValue']), default="", nullable=True) # content of the answer
+    answer_recorded_at = db.Column(db.DateTime, nullable=True) # date the answer was recorded in the system
 
     def __init__(self, sender_name, sender_email, subject, message, **kwargs):
         self.sender_name  = sender_name
@@ -65,20 +72,52 @@ class Message(UserMixin, db.Model):
             "answer_date": answer_date,
             "answer": self.answer
         }
+    answered_by = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), default="", nullable=True) # email of the admin who answered message or email of the main account used to set up system messaging
+    answerer_name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), default="", nullable=True) # name of the admin who answered message
+    answerer_id = db.Column(db.Integer, nullable=True) # id of the admin who answered message
+    answer_date = db.Column(db.DateTime, nullable=True) # date the answer was sent
+    answer_subject = db.Column(db.String(INPUT_LENGTH['contact_message_subject']['maxValue']), default="", nullable=True) # subject of the answer
+    answer = db.Column(db.String(INPUT_LENGTH['contact_message']['maxValue']), default="", nullable=True) # content of the answer
     
-    def message_answered(self, answered_by, answer, answer_date = datetime.now(timezone.utc)):
+    def record_answer(self, answered_by, answerer_name, answerer_id, answer, answer_date= datetime.now(timezone.utc), answer_subject="Re: message"):
         """
-        message_answered(answered_by: str, answer: str) -> void
+        record_answer(answered_by: str, answerer_name:str, answerer_id: int, answer: str) -> void
         ------------------------------
         Records answer to a user's message.
-        Two required arguments: the email of the admin who answered the message and the content of the answer (string).
-        One optional argument: the date the message was answered.
+        Should be used to record answers that were NOT sent through the app by email.
+        Required arguments: the email, name, and id of the admin who answered the message and the content of the answer (string).
+        Optional arguments: the date the message was answered and the answer subject.
         """
         self.answered_by = answered_by
+        self.answerer_name = answerer_name
+        self.answerer_id = answerer_id
+        self.answer_subject = answer_subject
         self.answer = answer
         self.answer_needed = modelBool.FALSE
         self.was_answered = modelBool.TRUE
         self.answer_date = answer_date
+        self.answer_recorded_at= datetime.now(timezone.utc)
+    
+    def email_answer(self, answerer_name, answerer_id, answer, answer_subject="Re: message"):
+        """
+        record_answer(answerer_name:str, answerer_id: int, answer: str) -> void
+        ------------------------------
+        Records answer to a user's message per email.
+        Should be used to record answers that were sent through the app by email.
+        Required arguments: name and id of the admin who answered the message and the content of the answer (string).
+        Optional argument: the answer subject.
+        """
+        if not EMAIL_CREDENTIALS["email_set"]:
+            logging.warning(f"No email was set for this app. Default/fake mail address being used to add email answer to db.")
+        self.answered_by = EMAIL_CREDENTIALS["email_address"]
+        self.answerer_name = answerer_name
+        self.answerer_id = answerer_id
+        self.answer_subject = answer_subject
+        self.answer = answer
+        self.answer_needed = modelBool.FALSE
+        self.was_answered = modelBool.TRUE
+        self.answer_date = datetime.now(timezone.utc)
+        self.answer_recorded_at= datetime.now(timezone.utc)
 
     
     def flag_change(self, flag_colour):

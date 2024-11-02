@@ -47,7 +47,7 @@ admin_message_action_flag_change = {
     "required": ["message_id","message_flag"]
 }
 
-admin_message_action_mark_answer = {
+admin_message_action_answer_message = {
     "type": "object",
     "properties": {
         "message_id": {
@@ -55,40 +55,40 @@ admin_message_action_mark_answer = {
             "type": "integer",
             "exclusiveMinimum": 0 
             },
+        "email_answer": {
+            "description": "Email answer: set to true. If false, it will record answer but not send it.",
+            "type": "boolean",
+            },
+        "answer": {
+            "description": "Text of answer to message",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['contact_message']['minValue'], 
+            "maxLength": INPUT_LENGTH['contact_message']['maxValue'],
+        },
+        "subject": {
+            "description": "Optional: subject of email answer (if answer is emailed)",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['contact_message_subject']['minValue'], 
+            "maxLength": INPUT_LENGTH['contact_message_subject']['maxValue'],
+        },
         "answered_by": {
-            "description": "Email of the admin who answered message",
+            "description": "Optional: Email of the admin who answered message (if answer is recorded)",
             "type": "string", 
             "minLength": INPUT_LENGTH['email']['minValue'], 
             "maxLength": INPUT_LENGTH['email']['maxValue'], 
             "pattern": EMAIL_PATTERN
             },
-        "subject": {
-            "description": "Optional subject of answer",
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['contact_message_subject']['minValue'], 
-            "maxLength": INPUT_LENGTH['contact_message_subject']['maxValue'],
-        },
-        "answer": {
-            "description": "Answer message",
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['contact_message']['minValue'], 
-            "maxLength": INPUT_LENGTH['contact_message']['maxValue'],
-        },
         "answer_date": {
-            "description": "Optiona answer date formatted YYYY-MM-DD",
+            "description": "Optional: answer date formatted YYYY-MM-DD (if answer is recorded)",
             "type": "string", 
             "format": "date",
             "minLength":  10, 
             "maxLength": 10,
             "pattern": DATE_PATTERN ,
-        },
-        "email_answer": {
-            "description": "Email answer: set to true. If false, it will record answer but not send it.",
-            "type": "boolean",
-            },
+        }
     },
     "additionalProperties": False,
-    "required": ["message_id","answered_by", "answer", "email_answer"]
+    "required": ["message_id","email_answer", "answer"]
 }
 
 admin_message_delete_schema = {

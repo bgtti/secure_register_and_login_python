@@ -10,6 +10,9 @@ from app.config_constants import pepper_array, secret_key, admin_credentials, us
 
 load_dotenv()
 
+# *** DEFINE CONFIG
+MODE = 'dev' # "prod"
+
 # *** SETTINGS CONSTANTS
 PEPPER_STRING_ARRAY = pepper_array(os.getenv('PEPPER'))
 SECRET = secret_key(os.getenv('SECRET_KEY'))

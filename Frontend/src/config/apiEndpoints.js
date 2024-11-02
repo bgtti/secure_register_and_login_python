@@ -36,9 +36,9 @@ export const apiEndpoints = {
     adminBlockUnblockUser: `${adminUrl.userAction}/block_unblock`,//OK
     adminDeleteUser: `${adminUrl.userAction}/delete_user`, //OK
     //admin - messages
-    adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter...)
+    adminMessagesTable: `${adminUrl.messages}/table`, // OK ? (check filter and pagination)
     adminMessageMarkAs: `${adminUrl.messageAction}/mark_as`, //OK 
-    adminMessageAnswer: `${adminUrl.messageAction}/mark_answer`, //------------WORKING NOW
+    adminMessageAnswer: `${adminUrl.messageAction}/answer_message`, //OK
     adminMessageFlagChange: `${adminUrl.messageAction}/flag_change`, //OK
     adminMessageDelete: `${adminUrl.messageAction}/delete_message`, //MISSING
 };

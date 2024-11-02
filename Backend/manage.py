@@ -2,7 +2,7 @@
 from app import create_app
 from create_db import create_super_admin_acct, check_redis, create_ssl_certificate
 from app.extensions import db 
-from app.config import ProductionConfig
+from app.config import ProductionConfig, MODE
 import os
 
 # ABOUT MODE:
@@ -11,7 +11,7 @@ import os
 # More information on how to handle configuration is available in the flask docs: https://flask.palletsprojects.com/en/3.0.x/config/
 # note about ip-address and related functions: remote_addr will be 127.0.0.1 in dev MODE, which means the ip-geolocation will be useless (in the stats module). 
 
-MODE = "dev" # "prod"
+# MODE = "dev" # "prod" #MODE can be set in cofig file now
 
 if MODE == "dev":
     app = create_app()

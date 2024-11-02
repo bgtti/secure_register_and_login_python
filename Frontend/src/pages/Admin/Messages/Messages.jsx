@@ -14,13 +14,16 @@ import FilterMessages from "./FilterMessages/FilterMessages.jsx";
 import "./messages.css"
 
 
+//=> TODO: pagination not working properly
+//=> TODO: adapt filter "Filter" to include answered messages
+
+
 const ACTIONS = {
     answer: "Admin answer",
     delete: "Delete message",
     flag: "Change message flag",
     markAs: "Mark message as..."
 }
-
 
 /**
  * Component returns all messages received through the contact form
@@ -103,7 +106,6 @@ function Messages() {
      * @returns {void} 
      */
     function getMessages(pageNr = 1) {
-        // console.log("hello")
         dispatch(setLoader(true))
         const queryObj = {
             pageNr: pageNr,
@@ -145,80 +147,6 @@ function Messages() {
         setSelectedMessage(messageObj);
     }
 
-    // function clickHandlerNoAnswerNeeded(/**Number*/ id, /**Bool*/ markNoAnswer) {
-    //     markNoAnswer ? setSelectedAction(ACTIONS.noAnswerNeeded) : setSelectedAction(ACTIONS.answerNeeded);
-    //     setSelectedMessageId(id);
-    //     setDisplayModal(true);
-    // }
-    // function clickHandlerMarkAnswer(/**Number*/ id, /**String*/ answeredBy = "", /**String*/ answer = "") {
-    //     setSelectedAction(ACTIONS.markAnswered);
-    //     setSelectedMessageId(id);
-    //     setMarkAnswered({ answeredBy: answeredBy, answer: answer });
-    //     setDisplayModal(true);
-    // }
-    // function clickHandlerChangeFlag(/**Number*/ id, /**String*/ currentFlagColour) {
-    //     setSelectedAction(ACTIONS.changeFlag);
-    //     setSelectedMessageId(id);
-    //     setMarkColourChange({ currentFlagColour: currentFlagColour })
-    //     setDisplayModal(true);
-    // }
-    // function clickHandlerDeleteMessage(/**Number*/ id) {
-    //     setSelectedAction(ACTIONS.deleteMessage);
-    //     setSelectedMessageId(id);
-    //     setDisplayModal(true);
-    // }
-
-    let aMessage = {
-        "id": 1,
-        "date": "Tue, 09 Jan 2024 21:07:38 GMT",
-        "senderName": "John",
-        "senderEmail": "john@example.com",
-        "subject": "oops",
-        "message": "Hi, I have a problem logging in.",
-        "flagged": "blue",
-        "answerNeeded": true,
-        "senderIsUser": true,
-        "wasAnswered": false,
-        "answeredBy": "",
-        "answerDate": "",
-        "answer": "",
-        "isSpam": false,
-        "userId": 5
-    }
-    let a2Message = {
-        "id": 1,
-        "date": "Tue, 09 Jan 2024 21:07:38 GMT",
-        "senderName": "John",
-        "senderEmail": "john@example.com",
-        "subject": "helooo",
-        "message": "Hi, I have a problem logging in.",
-        "flagged": "blue",
-        "answerNeeded": false,
-        "wasAnswered": true,
-        "senderIsUser": false,
-        "answeredBy": "j@hhhshsidndd.com",
-        "answerDate": "Tue, 09 Jan 2024 21:07:38 GMT",
-        "answer": "kdbkdvbs djhcbvhcd shbkhb sajhsbashcabv shcbdchkbcd kbkdbkdc hvhdvdlhvdc askhbckhcd",
-        "isSpam": true,
-        "userId": 0
-    }
-    let a3Message = {
-        "id": 3,
-        "date": "Tue, 09 Jan 2024 21:07:38 GMT",
-        "senderName": "John",
-        "senderEmail": "john@example.com",
-        "subject": "zyagss",
-        "message": "Hi, I have a problem logging in.",
-        "flagged": "red",
-        "answerNeeded": false,
-        "wasAnswered": false,
-        "senderIsUser": true,
-        "answeredBy": "",
-        "answerDate": "",
-        "answer": "",
-        "isSpam": false,
-        "userId": 8
-    }
 
     return (
         <div className="Messages">
@@ -261,56 +189,8 @@ function Messages() {
                         <p><b>No message found.</b></p>
                     )
                 }
-                {/* <Message
-                    isAdminComponent={true}
-                    theMessage={aMessage}
-                    clickHandler={clickHandler}
-                />
-                <Message
-                    isAdminComponent={true}
-                    theMessage={a2Message}
-                    clickHandler={clickHandler}
-                />
-                <Message
-                    isAdminComponent={true}
-                    theMessage={a3Message}
-                    clickHandler={clickHandler}
-                /> */}
             </section>
 
-            {/* {
-                messages && messages.length <0 && (
-                    messages.map((item, index) => (
-                        <Message
-                            isAdminComponent={true}
-                            theMessage={item}
-                            clickHandler={clickHandler}
-                            key={index}
-                        />
-                    ))
-                )
-            } */}
-
-
-            {/* {
-                messages && messages.length > 0 && (
-                    <>
-                        {messages && (
-                            messages.map((message, index) => (
-                                <UserMessageContainer
-                                    theMessage={message}
-                                    key={index}
-                                />
-                            ))
-                        )}
-                    </>
-                )
-            }
-            {
-                ((messages && messages.length == 0) || (!messages)) && (
-                    <p><b>No message found.</b></p>
-                )
-            } */}
             {
                 tPages > 1 && (
                     <Pagination

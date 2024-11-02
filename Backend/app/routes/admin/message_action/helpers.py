@@ -1,7 +1,13 @@
-from app.models.spammer import Spammer
-from sqlalchemy.exc import IntegrityError
+import re
 import logging
-from app.extensions import db
+from flask_mail import Message as EmailMessage
+from sqlalchemy.exc import IntegrityError
+from app.extensions import db, mail
+from app.config import EMAIL_CREDENTIALS
+from app.models.spammer import Spammer
+from app.utils.console_warning.print_warning import console_warn
+from app.utils.constants.account_constants import EMAIL_PATTERN
+
 
 def set_spammer(admin_id, spammer_email):
     """
@@ -38,18 +44,10 @@ def set_spammer(admin_id, spammer_email):
         db.session.rollback()
         logging.error(f"Error when adding email {spammer_email} to spammer list: {e}")
         return False
-    
-import re
-from flask_mail import Message as EmailMessage
-import logging
-from app.extensions import mail
-from app.config import EMAIL_CREDENTIALS
-from app.utils.console_warning.print_warning import console_warn
-from app.utils.constants.account_constants import EMAIL_PATTERN
 
-def message_action_answer_message(email_data):
+def send_answer_by_email(email_data):
     """
-    message_action_answer_message(email_data: dict) -> bool
+    send_answer_by_email(email_data: dict) -> bool
     -----------------------------------------------------------------------------
     Function sends an email based on the data provided in the email_data dictionary.
     The email_data dictionary should contain the following keys:
@@ -77,19 +75,17 @@ def message_action_answer_message(email_data):
     sender_name = email_data.get("sender_name", "Admin Team")
     original_message = email_data.get("original_message", "")
     original_message_date = email_data.get("original_message_date", "N/A")
-    original_message_sender = email_data.get("original_message_sender", "N/A")
 
     if not EMAIL_CREDENTIALS["email_set"]:
         console_warn("Email credentials not set up. Email could not be sent.", "RED")
         return False
     
-    EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
     if not bool(re.match(EMAIL_PATTERN, recepient)):
-        logging.warning(f"message_action_answer_message: email pattern failed for {recepient}.")
+        logging.warning(f"send_answer_by_email: email pattern failed for {recepient}.")
         return False
     
     if message=="":
-        logging.warning("message_action_answer_message: cannot send email with no message.")
+        logging.warning("send_answer_by_email: cannot send email with no message.")
         return False
     
     message_history = ""
@@ -97,18 +93,19 @@ def message_action_answer_message(email_data):
     if original_message != "":
         message_history = f"""
         <br>
-        <em>*** Message history ***</em><br>
-        Sender: {original_message_sender}<br>
-        Date: {original_message_date}<br>
-        Message:<br>
-        {original_message}<br>
+        ************************<br>
+        <em><b>*** Message history ***</b></em><br>
+        <em>Sender: {recepient}</em><br>
+        <em>Date: {original_message_date}</em><br>
+        <em>Message:</em><br>
+        <em>{original_message}</em><br>
         <br>
         <br>
         <em><b>If you did not author the message above, please inform the administrators of the site.</b></em><br>
         """
 
     email_body = f"""
-    <b>[SafeDev App] Message received.</b><br>
+    <b>You got a response from [SafeDev App]</b><br>
     ********************************************************************<br>
     <br>
     {message}<br>
@@ -130,7 +127,7 @@ def message_action_answer_message(email_data):
         logging.error(f"Could not send email to {recepient}. Error: {e}")
         return False
 
-    logging.info(f"Email sent to successfully.")
+    logging.info(f"Email sent to {recepient} successfully.")
 
     return True
 

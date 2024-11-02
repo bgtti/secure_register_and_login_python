@@ -166,8 +166,8 @@ Flask-React software template for secure registration and login of users.
   <tr>
     <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
     <td style="background: #344955; border-radius:20px"><small>messages</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center; color: red;"><small>✘</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center;"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small></small></td>
   </tr>
 </table>
 

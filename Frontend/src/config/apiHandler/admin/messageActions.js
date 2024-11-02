@@ -4,6 +4,11 @@ import { emailValidation } from "../../../utils/validation"
 import { INPUT_LENGTH, FLAG_TYPES } from "../../../utils/constants"
 import { getUTCString, validateDate, dateToYYYYMMDD } from "../../../utils/helpers"
 
+//=> TODO: all api handlers: instead of returning an object when there is a failure, return a promise instead:
+// return Promise.resolve({ success: false }) INSTEAD OF return { success: false };
+// reason: not to throw an error and avoid .finally to be called in the requesting function.
+
+
 /**
  * Function makes api call to set the status of a message (whether an answer is needed or if it is spam) and whether the sender should be marked as a spammer.
  * 
@@ -62,91 +67,73 @@ export function markMessageAs(messageId, answerNeeded, isSpam = false, senderIsS
     }
 
     return getData();
-
 }
 
 
 
+/**
+ * Function makes api call to record an answer as a reply to a user message in the DB. Optionally, the reply may be sent by the system's email.
+ *
+ * @param {object} answerData
+ * @param {number} answerData.id (the message's id) 
+ * @param {string} answerData.answer (answer text)
+ * @param {string} answerData.subject (OPTIONAL: subject of the answer email)
+ * @param {string} answerData.answeredBy (OPTIONAL: email of admin answering the message)
+ * @param {string} answerData.answerDate (OPTIONAL: date the message was answered)
+ * @param {bool} sendAnsByEmail (true will send the answer to the sender's stored email address)
+ * @returns {object}
+ *
+ * @example
+ * //Usage:
+ * const ansData = {
+ *  id: 5,
+ *  answer:"Thank you for your recommendation, John.",
+ *  subject:"Re: recommendation",
+ *  answeredBy:"milton@fakemail.com",
+ *  answerDate:"2024-11-01"
+ * }
+ * answerMessage(ansData, true)
+ *
+ * //Success response:
+ * {
+ *  success: true
+ * }
+ *
+ * //Error response:
+ * {
+ *  success: false
+ * }
+ */
+export function answerMessage(answerData, sendAnsByEmail = false) {
+    //Error message
+    const error_mes = "Function answerMessage encountered an issue. Check the arguments."
 
-
-
-
-
-// /**
-//  * Function makes api call to set a message status to 'no answer needed' or back to 'answer needed.
-//  * 
-//  * The message's id and markNoAnswer are required parameters. markNoAnswer is true to mark message as no reply needed, or false to mark as reply needed.
-//  * 
-//  * @param {number} id (the message's id)
-//  * @param {bool} markNoAnswer (true to mark as no reply needed, false to mark as reply needed)
-//  * @returns {object}
-//  * 
-//  * @example
-//  * //Usage:
-//  * markMessageNoAnswerNeeded(55)
-//  * 
-//  * //Success response:
-//  * {
-//  *  success: true
-//  * }
-//  * 
-//  * //Error response:
-//  * {
-//  *  success: false
-//  * }
-//  */
-// export function markMessageNoAnswerNeeded(id, markNoAnswer) {
-//     let theId = (id && Number.isInteger(id)) ? id : "";
-//     let theMark = (markNoAnswer && (typeof markNoAnswer === "boolean")) ? markNoAnswer : "";
-
-//     if (theId === "" || theMark === "") {
-//         console.warn("No message id provided to markMessageNoAnswerNeeded.")
-//         return { success: false }
-//     }
-
-//     let requestData = {
-//         "message_id": theId,
-//         "mark_no_answer_needed": theMark
-//     }
-//     const getData = async () => {
-//         try {
-//             const response = await apiHandle404.post(apiEndpoints.adminMessageMarkNoAnswer, requestData)
-//             if (response.status === 200) {
-//                 return { success: true }
-//             } else {
-//                 return { success: false }
-//             }
-//         }
-//         catch (error) {
-//             console.error("Error marking message as no answer needed:", error);
-//             return { success: false }
-//         }
-//     }
-
-//     return getData();
-
-// }
-
-export function markMessageAnswered(id, messageAnsweredBy, messageAnsweredText, messageAnswerDate = false) {
-    let theId = (id && Number.isInteger(id)) ? id : false;
-    let theEmail = (messageAnsweredBy && emailValidation(messageAnsweredBy)) ? messageAnsweredBy : false;
-    let theText = (messageAnsweredText && (typeof messageAnsweredText === "string") && messageAnsweredText.length <= INPUT_LENGTH.contactMessage.maxValue) ? messageAnsweredText : false;
-
-    if (!theId || !theEmail || !theText) {
-        console.warn("Wrong parameter provided to markMessageAnswered.")
-        return { success: false }
+    //Checking required values
+    if (arguments.length < 2 || sendAnsByEmail === undefined || (typeof sendAnsByEmail !== 'boolean')) {
+        console.warn(error_mes);
+        return Promise.resolve({ success: false })
     }
+    const id = (answerData.hasOwnProperty("id") && Number.isInteger(answerData.id)) ? answerData.id : false;
+    const answer = (answerData.hasOwnProperty("id") && (typeof answerData.answer === "string") && answerData.answer.length <= INPUT_LENGTH.contactMessage.maxValue) ? answerData.answer : false;
 
+    if (!id && !answer) { console.warn(error_mes); return Promise.resolve({ success: false }); }
+
+    //Checking optional values
+    const subject = (answerData.hasOwnProperty("subject") && (typeof answerData.subject === "string") && answerData.subject.length <= INPUT_LENGTH.contactMessageAnswerSubject.maxValue) ? answerData.subject : false;
+    const answeredBy = (answerData.hasOwnProperty("answeredBy") && emailValidation(answerData.answeredBy)) ? answerData.answeredBy : false;
+    const today = dateToYYYYMMDD(new Date())
+    const answerDate = (answerData.hasOwnProperty("answerDate") && validateDate(answerData.answerDate, "yyyy-mm-dd")) && answerData.answerDate !== today ? answerData.answerDate : false;
+
+    //Preparing payload
     let requestData = {
-        "message_id": theId,
-        "answered_by": theEmail,
-        "answer": theText
+        "message_id": id,
+        "email_answer": sendAnsByEmail,
+        "answer": answer,
     }
 
-    let today = dateToYYYYMMDD(new Date())
-    let theDate = messageAnswerDate && validateDate(messageAnswerDate, "yyyy/mm/dd") && messageAnswerDate !== today
-
-    if (theDate) { requestData["answer_date"] = messageAnswerDate }
+    if (subject) { requestData["subject"] = subject }
+    if (answeredBy) { requestData["answered_by"] = answeredBy }
+    if (answerDate) { requestData["answer_date"] = answerDate }
 
     const getData = async () => {
         try {
@@ -196,7 +183,6 @@ export function changeMessageFlag(id, flagColour) {
     }
 
     return getData();
-
 }
 
 export function deleteMessage(id) {
@@ -226,5 +212,4 @@ export function deleteMessage(id) {
     }
 
     return getData();
-
 }

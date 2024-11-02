@@ -39,6 +39,11 @@ function ActionAnswer(props) {
         const { name, value } = e.target;
         changeParentState({ [name]: value })
     };
+    //Handle boolean: whether to send ans as email or not
+    const handleChoice = (e) => {
+        const val = e.target.value === "true" ? true : false;
+        changeParentState({ answerSend: val })
+    };
 
     useEffect(() => {
         // Update the button text
@@ -63,7 +68,7 @@ function ActionAnswer(props) {
                     id="answerSend"
                     defaultValue={answerSend}
                     disabled={wasAnswered}
-                    onChange={(e) => { handleChange({ target: { name: e.target.name, value: e.target.value === "true" } }) }}>
+                    onChange={handleChoice}>
                     <option value={true}>Email answer</option>
                     <option value={false}>Record answer </option>
                 </select>

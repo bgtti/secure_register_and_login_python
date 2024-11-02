@@ -8,6 +8,7 @@ from app.extensions import faker
 
 # Data for Admin Account (to mark messages as answered):
 ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
+ADMIN_NAME = ADMIN_DATA[0]
 ADMIN_EMAIL = ADMIN_DATA[1]
 
 """
@@ -68,8 +69,10 @@ def create_dummie_messages():
             new_message.no_reply_needed()
         elif 19 <= i < 22:  # Mark as answered for the subsequent 3 messages
             answered_by = ADMIN_EMAIL
+            answerer_name = ADMIN_NAME
+            answerer_id = 1
             answer = faker.text(max_nb_chars=70)
-            new_message.message_answered(answered_by, answer)
+            new_message.record_answer(answered_by, answerer_name, answerer_id, answer)
         # For the last message added, no change is needed.
         
     db.session.commit()

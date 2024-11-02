@@ -1,31 +1,36 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone, timedelta
 from flask_login import login_required, current_user
-from app.extensions import limiter, db
 from sqlalchemy.exc import IntegrityError
 import logging
+from app.config import EMAIL_CREDENTIALS, MODE
+from app.extensions import limiter, db
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.message import Message
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.detect_html.detect_html import check_for_html
+from app.utils.console_warning.print_warning import console_warn
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.routes.admin.message_action.schemas import admin_message_action_mark_as, admin_message_action_flag_change, admin_message_action_mark_answer, admin_message_delete_schema
-from app.routes.admin.message_action.helpers import set_spammer
-
+from app.utils.detect_html.detect_html import check_for_html
+from app.routes.admin.message_action.helpers import set_spammer,send_answer_by_email
+from app.routes.admin.message_action.schemas import admin_message_action_mark_as, admin_message_action_flag_change, admin_message_action_answer_message, admin_message_delete_schema
 
 message_action = Blueprint('message_action', __name__)
 
-# In this file: routes that provide message-related information (to be accessed by admin users only) 
-#   - table with all messages, 
-#   - message actions
+# In this file: routes that provide message-related actions (to be accessed by admin users only) 
+#   - mark message as... (..."answer is needed", "no answer is needed", "spam") 
+#   - answer message
+#   - change message flag
+#   - delete message
 
-# View functions in this file provide and/or modify information in the db
+#TODO: I adapted manage.py to retrieve mode from Config to use MODE in answer_message(). Make sure to organize Config files appropriately and use mode whenever similarly needed in apis
 
-
-# ----- MESSAGES MARK AS ----- #---------------------># TODO: block user that is marked as spammer
+# ----- MESSAGES MARK AS 
+#TODO: 500 error could be generalized in response: see answer_message() for example
+#TODO: block user that is marked as spammer
+#TODO: make sure to mark messages as spam that come from users in spammer list (in appropriate function)
 @message_action.route("/mark_as", methods=["POST"])
 @login_required
 @admin_only
@@ -125,6 +130,7 @@ def mark_as():
 
 
 # ----- MESSAGES FLAG CHANGE -----
+#TODO: 500 error could be generalized in response: see answer_message() for example
 @message_action.route("/flag_change", methods=["POST"])
 @login_required
 @admin_only
@@ -201,21 +207,25 @@ def flag_change():
     
     return jsonify(response_data)
 
-# ANSWER MESSAGE
-@message_action.route("/mark_answer", methods=["POST"])
+# ANSWER MESSAGE 
+# #TODO: function could be improved by dividing answer recording from answer sending in helper functions, making API shorter 
+@message_action.route("/answer_message", methods=["POST"])
 @login_required
 @admin_only
-@validate_schema(admin_message_action_mark_answer)
-def mark_answer():
+@validate_schema(admin_message_action_answer_message)
+def answer_message():
     """
-    mark_answer() -> JsonType
+    answer_message() -> JsonType
     ----------------------------------------------------------
     Route to change a message's flag.
     Takes a JSON payload with the following required parameters:
     - "message_id": the id of the message to be edited (int)
-    - "answered_by": email of admin who answered (str)
+    - "email_answer": whether the answer should be recorded (false) or sent by email (true) (bool)
     - "answer": answer text (str)
-    - "email_answer": whether message should be sent by email (bool)
+    Optional arguments:
+    - "subject": email subject of the answer (str)
+    - "answered_by": email of admin who answered (str)
+    - "answer_date": answer date formatted YYYY-MM-DD (str)
     
     Returns a JSON object with a "response" field.
     ----------------------------------------------------------
@@ -232,8 +242,8 @@ def mark_answer():
     {"response":"success",
         "requested":{
             "message_id": 6,
-            "answered_by": "example@fakemail.com",
-            "answer": "Hi George, we are working to solve your issue."
+            "answer": "Hi George, we are working to solve your issue.",
+            "email_answer": false
         }
     }
 
@@ -242,69 +252,113 @@ def mark_answer():
     # Get the JSON data from the request body
     json_data = request.get_json()
 
-    # Get info from JSON payload
-    message_id = json_data["message_id"] 
-    answered_by = json_data["answered_by"]
-    answer = json_data["answer"]
+    # Get required info from JSON payload
+    message_id = json_data["message_id"]
     email_answer = json_data["email_answer"]
-    answer_date = datetime.strptime(json_data["answer_date"], "%Y-%m-%d").date() if "answer_date" in json_data else datetime.now(timezone.utc)
-    subject = json_data["subject"] if "subject" in json_data else "Re: contact form submission"
+    answer = json_data["answer"]
+    # Optional values bellow...
 
     # Debug log
-    logging.debug(f"Request to record answer received: Message id={message_id}, answered_by={answered_by}, answer={answer}, answer_date={answer_date}. answer_date is request: {'Yes' if 'answer_date' in json_data else 'No'} ") 
+    logging.debug(f"Request to record answer received: Message id={message_id}, email_answer={email_answer}, answer={answer}.") 
 
-    # In case answer should be sent per email
-    #if email_answer is True:
-        #TODO
-        # Do not forget: answerBy... is it now the email of the user or the system?
-        # -> it must be known who sent it...
-        # Import message_action_answer_message from helpers
+    # 500 error response
+    res_500 = {"response": "Error prevented answer to be recorded"}
 
-    # Record the answer in db
     try:
-        the_message = Message.query.filter_by(id=message_id).first()
-
-        if not the_message:
-            logging.info(f"Message id={message_id} could not be found, 404 not found.") 
-            return jsonify({"response": "Message not found"}), 404
-        
-        the_message.message_answered(answered_by,answer,answer_date)
-        
-        db.session.commit()
-        
-    except IntegrityError as e:
-        db.session.rollback()
-        logging.error(f"DB integrity error prevented message id={message_id} answer to be recorded: {e}")
-        return jsonify({"response": "Integrity error prevented message answer to be recorded."}), 500
+        the_message = Message.query.filter_by(id=message_id).first_or_404()
     
     except Exception as e:
-        logging.error(f"Error prevented message id={message_id} answer to be recorded: {e}")
-        return jsonify({"response": "Error prevented message answer to be recorded."}), 500
+        logging.error(f"Error prevented message id={message_id} to be retrieved: {e}")
+        return jsonify(res_500), 500
     
-    # In case answer_by email is different from that of the admin user, log that fact
-    try:
-        user = current_user
-        if user.email != answered_by:
-            logging.info(f"Admin with id {user.id} recorded a message answer answered by {answered_by} but own email is {user.email}")
-    except Exception as e:
-        logging.error(f"Error prevented log of answer to be recorded: {e}")
+    user = current_user
+    answerer_name= current_user.name
+    answerer_id = current_user.id
+    
+    if email_answer is False:
+        # get relevant optional info from JSON payload (if it exists, else use a default value)
+        answered_by = json_data.get("answered_by", user.email)
+        answer_date = datetime.strptime(json_data["answer_date"], "%Y-%m-%d").date() if "answer_date" in json_data else datetime.now(timezone.utc)
 
+        try:
+            the_message.record_answer(answered_by, answerer_name, answerer_id, answer, answer_date)
+            
+            db.session.commit()
+            
+        except IntegrityError as e:
+            db.session.rollback()
+            logging.error(f"DB integrity error prevented message id={message_id} answer to be recorded: {e}")
+            return jsonify(res_500), 500
+        
+        except Exception as e:
+            logging.error(f"Error prevented message id={message_id} answer to be recorded: {e}")
+            return jsonify(res_500), 500
+        
+        try:
+            if user.email != answered_by:
+                logging.info(f"Admin with id {user.id} recorded a message answer answered by {answered_by} but own email is {user.email}")
+        except Exception as e:
+            logging.error(f"Error prevented log of answer to be recorded: {e}")
 
+    if email_answer is True:
+        # get relevant optional info from JSON payload (if it exists, else use a default value)
+        subject = json_data.get("subject", "Re: contact form submission")
+
+        if EMAIL_CREDENTIALS["email_set"] is False:
+            if MODE == "dev":
+                console_warn("Email credentials not set up. Email was not sent but will be recorded in DB to make testing possible. ", "RED")
+                email_sent = True
+            else:
+                logging.error(f"Email credentials not set up. Email could not be sent and system will return a 500 response.")
+                return jsonify(res_500), 500
+
+        else:
+            email_data = {
+                "recepient": the_message.sender_email,
+                "message": answer,
+                "subject": subject,
+                "sender_name": "Admin Team",
+                "original_message":the_message.message,
+                "original_message_date":the_message.date,
+            }
+            email_sent = send_answer_by_email(email_data)
+
+        if email_sent:
+            try:
+                the_message.email_answer(answerer_name, answerer_id, answer, subject)
+                
+                db.session.commit()
+                
+            except IntegrityError as e:
+                db.session.rollback()
+                logging.error(f"DB integrity error prevented message id={message_id} answer to be recorded: {e}")
+                return jsonify(res_500), 500
+            
+            except Exception as e:
+                logging.error(f"Error prevented message id={message_id} answer to be recorded: {e}")
+                return jsonify(res_500), 500
+            
+        else:
+            logging.error(f"Answer could not be sent. Answer will not be recorded in DB. App will return 500.")
+            return jsonify(res_500), 500
+        
     response_data ={
             "response":"success",
             "requested":{
                 "message_id": message_id,
-                "answered_by": answered_by,
                 "answer": answer,
-                "answer_date": answer_date
+                "email_answer": email_answer
             }
         }
     
     return jsonify(response_data)  
+            
     
     
 
 # ----- ACTION: DELETE Message ----- 
+#TODO: 500 error could be generalized in response: see answer_message() for example
+#TODO: Check logs to see if appropriate
 @message_action.route("/delete_message", methods=["POST"])
 @login_required
 @admin_only
