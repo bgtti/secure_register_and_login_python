@@ -1,32 +1,39 @@
-# Application script: where instance is defined
-from app import create_app
-from create_db import create_super_admin_acct, check_redis, create_ssl_certificate
-from app.extensions import db 
-from app.config import ProductionConfig, MODE
+"""
+**Manage.py is the starting point**: the application script where the instance is defined.
+
+The configuration used to create the instance can be defined in a .env file as FLASK_ENV ('flask environment'), which can be "local", "development", or "production". In the case you do not have a .env, a local instance will be created using values from the .env.default file. This file can also be used as an example for creating a .env file.
+
+The configuration files can be found inside the config directory. The appropriate one will be selected according to the value set to FLASK_ENV and passed on to the create_app application factory inside app/__init__.py
+
+Note about ip-address and related functions: remote_addr will be 127.0.0.1 in dev MODE, which means the ip-geolocation will be useless (in the stats module)
+
+ENVIRONMENT_OPTIONS = ["local", "development", "production"] -> *set in values_setter*
+"""
 import os
+from app import create_app
+from app.extensions import db 
+from config.config_dev import DevelopmentConfig
+from config.config_prod import ProductionConfig
+from config.values import ENVIRONMENT
+from scripts.setup import initial_setup
 
-# ABOUT MODE:
-# Environment can be changed by setting MODE to 'dev' during development and 'prod' (for instance) for production
-# The app's configuration is found in app/config.py, and pulled by the create_app application factory in app/__init__.py which will use the Config class to configure by default. When MODE = 'prod' (or something other than 'dev'), it will create the app using the ProductionConfig class.
-# More information on how to handle configuration is available in the flask docs: https://flask.palletsprojects.com/en/3.0.x/config/
-# note about ip-address and related functions: remote_addr will be 127.0.0.1 in dev MODE, which means the ip-geolocation will be useless (in the stats module). 
+# When "local" or "development" environments are set, this file will run an extra script:
+# - Dummie data will populate the database using the content from "seed"
+# - SSL certificates will be generated (and used)
+# - It will be checked whether redis is running
+# When "development" environment is set, this file will run an extra script:
+# - Check whether there is a .env file and warn in case the data in this file is incorrect
 
-# MODE = "dev" # "prod" #MODE can be set in cofig file now
 
-if MODE == "dev":
-    app = create_app()
+if ENVIRONMENT == "local" or ENVIRONMENT == "development":
+    app = create_app(DevelopmentConfig)
 else:
-    SHOW_WARNINGS = False
+    SHOW_WARNINGS = False # --> ?
     app = create_app(ProductionConfig)
 
 with app.app_context():
     db.create_all()
-    create_super_admin_acct()
-    if MODE == "dev":
-        from app.dummie_data.dummie_users import create_dummie_user_accts
-        create_dummie_user_accts()
-        check_redis()
-        create_ssl_certificate()
+    initial_setup(ENVIRONMENT)
 
 # The code bellow will run with every API used to log the session data. It can be used for debugging authorization errors.
 # from flask import session, request
@@ -44,14 +51,14 @@ with app.app_context():
 #             console_warn(f"     No session cookie sent. Browser blocked?", "RED")
 
 if __name__ == "__main__":
-    if MODE == "dev":
-        from app.utils.console_warning.print_warning import console_warn
+    if ENVIRONMENT == "local" or ENVIRONMENT == "development":
+        from utils.print_to_terminal import print_to_terminal
         # If an SSL certificate and key are available in the specified folder, they will be used to build an HTTP connection. This is recommended.
-        if os.path.exists(os.path.join(os.getcwd(), "ssl_certificate")) and os.listdir(os.path.join(os.getcwd(), "ssl_certificate")):
-            console_warn(f"App running in HTTPS: be sure to check front end path.", "BLUE")
-            app.run(ssl_context=("ssl_certificate/cert.pem", "ssl_certificate/key.pem"), debug=True)
+        if os.path.exists(os.path.join(os.getcwd(), "certs")) and os.listdir(os.path.join(os.getcwd(), "certs")):
+            # print_to_terminal(f"App running in HTTPS: be sure to check front end path.", "BLUE")
+            app.run(ssl_context=("certs/cert.pem", "certs/key.pem"), debug=True)
         else:
-            console_warn(f"App running in HTTP: be sure to check front end path.", "BLUE")
+            # print_to_terminal(f"App running in HTTP: be sure to check front end path.", "BLUE")
             app.run(debug=True)
     else:
         app.run() # set accordingly for production. 

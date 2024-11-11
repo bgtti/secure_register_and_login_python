@@ -1,8 +1,8 @@
-from flask_mail import Message as EmailMessage
 import logging
+from flask_mail import Message as EmailMessage
+from utils.print_to_terminal import print_to_terminal
+from config.values import EMAIL_CREDENTIALS
 from app.extensions import mail
-from app.config import EMAIL_CREDENTIALS
-from app.utils.console_warning.print_warning import console_warn
 
 def contact_form_email_forwarding(sender_name, sender_email, subject, message, is_user=False, email_in_db=""):
     """
@@ -15,7 +15,7 @@ def contact_form_email_forwarding(sender_name, sender_email, subject, message, i
     """
 
     if EMAIL_CREDENTIALS["email_set"] == False:
-        console_warn("Email credentials not set up. Contact form could not be forwarded to email.", "RED")
+        print_to_terminal("Email credentials not set up. Contact form could not be forwarded to email.", "RED")
         return False
     
     if is_user:

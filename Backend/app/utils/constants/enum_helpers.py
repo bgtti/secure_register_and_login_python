@@ -1,5 +1,5 @@
 import logging
-from app.utils.console_warning.print_warning import console_warn
+from utils.print_to_terminal import print_to_terminal
 
 def map_string_to_enum(value, enum_class):
     """
@@ -18,5 +18,5 @@ def map_string_to_enum(value, enum_class):
         return enum_class[value.upper()]
     except KeyError:
         logging.error(f"User table could not be retrieved as criteria was not met.")
-        console_warn(f"Value Error (map_string_to_enum). No such value in {enum_class.__name__}: {value}", "RED")
+        print_to_terminal(f"Value Error (map_string_to_enum). No such value in {enum_class.__name__}: {value}", "RED")
         return None

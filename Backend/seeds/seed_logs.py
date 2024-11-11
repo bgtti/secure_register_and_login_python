@@ -1,13 +1,15 @@
+"""
+**ABOUT THIS FILE**
+
+seed_logs.py contains the **create_dummie_logs** function, which can be called to create dummie logs in the db for testing and visualization.
+
+Currently used in *seed_all.py* after dummie users are inserted to the db.
+"""
+from datetime import datetime, timezone
 from sqlalchemy import insert
 from app.extensions import db
-from datetime import datetime, timezone
 from app.models.user import User
 from app.models.log_event import LogEvent
-
-"""
-This file contains the create_dummie_logs function, which can be called to create dummie logs in the db for testing and visualization.
-Currently used in dummie_users.py after dummie users are inserted to the db.
-"""
 
 logs_examples = [
     ("INFO", "signup","successful signup.", 20),
@@ -51,4 +53,3 @@ def create_dummie_logs():
 
     db.session.execute(insert(LogEvent), log_list)
     db.session.commit()
-

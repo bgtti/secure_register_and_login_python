@@ -1,11 +1,11 @@
-import re
 import logging
+import re
 from flask_mail import Message as EmailMessage
 from sqlalchemy.exc import IntegrityError
+from utils.print_to_terminal import print_to_terminal
+from config.values import EMAIL_CREDENTIALS
 from app.extensions import db, mail
-from app.config import EMAIL_CREDENTIALS
 from app.models.spammer import Spammer
-from app.utils.console_warning.print_warning import console_warn
 from app.utils.constants.account_constants import EMAIL_PATTERN
 
 
@@ -77,7 +77,7 @@ def send_answer_by_email(email_data):
     original_message_date = email_data.get("original_message_date", "N/A")
 
     if not EMAIL_CREDENTIALS["email_set"]:
-        console_warn("Email credentials not set up. Email could not be sent.", "RED")
+        print_to_terminal("Email credentials not set up. Email could not be sent.", "RED")
         return False
     
     if not bool(re.match(EMAIL_PATTERN, recepient)):

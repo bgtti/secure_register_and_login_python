@@ -1,36 +1,45 @@
-import os
-import ast
 import random
 from datetime import datetime
 from uuid import uuid4
-from app.config import PEPPER_STRING_ARRAY
+from config.values import PEPPER
 
 # function to get pepper according to account creation date
 def get_pepper(date):
     """
     get_pepper(date: datetime) -> str[4]
     --------------------------------------
-    Requires a datetime argument. 
-    Returns a string defined in the
-    PEPPER saved in the env file. 
-    --------------------------------------
-    Important:
-    Make sure you have the pepper array in
-    the env file like: PEPPER = '["xxxx", 
-    "xxxx", "xxxx", "xxxx", "xxxx", 
-    "xxxx"]' where xxxx represents a
-    random 4-char string.
-    --------------------------------------
-    Example usage 1:
-    date = datetime.utcnow()
-    pepper = get_pepper(date)
 
-    Example usage 2:
-    date = user.created_at #from db model
-    pepper = get_pepper(date)
+    Requires a datetime argument. 
+    Returns one of the strings defined in PEPPER (from the configuration files). 
+
+    --------------------------------------
+    **Important:**
+
+    Make sure you have the pepper array in the env file like: 
+    
+    `PEPPER = '["xxxx", "xxxx", "xxxx", "xxxx", "xxxx", "xxxx"]'` 
+    
+    where xxxx represents a random 4-char string.
+
+    The month inside the date string will define which pepper value will be returned.
+
+    --------------------------------------
+    Example usage:
+
+    `date = datetime.utcnow()` 
+
+    `pepper = get_pepper(date)` 
+
+    *if in config `PEPPER = ["xxx0", "xxx1", "xxx2", "xxx3", "xxx4", "xxx5"]`, then:*
+
+    - **January and July**: `pepper = "xxx0"`
+    - **February and August**: `pepper = "xxx1"`
+    - **March and September**: `pepper = "xxx2"`
+    - **April and October**: `pepper = "xxx3"`
+    - **May and November**: `pepper = "xxx4"`
+    - **June and December**: `pepper = "xxx5"`
     """
-    PEPPER_ARRAY = ast.literal_eval(PEPPER_STRING_ARRAY)
-    pepper = PEPPER_ARRAY[(date.month -1) % len(PEPPER_ARRAY)] 
+    pepper = PEPPER[(date.month -1) % len(PEPPER)] 
     return pepper
 
 
@@ -39,11 +48,12 @@ def generate_salt():
     """
     generate_salt() -> str[8]
     --------------------------------
-    Accepts no arguments and returns 
-    a radom 8-character string.
+
+    Accepts no arguments and returns a radom 8-character string.
+
     --------------------------------
     Example usage:
-    salt = generate_salt()
+    `salt = generate_salt()`
     """
     # Getting first random character: from a timestamp
     current_datetime = datetime.now()

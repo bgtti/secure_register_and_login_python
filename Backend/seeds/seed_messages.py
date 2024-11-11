@@ -1,20 +1,20 @@
+"""
+**ABOUT THIS FILE**
+
+seed_messages.py contains the **create_dummie_mesages** function, which can be called to create dummie messages in the db for testing and visualization. This should simulate the receiving of messages through the contact form (without forwarding them to the specified administrator email address).
+
+Currently used in *seed_all.py* after dummie users are inserted to the db.
+"""
 import ast
-from app.config import ADMIN_ACCT
-from app.extensions import db
+from app.extensions import db, faker
 from app.models.user import User
 from app.models.message import Message
-from app.dummie_data.create_files import generate_fake_mail
-from app.extensions import faker
+from config.values import SUPER_USER
+from seeds.helpers import generate_fake_mail
 
 # Data for Admin Account (to mark messages as answered):
-ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
-ADMIN_NAME = ADMIN_DATA[0]
-ADMIN_EMAIL = ADMIN_DATA[1]
-
-"""
-This file contains the create_dummie_mesages function, which can be called to create dummie messages in the db for testing and visualization. This should simulate the receiving of messages through the contact form (without forwarding them to the specified administrator email address).
-Currently used in dummie_users.py after dummie users are inserted to the db.
-"""
+ADMIN_NAME = SUPER_USER["name"]
+ADMIN_EMAIL = SUPER_USER["email"]
 
 def create_spam_messages():
     """
@@ -78,5 +78,3 @@ def create_dummie_messages():
     db.session.commit()
     create_message_unkown_sender()
     create_spam_messages()
-
-

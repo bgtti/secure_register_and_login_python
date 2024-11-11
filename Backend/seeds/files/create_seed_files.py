@@ -1,12 +1,15 @@
-import random
-import string
-from uuid import uuid4
-import ipaddress
-from app.extensions import faker
-import os
-import json
-
 """
+**ABOUT THIS FILE**
+
+*create_seed_files.py* creates json files containing data that can be used to seed the database.
+
+**create_seed_files()** is the function that creates these files - and it should be called from seed_all.py once - and only if the json files don't already exist. If the json files are deleted and no second db User is found, the files will be re-created if the code runs in development mode.
+
+Check out *seed_users.py* (in the seeds directory) to see how the files are used.
+
+-----------------------------------
+**How the files are created**
+
 A dummie user is created based on a list of random names.
 
 for every user created:
@@ -20,11 +23,15 @@ The data and functions in this file were used to create the following files:
     - data_user_stats.json -> will populate the user stats database (correlate to users created)
     - data_users_visitor_stats.json -> will populate the visitor stats database (correlate to users created)
     - data_visitor_stats.json -> will populate the visitor stats database (correlate to users created)
-
-create_dummie_files() is the function that created these files - and it was called from dummie_users.py once.
-If the json files are deleted and no second db User is found, the files will be re-created if the code runs in development mode.
-Check dummie_users.py (in this directory) to see how the data in this page is called and how the files are used.
 """
+import ipaddress
+import json
+import random
+import string
+import os
+from uuid import uuid4
+from app.extensions import faker
+from seeds.helpers import generate_fake_mail
 
 # BASE INFORMATION FOR DUMMIE DATA CREATION
 
@@ -134,25 +141,6 @@ def generate_fake_str():
     """
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
 
-def generate_fake_mail(name):
-    """
-    generate_fake_mail(name: str) -> str
-    ---------------------------------------------------------------------------
-    This function takes a name, removes special characters, put it in lowercase,
-    joins first/middle/last names with a . and suffixed it with @fakemail.com
-    ---------------------------------------------------------------------------
-    Example usage:
-    
-    generate_fake_mail("David") -> david@fakemail.com
-    generate_fake_mail("Charles Szabó") -> charles.szabo@fakemail.com
-    generate_fake_mail("João Martinez de Sá Peixoto") -> joao.martinez.de.sa.peixoto@fakemail.com
-    """
-    cleaned_name = "".join(c.lower() if c.isalnum() or c.isspace() else "." for c in name)
-    cleaned_name = " ".join(cleaned_name.split()) # Replace consecutive spaces with a single space
-    cleaned_name = cleaned_name.replace(" ", ".") # Replace spaces with dots
-    fake_email = f"{cleaned_name}@fakemail.com"
-    return fake_email
-
 def get_uuid():
     """
     get_uuid(:void) -> str
@@ -161,7 +149,7 @@ def get_uuid():
     --------------------------------
     Example usage:
     
-    my_uuid = get_uuid()
+    `my_uuid = get_uuid()`
     """
     return uuid4().hex
 
@@ -169,11 +157,13 @@ def fake_anonymize_ip(ip_address):
     """
     fake_anonymize_ip(ip_address: str) -> str
     --------------------------------------------
+
     This function anonymizes fake ipv4 data.
+
     --------------------------------------------
     Example usage:
     
-    fake_anonymize_ip("192.168.1.100") -> "192.168.1.0"
+    `fake_anonymize_ip("192.168.1.100") #-> "192.168.1.0"`
     """
     ip = ipaddress.ip_address(ip_address)
     return ".".join(str(octet) for octet in ip.packed[:-1]) + ".0"
@@ -183,7 +173,7 @@ def create_dummie_visitor_stats():
     create_dummie_visitor_stats(:void) -> dict[str, str]
     -----------------------------------------------------
     This creates an object with fake visitor stats data.
-    Used in create_dummie_files().
+    Used in *create_seed_files()*.
     """
     random_referrer_index = random.randint(0,len(dummie_referrer)-1) 
     visitor_session_id = get_uuid()
@@ -204,18 +194,29 @@ def create_dummie_visitor_stats():
     }
     return model_visitor_stats_random
 
+# NAMES OF FILES TO BE CREATED:
+SEED_FILES_JSON = [
+            "data_users.json",
+            "data_users_stats.json",
+            "data_users_visitor_stats.json",
+            "data_visitor_stats.json"
+        ]
+"""Name of .json files in seeds/files that contain data to seed the db.
+
+SEED_FILES_JSON = ["data_users.json", "data_users_stats.json", "data_users_visitor_stats.json", "data_visitor_stats.json"]"""
+
 # DUMMIE DATA CREATION:
 
-def create_dummie_files():
+def create_seed_files():
     """
-    create_dummie_files(:void) -> IO
+    create_seed_files(:void) -> IO
     --------------------------------------------------------------------------------
     This function takes no arguments and generates 4 python files containing 
     lists of dictionaries.
 
-    This function generated the dummie data used to created the database for testing.
-    By creating the files with the dummie data in advance, it was possible to speed
-    things up a little bit when creating the dummie users at run time, and allows the 
+    This function generated the seed data used to created the database for testing.
+    By creating the files with the seed data in advance, it was possible to speed
+    things up a little bit when creating the seed users at run time, and allows the 
     create user file to be a little shorter.
     """
     user_list = []
@@ -272,13 +273,6 @@ def create_dummie_files():
         model_visitor_stats_random = create_dummie_visitor_stats()
         visitor_stats_random.append(model_visitor_stats_random)
         
-    file_paths = [
-            "data_users.json",
-            "data_users_stats.json",
-            "data_users_visitor_stats.json",
-            "data_visitor_stats.json",
-        ]
-
     data_to_write = [
         user_list,
         user_stats_list,
@@ -286,26 +280,6 @@ def create_dummie_files():
         visitor_stats_random,
     ]
     
-    for i in range(len(file_paths)):
-        with open(os.path.join(os.path.dirname(__file__), file_paths[i]), "w", encoding="utf-8") as file:
+    for i in range(len(SEED_FILES_JSON)):
+        with open(os.path.join(os.path.dirname(__file__), SEED_FILES_JSON[i]), "w", encoding="utf-8") as file:
             json.dump(data_to_write[i], file, indent=4)  # Use json.dump to write the data as JSON
-    
-
-# The function above used to create .py files. In case you prefer .py over .json, here are the original bits:
-    # file_paths = [
-    #         "data_users.py",
-    #         "data_users_stats.py",
-    #         "data_users_visitor_stats.py",
-    #         "data_visitor_stats.py",
-    #     ]
-    # data_to_write = [
-    #     (user_list, 'user_list'),
-    #     (user_stats_list, 'user_stats_list'),
-    #     (visitor_stats_list, 'visitor_stats_list'),
-    #     (visitor_stats_random, 'visitor_stats_random'),
-    # ]
-    # for i in range(len(file_paths)):
-    #     with open(os.path.join(os.path.dirname(__file__), file_paths[i]), "w", encoding="utf-8") as file:
-    #         # if i != 1:
-    #         #     file.write(f"import datetime\n")
-    #         file.write(f"{data_to_write[i][1]} = {data_to_write[i][0]}")
