@@ -1,5 +1,6 @@
 const urlPrefix = {
-    account: "/api/account",
+    // account: "/api/account",
+    auth: "/api/auth",
     admin: "/api/admin",
     contact: "/api/contact",
 }
@@ -16,13 +17,13 @@ export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
-    //account
-    userSignUp: `${urlPrefix.account}/signup`, //OK
-    userLogIn: `${urlPrefix.account}/login`, //OK
-    userLogOut: `${urlPrefix.account}/logout`, //OK
-    userGetOwnAcctInfo: `${urlPrefix.account}/@me`, //OK
-    userDeleteOwnAccount: `${urlPrefix.account}/delete`, //MISSING
-    userChangeEmail: `${urlPrefix.account}/...`, //MISSING
+    //authentication
+    userSignUp: `${urlPrefix.auth}/signup`, //OK
+    userLogIn: `${urlPrefix.auth}/login`, //OK
+    userLogOut: `${urlPrefix.auth}/logout`, //OK
+    userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
+    userDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
+    userChangeEmail: `${urlPrefix.auth}/...`, //MISSING
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING
     //admin - users

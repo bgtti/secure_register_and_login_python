@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import logging
 from sqlalchemy.exc import IntegrityError
 from flask_login import current_user, login_required
-from app.extensions import db
+from app.extensions.extensions import db
 from app.routes.admin.user_action.schemas import admin_user_flag_change,admin_user_access_type_change, admin_block_and_unblock_user_schema, admin_delete_user_schema
 from app.models.user import User
 from app.models.stats import UserStats

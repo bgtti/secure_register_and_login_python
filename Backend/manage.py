@@ -11,7 +11,7 @@ ENVIRONMENT_OPTIONS = ["local", "development", "production"] -> *set in values_s
 """
 import os
 from app import create_app
-from app.extensions import db 
+from app.extensions.extensions import db 
 from config.config_dev import DevelopmentConfig
 from config.config_prod import ProductionConfig
 from config.values import ENVIRONMENT

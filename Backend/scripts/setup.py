@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
 from seeds.seed_all import seed_database
-from app.extensions import db, flask_bcrypt
+from app.extensions.extensions import db, flask_bcrypt
 from app.models.user import User
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 

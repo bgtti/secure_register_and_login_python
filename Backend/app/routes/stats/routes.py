@@ -5,7 +5,7 @@ from uuid import uuid4
 import logging
 import jsonschema
 import requests
-from app.extensions import flask_bcrypt, db, limiter
+from app.extensions.extensions import flask_bcrypt, db, limiter
 from app.models.stats import VisitorStats
 from app.routes.stats.schemas import analytics_schema
 # from app.stats.helpers import anonymize_ip

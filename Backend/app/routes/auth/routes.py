@@ -1,10 +1,30 @@
+"""
+**ABOUT THIS FILE**
+
+auth/routes.py contains routes responsible for core authentication and authorization functionalities.
+Here you will find the following routes:
+- **signup** route
+- **login** route
+- **logout** route
+- **@me** route (delivers user information given session cookie)
+
+The format of data sent by the client is validated using Json Schema. 
+Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
+
+------------------------
+## More information
+
+This app relies on Flask-Login (see `app/extensions`) to handle authentication. It provides user session management, allowing us to track user logins, manage sessions, and protect routes.
+
+Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
+
+"""
+import logging
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user as flask_login_user, current_user, logout_user as flask_logout_user, login_required
 from datetime import datetime, timezone
-import logging
-from app.extensions import flask_bcrypt, db, limiter, login_manager
-from app.routes.account.schemas import sign_up_schema, log_in_schema
-from app.routes.account.helpers import is_good_password
+from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
+from app.models.user import User
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.log_event_utils.log import log_event
@@ -14,60 +34,45 @@ from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip 
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.models.user import User
+from app.routes.auth.schemas import signup_schema, login_schema
+from app.routes.auth.helpers import is_good_password
 
-account = Blueprint("account", __name__) 
-
-# LOGIN MANAGER SETUP
-# The reason we use session id instead of regular id when user chooses to be remembered is that remembered tokens must be changed to invalidate sessions.
-# More on this in the documentation: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
-# The reason the session id is not being used all the time is that it is a uuid, and those do not perform very well on db queries.
-@login_manager.user_loader
-def load_user(user_id):
-    """
-    Used by flask_login to create sessions. Uses user.get_id() method. 
-    If user chose to be remembered, a session uuid will be used. 
-    Else, the regular user's id wil be used. 
-    """
-    if user_id.isdigit():
-        # If the user_id is a digit, assume it's a regular ID
-        return User.query.get(int(user_id))
-    else:
-        # If the user_id is not a digit, assume it's a session ID
-        return User.query.filter_by(session=user_id).first()
-
-@login_manager.unauthorized_handler
-def unauthorized():
-    error_response = {"response": "Route unauthorized."}
-    return jsonify(error_response), 401
+auth = Blueprint("auth", __name__) 
 
 # SIGN UP
-@account.route("/signup", methods=["POST"])
+@auth.route("/signup", methods=["POST"])
 @limiter.limit("2/minute;5/day")
-@validate_schema(sign_up_schema)
+@validate_schema(signup_schema)
 def signup_user():
     """
     signup_user() -> JsonType
     ----------------------------------------------------------
-    Route with no parameters.
+
+    Route registers a new user.
+    
+    Requires json data from the client. 
     Sets a session cookie in response.
-    Returns Json object containing strings.
-    "response" value is always included.  
-    "user" value only included if response is "success".
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "user" value only included if response is "success".
+
     ----------------------------------------------------------
-    Response example:
-    response_data = {
-            "response":"success",
-            "user": {
-                "access": "user"
-                "name": "John", 
-                "email": "john@email.com"}, 
-        } 
+    **Response example:**
+    ```python
+        response_data = {
+                "response":"success",
+                "user": {
+                    "access": "user"
+                    "name": "John", 
+                    "email": "john@email.com"}, 
+            } 
+    ```
     ----------------------------------------------------------
-    About errors:
-        Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
-        The password validation and 'user exists' will both return the same error response.
-        The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
+    **About errors:**
+
+    Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
+    The password validation and 'user exists' will both return the same error response.
+    The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
     """
     # Standard error response
     error_response = {"response": "There was an error registering user."}
@@ -178,36 +183,44 @@ def signup_user():
     return jsonify(response_data)
 
 # LOG IN
-@account.route("/login", methods=["POST"])
-# @limiter.limit("30/minute;50/day")
-@validate_schema(log_in_schema)
+@auth.route("/login", methods=["POST"])
+@limiter.limit("30/minute;50/day")
+@validate_schema(login_schema)
 def login_user():
     """
     login_user() -> JsonType
     ----------------------------------------------------------
-    Route with no parameters.
+
+    Route logs-in a user.
+    
+    Requires json data from the client. 
     Sets a session cookie in response.
-    Returns Json object containing strings.
-    "response" value is always included.  
-    "user" value only included if response is "success".
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "user" value only included if response is "success".
+
     ----------------------------------------------------------
-    Response example:
-    response_data = {
-            "response":"success",
-            "user": {
-                "name": "John", 
-                "email": "john@email.com",
-                "access": "user"
-                }, 
-        } 
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "user": {
+                    "name": "John", 
+                    "email": "john@email.com",
+                    "access": "user"
+                    }, 
+            }
+    ``` 
     ----------------------------------------------------------
-    About errors:
-        Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
-        The blocked and failed credentials will all return the same error response.
-        The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
+    **About errors:**
+
+    Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
+    The blocked and failed credentials will all return the same error response.
+    The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
     """
     # Standard error response
-    error_response = {"response": "There was an error logging in user."}
+    error_response = {"response": "There was an error logging in user."} 
 
     # Get the JSON data from the request body 
     json_data = request.get_json()
@@ -257,7 +270,7 @@ def login_user():
             if client_ip:
                 geolocation = geolocate_ip(client_ip) 
                 anonymized_ip = anonymize_ip(client_ip)
-                logging.warn(f"{user.login_attempts} wrong login attempts for email: {email}. From IP {anonymized_ip}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}. (typically error code: 403)")
+                logging.warning(f"{user.login_attempts} wrong login attempts for email: {email}. From IP {anonymized_ip}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}. (typically error code: 403)")
             try:
                 log_event("ACCOUNT_LOGIN", "wrong credentials 5x", user.id, f"Login attempt from IP {anonymized_ip}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}.")
             except Exception as e:
@@ -307,9 +320,9 @@ def login_user():
 
     # event and system logs
     logging.info("A user logged in.")
-    logging.debug(f"Session after login: {session}")
+    # logging.debug(f"Session after login: {session}") # Uncomment to debug session
 
-    # POSSIBLE IMPLEMENTATION:
+    # TODO POSSIBLE IMPLEMENTATION:
     # - Send an email to the user in case of user being blocked.
     
     response_data ={
@@ -321,18 +334,59 @@ def login_user():
         }
     return jsonify(response_data)
 
-# Log OUT
-@account.route("/logout", methods=["POST"])
+# LOG OUT
+@auth.route("/logout", methods=["POST"])
 @login_required
 def logout_user():
+    """
+    logout_user() -> JsonType
+    ----------------------------------------------------------
+
+    Route logs out a user.
+    
+    Returns Json object if successfull.
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success"
+            }
+    ``` 
+    """
     flask_logout_user()
     logging.info(f"Successful logout") 
     return jsonify({"response":"success"})
 
-# GET CURRENT USER
-@account.route("/@me")
+# GET CURRENT USER FROM SESSION COOKIE
+@auth.route("/@me")
 @login_required
 def get_current_user():
+    """
+    get_current_user() -> JsonType
+    ----------------------------------------------------------
+
+    Route re-logs a user in (using the session cookie). 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "user" value only included if response is "success".
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "user": {
+                    "name": "John", 
+                    "email": "john@email.com",
+                    "access": "user"
+                    }, 
+            }
+    ``` 
+    """
 
     user = current_user
 

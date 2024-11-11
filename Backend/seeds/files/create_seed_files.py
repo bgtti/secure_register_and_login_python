@@ -30,7 +30,7 @@ import random
 import string
 import os
 from uuid import uuid4
-from app.extensions import faker
+from app.extensions.extensions import faker
 from seeds.helpers import generate_fake_mail
 
 # BASE INFORMATION FOR DUMMIE DATA CREATION

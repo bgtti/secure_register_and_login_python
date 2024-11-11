@@ -1,6 +1,20 @@
+"""
+**ABOUT THIS FILE**
+
+auth/schemas.py contains the following schemas to validate request data:
+
+- **signup_schema** 
+- **login_schema** 
+
+------------------------
+## More information
+
+These schemas are passed in to `validate_schema` (see `app/utils/custom_decorators/json_schema_validator.py`) through the route's decorator to validate client data received in json format by comparing it to the schema rules.
+
+"""
 from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
 
-sign_up_schema = {
+signup_schema = {
     "type": "object",
     "properties": {
         "name": {
@@ -31,7 +45,7 @@ sign_up_schema = {
     "required": ["name", "email", "password", "honeypot"]
 }
 
-log_in_schema = {
+login_schema = {
     "type": "object",
     "properties": {
         "email": {

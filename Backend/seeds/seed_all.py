@@ -14,7 +14,7 @@ It will call the main functions from *seed_logs.py", "seed_messages.py", and "se
 #TODO REPLACE CONSOLE_WARN
 
 import os
-from app.extensions import db
+from app.extensions.extensions import db
 from app.models.user import User
 from utils.print_to_terminal import print_to_terminal
 from seeds.seed_logs import create_dummie_logs

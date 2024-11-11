@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 import logging
 from utils.print_to_terminal import print_to_terminal
 from config.values import EMAIL_CREDENTIALS, ENVIRONMENT
-from app.extensions import limiter, db
+from app.extensions.extensions import limiter, db
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.message import Message

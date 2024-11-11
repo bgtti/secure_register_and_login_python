@@ -9,7 +9,7 @@ from random import randint
 from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
-from app.extensions import db
+from app.extensions.extensions import db
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum

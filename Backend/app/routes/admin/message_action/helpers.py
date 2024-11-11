@@ -4,7 +4,7 @@ from flask_mail import Message as EmailMessage
 from sqlalchemy.exc import IntegrityError
 from utils.print_to_terminal import print_to_terminal
 from config.values import EMAIL_CREDENTIALS
-from app.extensions import db, mail
+from app.extensions.extensions import db, mail
 from app.models.spammer import Spammer
 from app.utils.constants.account_constants import EMAIL_PATTERN
 

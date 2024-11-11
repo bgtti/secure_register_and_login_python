@@ -1,7 +1,7 @@
 import pytest
 from app import create_app
-from app.extensions import db 
-from app.config import TestConfig
+from app.extensions.extensions import db 
+from config.config_test import TestingConfig
 
 ## Running tests
 # Pytest is being used for unit testing.
@@ -12,7 +12,7 @@ from app.config import TestConfig
 # Simulate DB
 @pytest.fixture()
 def app_test():
-    app_test = create_app(TestConfig)
+    app_test = create_app(TestingConfig)
 
     with app_test.app_context():
         db.create_all()

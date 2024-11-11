@@ -12,7 +12,7 @@ from sqlalchemy import insert
 from utils.print_to_terminal import print_to_terminal
 from seeds.files.create_seed_files import SEED_FILES_JSON
 from seeds.helpers import generate_date_obj, get_date_from_week_num, get_date_obj_last_week, get_hashed_pw
-from app.extensions import db
+from app.extensions.extensions import db
 from app.models.user import User
 from app.models.stats import UserStats, VisitorStats
 

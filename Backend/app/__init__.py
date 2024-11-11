@@ -19,7 +19,7 @@ from flask import Flask
 import logging
 from logging.config import dictConfig
 from colorama import init
-import app.extensions as extensions
+import app.extensions.extensions as extensions
 
 def create_app(config_class):
     if config_class is None:
@@ -59,6 +59,7 @@ def create_app(config_class):
     extensions.login_manager.init_app(app)
     extensions.mail.init_app(app)
     extensions.server_session.init_app(app)
+    from app.extensions import login_manager_config as flask_login_config #imported just to register
 
     # TODO: eventually substitute the bellow (importing user) when implementing Flask-Migrate like: 
     # from flask_migrate import Migrate 
@@ -70,11 +71,11 @@ def create_app(config_class):
 
     # Blueprint registration
     # Note admin has nested blueprits: check admin routes file
-    from app.routes.account.routes import account
+    from app.routes.auth.routes import auth
     from app.routes.admin.routes import admin
     from app.routes.stats.routes import stats
     from app.routes.contact.routes import contact
-    app.register_blueprint(account, url_prefix='/api/account')
+    app.register_blueprint(auth, url_prefix='/api/auth')
     app.register_blueprint(admin, url_prefix='/api/admin')
     app.register_blueprint(stats, url_prefix='/api/stats')
     app.register_blueprint(contact, url_prefix='/api/contact')

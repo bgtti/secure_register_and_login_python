@@ -7,7 +7,7 @@ Currently used in *seed_all.py* after dummie users are inserted to the db.
 """
 from datetime import datetime, timezone
 from sqlalchemy import insert
-from app.extensions import db
+from app.extensions.extensions import db
 from app.models.user import User
 from app.models.log_event import LogEvent
 

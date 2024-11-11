@@ -6,7 +6,7 @@ seed_messages.py contains the **create_dummie_mesages** function, which can be c
 Currently used in *seed_all.py* after dummie users are inserted to the db.
 """
 import ast
-from app.extensions import db, faker
+from app.extensions.extensions import db, faker
 from app.models.user import User
 from app.models.message import Message
 from config.values import SUPER_USER
