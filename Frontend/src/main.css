@@ -113,6 +113,12 @@ h3 {
     margin: 10px 0;
 }
 
+h4 {
+    font-size: 1.4em;
+    margin: 10px 0;
+    color: var(--FontColorSecondary)
+}
+
 p,
 label,
 button,

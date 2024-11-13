@@ -1,5 +1,7 @@
-// import UsersTable from "../UsersTable/UsersTable";
 import { useState, useEffect, lazy, Suspense, useRef } from "react";
+import iconMail from "../../../assets/icon_mail.svg";
+import iconTodo from "../../../assets/icon_todo_checkbox.svg";
+import iconLog from "../../../assets/icon_log.svg"
 import LogTable from "./LogTable/LogTable"
 import "./admindashboard.css"
 
@@ -26,7 +28,8 @@ function AdminDashboard() {
             {
                 !showLogs && (
                     <>
-                        <section className="AdminDashboard-Section1">
+                        {/* ANALYTICS */}
+                        <section className="AdminDashboard-Analytics">
                             <div>
                                 <p>10</p>
                                 <p>registered users</p>
@@ -48,19 +51,156 @@ function AdminDashboard() {
                                 <p>this month</p>
                             </div>
                         </section>
-                        <section className="AdminDashboard-Section2">
+
+                        <h4>Needs your attention:</h4>
+
+                        {/* Alerts */}
+                        <section className="AdminDashboard-Alerts">
+                            {/* Messages */}
                             <div>
-                                <div className="AdminDashboard-Suspiscious"></div>
-                                <p>2 logs marked 'suspiscious'</p>
+                                <div className="AdminDashboard-BgBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Messages."}
+                                        role="img"
+                                        title={"Messages"}
+                                        src={iconMail}
+                                    />
+                                </div>
+                                <p>5 unanswered messages</p>
                                 <div>
                                     <button onClick={toggleShowLogs}>view</button>
                                 </div>
                             </div>
+
+                            {/* Admin tasks */}
                             <div>
-                                <div className="AdminDashboard-Warn"></div>
-                                <p>3 logs marked 'warn'</p>
+                                <div className="AdminDashboard-BgBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Tasks"}
+                                        role="img"
+                                        title={"Tasks"}
+                                        src={iconTodo}
+                                    />
+                                </div>
+                                <p>5 open tasks</p>
                                 <div>
                                     <button onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+
+                            {/* Logs marked suspicious */}
+                            <div>
+                                <div className="AdminDashboard-BgYellow"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Suspicious log"}
+                                        role="img"
+                                        title={"Suspicious log"}
+                                        src={iconLog}
+                                    />
+                                </div>
+                                <p>2 activity logs marked 'suspiscious'</p>
+                                <div>
+                                    <button onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+
+                            {/* Logs marked warn */}
+                            <div>
+                                <div className="AdminDashboard-BgRed"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Warn log"}
+                                        role="img"
+                                        title={"Warn log"}
+                                        src={iconLog}
+                                    />
+                                </div>
+                                <p>3 activity logs marked 'warn'</p>
+                                <div>
+                                    <button onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <h4>Under control:</h4>
+
+                        {/* Alerts ---- disabled*/}
+                        {/* DIFFERENCE FROM THE ABOVE:
+                        - FIRST DIV: gets className="AdminDashboard-BgDarkBlue"
+                        - BUTTON: gets className="AdminDashboard-BtnDark" */}
+                        <section className="AdminDashboard-Alerts">
+                            {/* Messages */}
+                            <div>
+                                <div className="AdminDashboard-BgDarkBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Messages."}
+                                        role="img"
+                                        title={"Messages"}
+                                        src={iconMail}
+                                    />
+                                </div>
+                                <p>5 unanswered messages</p>
+                                <div>
+                                    <button className="AdminDashboard-BtnDark"
+                                        onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+
+                            {/* Admin tasks */}
+                            <div>
+                                <div className="AdminDashboard-BgDarkBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Tasks"}
+                                        role="img"
+                                        title={"Tasks"}
+                                        src={iconTodo}
+                                    />
+                                </div>
+                                <p>5 open tasks</p>
+                                <div>
+                                    <button className="AdminDashboard-BtnDark"
+                                        onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+
+                            {/* Logs marked suspicious */}
+                            <div>
+                                <div className="AdminDashboard-BgDarkBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Suspicious log"}
+                                        role="img"
+                                        title={"Suspicious log"}
+                                        src={iconLog}
+                                    />
+                                </div>
+                                <p>2 activity logs marked 'suspiscious'</p>
+                                <div>
+                                    <button className="AdminDashboard-BtnDark"
+                                        onClick={toggleShowLogs}>view</button>
+                                </div>
+                            </div>
+
+                            {/* Logs marked warn */}
+                            <div>
+                                <div className="AdminDashboard-BgDarkBlue"></div>
+                                <div className=" AdminDashboard-IconContainer">
+                                    <img
+                                        alt={"Warn log"}
+                                        role="img"
+                                        title={"Warn log"}
+                                        src={iconLog}
+                                    />
+                                </div>
+                                <p>3 activity logs marked 'warn'</p>
+                                <div>
+                                    <button className="AdminDashboard-BtnDark"
+                                        onClick={toggleShowLogs}>view</button>
                                 </div>
                             </div>
                         </section>

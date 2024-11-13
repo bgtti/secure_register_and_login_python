@@ -10,14 +10,16 @@
     margin: 0 0 20px 0;
 }
 
-.AdminDashboard-Section1 {
+/* Section: Analytics */
+
+.AdminDashboard-Analytics {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
     gap: 10px;
 }
 
-.AdminDashboard-Section1>div {
+.AdminDashboard-Analytics>div {
     width: 7em;
     border-radius: 10px;
     background-color: var(--BackgroudTertiary);
@@ -27,27 +29,28 @@
     text-align: center;
 }
 
-.AdminDashboard-Section1>div p:first-child {
+.AdminDashboard-Analytics>div p:first-child {
     font-weight: bold;
     font-size: 1.8em;
     color: var(--FontColorPrimary);
 }
 
-.AdminDashboard-Section1>div p:not(:first-child) {
+.AdminDashboard-Analytics>div p:not(:first-child) {
     font-size: 0.8em;
     color: var(--FontColorSecondary);
 }
 
-.AdminDashboard-Section2 {
+/* Section: Attention */
+
+.AdminDashboard-Alerts {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.AdminDashboard-Section2>div {
+.AdminDashboard-Alerts>div {
     display: grid;
-    grid-template-columns: 5px 1fr 90px;
-    grid-template-rows: repeat(2, min-max(min-content, 50px));
+    grid-template-columns: 5px 2.2em 1fr 90px;
     row-gap: 5px;
     grid-row-gap: 5px;
     column-gap: 5px;
@@ -57,61 +60,88 @@
     background-color: var(--BackgroudTertiary);
 }
 
-.AdminDashboard-Section2>div>* {
+.AdminDashboard-Alerts>div>* {
     align-self: center;
 }
 
-.AdminDashboard-Section2>div>div:first-child {
+/* colour left of div */
+.AdminDashboard-Alerts>div>div:first-child {
     width: 5px;
     height: 100%;
     border-radius: 3px 0 0 3px;
 }
 
-.AdminDashboard-Section2>div>div:last-child {
+/* button container */
+.AdminDashboard-Alerts>div>div:last-child {
     display: flex;
     align-items: center;
     justify-content: flex-end;
 }
 
-.AdminDashboard-Suspiscious {
+/* Icons */
+.AdminDashboard-IconContainer {
+    width: 2em;
+    height: 2.3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.AdminDashboard-IconContainer>img {
+    width: 70%;
+}
+
+
+/* colour left of div */
+.AdminDashboard-BgBlue {
+    background-color: var(--BlueColour);
+}
+
+.AdminDashboard-BgYellow {
     background-color: var(--YellowColor);
 }
 
-.AdminDashboard-Warn {
+.AdminDashboard-BgRed {
     background-color: var(--RedColor);
 }
 
-.AdminDashboard-Section2 button {
+.AdminDashboard-BgDarkBlue {
     background-color: var(--MiddleBlueColour);
+}
+
+
+/* button */
+
+.AdminDashboard-Alerts button {
     height: 2.2em;
     padding: 5px 15px;
     font-size: 0.9em !important;
     margin: 5px 0;
 }
 
-.AdminDashboard-Section2 button>* {
+.AdminDashboard-BtnDark {
+    background-color: var(--MiddleBlueColour);
+}
+
+.AdminDashboard-Alerts button>* {
     font-size: 1em !important;
     font-weight: normal !important;
 }
 
 @media only screen and (min-width: 900px) {
-    .AdminDashboard-Section1 {
+    .AdminDashboard-Analytics {
         justify-content: flex-start;
     }
 
-    .AdminDashboard-Section2 {
+    .AdminDashboard-Alerts {
         /* 
-        calc: nr of section1's divs* their size 
+        calc: nr of section Analytics's divs* their size 
         + nr of gaps between them * size of gap
         + nr of divs * 2 * padding left/right
 
-        I made the calc explicit (rather than a simple "28em + 150px") to make it obvious and so that if another div is included in section1, just update the nrs 4, 3, and 4 to +1.
+        I made the calc explicit (rather than a simple "28em + 150px") to make it obvious and so that if another div is included in section Analytics, just update the nrs 4, 3, and 4 to +1.
         */
         max-width: calc(4*7em + 3*10px + 4*2*15px);
         justify-content: flex-start;
-    }
-
-    .AdminDashboard-Section2>div>div:last-child {
-        justify-content: flex-end;
     }
 }
