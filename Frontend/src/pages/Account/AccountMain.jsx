@@ -1,28 +1,23 @@
 import { Outlet, NavLink } from "react-router-dom"
 import { Helmet } from "react-helmet-async";
-import "./adminArea.css"
+import "./accountMain.css"
 
-// TODO: Logs and Tasks
-
-function AdminArea() {
+function AccountMain() {
 
     return (
-        <div className="AdminArea">
+        <div className="AccountMain">
             <Helmet>
-                <title>Admin Dashboard</title>
+                <title>Account</title>
                 <meta name="robots" content="noindex, nofollow" />
             </Helmet>
-            <h2>Admin Area</h2>
+            <h2>Account</h2>
             <nav role="navigation" aria-labelledby="secondLabel" aria-label="Secondary">
                 <ul>
                     <li>
-                        <NavLink to="admindashboard" >Dashboard</NavLink>
+                        <NavLink to="userdashboard" >Dashboard</NavLink>
                     </li>
                     <li>
-                        <NavLink to="users" >Users</NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="messages" >Messages</NavLink>
+                        <NavLink to="acctSettings">Settings</NavLink>
                     </li>
                 </ul>
             </nav>
@@ -31,4 +26,4 @@ function AdminArea() {
     );
 }
 
-export default AdminArea;
+export default AccountMain;

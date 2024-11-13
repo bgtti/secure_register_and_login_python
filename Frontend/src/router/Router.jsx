@@ -11,8 +11,9 @@ import LogIn from "../pages/Login/LogIn";
 import SignUp from "../pages/SignUp/SignUp";
 import Contact from "../pages/Contact/Contact";
 //Pages: protected route (registered users)
-import Dashboard from "../pages/Dashboard/Dashboard";
-import UserSettings from "../pages/UserSettings/UserSettings";
+import UserAccount from "../pages/Account/AccountMain"
+import UserDashboard from "../pages/Account/Dashboard/Dashboard";
+import AcctSettings from "../pages/Account/Settings/AccountSettings";
 //Pages: admin protected (admin users only)
 import AdminArea from "../pages/Admin/AdminArea";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
@@ -22,7 +23,6 @@ import UserInfo from "../pages/Admin/Users/UserInfo/UserInfo";
 import UserLogs from "../pages/Admin/Users/UserLogs/UserLogs";
 import UserMessages from "../pages/Admin/Users/UserMessages/UserMessages";
 import Messages from "../pages/Admin/Messages/Messages";
-import AdminSettings from "../pages/Admin/Settings/AdminSettings";
 //Pages: error pages
 import ErrorPage from '../pages/ErrorPage/ErrorPage';
 import BotError from "../pages/ErrorPage/BotError";
@@ -54,10 +54,12 @@ const Router = () => {
                 <Route exact path="botError" element={<BotError />} />
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />
                 <Route element={<ProtectedUserRoute />}>
-                    <Route exact path="dashboard" element={<Dashboard />} />
-                    <Route exact path="userSettings" element={<UserSettings />} />
+                    <Route path="userAccount" element={<UserAccount />}>
+                        <Route index element={<UserDashboard />} />
+                        <Route path="userdashboard" element={<UserDashboard />} />
+                        <Route path="acctSettings" element={<AcctSettings />} />
+                    </Route>
                 </Route>
-                {/* <Route exact path="adminLogin" element={<AdminLogIn />} /> */}
                 <Route element={<ProtectedAdminRoute />}>
                     <Route path="adminArea" element={<AdminArea />}>
                         <Route index element={<AdminDashboard />} />
@@ -70,7 +72,6 @@ const Router = () => {
                             <Route path="userMessages" element={<UserMessages />} />
                         </Route>
                         <Route path="messages" element={<Messages />} />
-                        <Route path="adminSettings" element={<AdminSettings />} />
                     </Route>
                 </Route>
                 {/* <Route exact path="terms" element={<Terms />} /> */}

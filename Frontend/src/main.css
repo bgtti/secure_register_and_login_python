@@ -115,6 +115,7 @@ h3 {
 
 h4 {
     font-size: 1.4em;
+    font-weight: bold;
     margin: 10px 0;
     color: var(--FontColorSecondary)
 }
@@ -186,6 +187,9 @@ textarea {
 *                                                           *
 ********************************************************** */
 
+.MAIN-display-none {
+    display: none;
+}
 
 /* P-tag classes 
     - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well.

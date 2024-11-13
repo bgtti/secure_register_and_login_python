@@ -52,7 +52,7 @@ function AdminDashboard() {
                             </div>
                         </section>
 
-                        <h4>Needs your attention:</h4>
+                        <h4>Needs your attention</h4>
 
                         {/* Alerts */}
                         <section className="AdminDashboard-Alerts">
@@ -125,7 +125,7 @@ function AdminDashboard() {
                             </div>
                         </section>
 
-                        <h4>Under control:</h4>
+                        <h4>Under control</h4>
 
                         {/* Alerts ---- disabled*/}
                         {/* DIFFERENCE FROM THE ABOVE:
