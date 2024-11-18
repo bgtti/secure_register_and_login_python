@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Modal from "../../../components/Modal/Modal";
 import ModalChangeAccount from "./ModalChangeAccount";
 import "./accountSettings.css"
@@ -22,6 +23,9 @@ const ACCOUNT_ACTIONS = ["name", "email", "password"]
  * @returns {React.ReactElement}
  */
 function AccountSettings() {
+    //upload user to pre-fill name and email fields
+    const user = useSelector((state) => state.user);
+
     const [modalChangeAccount, setModalChangeAccount] = useState(false)
     const [accountAction, setAccountAction] = useState("")
 
@@ -52,14 +56,14 @@ function AccountSettings() {
             <h3>Account Settings</h3>
             <section className="AccountSettings-Section1">
                 <h4>Account</h4>
-                <p><b>Name:</b> Someones name</p>
+                <p><b>Name:</b> {user.name}</p>
                 <div>
                     <button onClick={() => { selectAccountAction("name"); toggleModal() }}>
                         Change name
                     </button>
                 </div>
                 <br />
-                <p><b>Email:</b> admin@admin.com</p>
+                <p><b>Email:</b> {user.email}</p>
                 <div>
                     <button onClick={() => { selectAccountAction("email"); toggleModal() }}>
                         Change email
@@ -78,7 +82,7 @@ function AccountSettings() {
                     <div>
                         <p>Mailing list</p>
                         <div>
-                            <label class="toggleBtn">
+                            <label className="toggleBtn">
                                 <input type="checkbox" />
                                 <span class="slider round"></span>
                             </label>
@@ -88,7 +92,7 @@ function AccountSettings() {
                     <div>
                         <p>Night mode</p>
                         <div>
-                            <label class="toggleBtn">
+                            <label className="toggleBtn">
                                 <input type="checkbox" />
                                 <span class="slider round"></span>
                             </label>

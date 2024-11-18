@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
 import { INPUT_LENGTH } from "../../../utils/constants";
 import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation";
@@ -15,10 +16,10 @@ import "./modalChangeAccount.css"
  */
 function ModalChangeAccount(props) {
     const { action, modalToggler } = props;
-
     const actionLowerCase = action.toLowerCase()
 
-    let inputUsername = "john@example.com" //===> TODO
+    const user = useSelector((state) => state.user);
+
     let inputLengthMax = INPUT_LENGTH[actionLowerCase].maxValue;
     let inputLengthMin = INPUT_LENGTH[actionLowerCase].minValue;
     let inputType = actionLowerCase === "name" ? "text" : actionLowerCase;
@@ -28,49 +29,74 @@ function ModalChangeAccount(props) {
         password: "new-password",
     };
 
-
     const [formData, setFormData] = useState({
         inputField: "",
         confirmPassword: "", //used only if action is password: second input field value here
-        inputIsValid: { response: false, message: "" }
+        isValid: false
     });
 
-    const validateForm = (onChangeAction = true) => {
-        let isValid;
-        if (onChangeAction && (formData.inputField.length < inputLengthMin)) {
-            isValid = { response: false, message: "" }
-        } else {
-            switch (actionLowerCase) {
-                case "name":
-                    isValid = nameValidation(formData.inputField)
-                    break;
-                case "email":
-                    isValid = emailValidation(formData.inputField)
-                    break;
-                case "password":
-                    if (formData.confirmPassword === "") {
-                        isValid = { response: false, message: "" }
-                    } else {
-                        let pwMatch = (formData.inputField === formData.confirmPassword)
-                        pwMatch ?
-                            isValid = passwordValidation(formData.inputField) :
-                            isValid = { response: false, message: "Passwords do not match" }
-                    }
-                    break;
-                default:
-                    isValid = { response: false, message: "Oops something went wrong" }
-            }
+    const [formError, setFormError] = useState({
+        occurred: true,
+        show: false,
+        message: "",
+    });
+
+    const formIsValid = !formError.occurred;
+
+    const checkPwMatch = () => {
+        if (formData.confirmPassword.length === 0) {
+            return { response: false, message: "Please confirm password" }
         }
-
-        setFormData((prevData) => ({
-            ...prevData,
-            inputIsValid: isValid,
-        }));
-
-        return
+        let res;
+        let pwMatch = (formData.inputField === formData.confirmPassword)
+        pwMatch ?
+            res = { response: true, message: "" } :
+            res = { response: false, message: "Passwords do not match" }
+        return res
     }
 
-    const formIsValid = formData.inputIsValid.response;
+    const validateInput = (field) => {
+        switch (actionLowerCase) {
+            case "name":
+                return nameValidation(formData.inputField)
+            case "email":
+                return emailValidation(formData.inputField)
+            case "password":
+                if (field === "confirmPassword") {
+                    return checkPwMatch()
+                } else {
+                    return passwordValidation(formData.inputField)
+                }
+            default:
+                return { response: false, message: "" }
+        }
+    }
+
+    const validateForm = (showError, field = "inputField") => {
+        let validity = validateInput(field);
+
+        setFormError(() => ({
+            occurred: validity.response,
+            message: validity.message,
+            show: showError
+        }));
+
+        if (actionLowerCase === "password") {
+            let pwValid = passwordValidation(formData.inputField)
+            let confirmPwisValid = checkPwMatch()
+            let formIsValid = pwValid.response && confirmPwisValid.response
+
+            setFormData((prevData) => ({
+                ...prevData,
+                isValid: formIsValid,
+            }));
+        } else {
+            setFormData((prevData) => ({
+                ...prevData,
+                isValid: validity.response,
+            }));
+        }
+    }
 
 
     const handleChange = (e) => {
@@ -79,20 +105,34 @@ function ModalChangeAccount(props) {
             ...prevData,
             [name]: value,
         }));
-        actionLowerCase === "password"
-        validateForm()
+        if ((name === "confirmPassword" && value.length >= inputLengthMin) || (name !== "confirmPassword" && value.length > 3)) {
+            validateForm(true, name) //show error
+        } else {
+            validateForm(false, name)//dont show error
+        }
     };
 
-    const handleBlur = () => {
-        validateForm(false)
+    const handleBlur = (e) => {
+        validateForm(true, e.target.name)
     };
+
+    const checkIfDataChanged = () => {
+        if (actionLowerCase === "password") { return true } //password data is not checked
+        return user[actionLowerCase] !== formData.inputField;
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
         //===> TODO
-        validateForm(false)
-        if (formIsValid) {
-            console.log('Form submitted:', formData);
+        validateForm(true)
+        let dataChanged = checkIfDataChanged()
+
+        if (formData.isValid && dataChanged) {
+            console.log('Form submitted:');
+            const requestData = {
+                action: actionLowerCase,
+                newInput: formData.inputField
+            }
         }
     };
 
@@ -111,24 +151,31 @@ function ModalChangeAccount(props) {
 
                 {
                     actionLowerCase !== "email" && (
-                        <div class="MAIN-display-none">
-                            <label for="username">Username</label>
+                        <div className="MAIN-display-none">
+                            <label htmlFor="username">Username</label>
                             <input
                                 autoComplete="username"
                                 id="username"
                                 name="username"
                                 readOnly
                                 type="text"
-                                value={inputUsername}
+                                value={user.email}
                             />
                         </div>
                     )
                 }
 
+                {
+                    actionLowerCase !== "password" &&
+                    (<p >
+                        Account {actionLowerCase}: {user[actionLowerCase]}
+                    </p>)
+                }
+
                 <div className="MAIN-form-display-table">
                     <label htmlFor="inputField">New {actionLowerCase}:<span className="MAIN-form-star">*</span></label>
                     <input
-                        aria-invalid={formData.inputIsValid.message === "" ? "false" : "true"}
+                        aria-invalid={formError.occurred}
                         aria-describedby={`${actionLowerCase}-error`}
                         autoComplete={inputAutoComplete[actionLowerCase]}
                         id="inputField"
@@ -147,7 +194,7 @@ function ModalChangeAccount(props) {
                         <div className="MAIN-form-display-table">
                             <label htmlFor="confirmPassword">Confirm password:<span className="MAIN-form-star">*</span></label>
                             <input
-                                aria-invalid={formData.inputIsValid.message === "" ? "false" : "true"}
+                                aria-invalid={formError.occurred}
                                 aria-describedby="confirm-password-error"
                                 autoComplete="new-password"
                                 id="confirmPassword"
@@ -164,16 +211,16 @@ function ModalChangeAccount(props) {
                     )
                 }
                 {
-                    formData.inputIsValid.message !== "" && (
+                    formError.message !== "" && formError.show && (
                         <p className="MAIN-error-message" id="error-message" aria-live="assertive">
-                            <i>{formData.inputIsValid.message}</i>
+                            <i>{formError.message}</i>
                         </p>
                     )
                 }
                 <br />
 
                 <div className="ModalChangeAccount-BtnContainer">
-                    <button disabled={!formIsValid} type="submit" className="ModalChangeAccount-ActionBtn">Save</button>
+                    <button disabled={!formData.isValid} type="submit" className="ModalChangeAccount-ActionBtn">Save</button>
                     <button onClick={modalToggler}>Cancel</button>
                 </div>
             </form>
