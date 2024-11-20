@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes.py contains routes responsible for core authentication and authorization functionalities.
+auth/routes_main.py contains routes responsible for core authentication and authorization functionalities.
 Here you will find the following routes:
 - **signup** route
 - **login** route
@@ -36,8 +36,9 @@ from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.bot_detection.bot_detection import bot_caught
 from app.routes.auth.schemas import signup_schema, login_schema
 from app.routes.auth.helpers import is_good_password
+from . import auth
 
-auth = Blueprint("auth", __name__) 
+# auth = Blueprint("auth", __name__) 
 
 # SIGN UP
 @auth.route("/signup", methods=["POST"])

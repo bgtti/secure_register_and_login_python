@@ -79,6 +79,7 @@ class User(db.Model, UserMixin):
     last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    secret_keys = db.relationship("SecretKey", backref="user", lazy="select", cascade="all, delete-orphan")
     
     def __init__(self, name, email, password, salt, created_at, **kwargs):
         self.name = name

@@ -84,7 +84,7 @@ function AccountSettings() {
                         <div>
                             <label className="toggleBtn">
                                 <input type="checkbox" />
-                                <span class="slider round"></span>
+                                <span className="slider round"></span>
                             </label>
                         </div>
                     </div>
@@ -94,7 +94,7 @@ function AccountSettings() {
                         <div>
                             <label className="toggleBtn">
                                 <input type="checkbox" />
-                                <span class="slider round"></span>
+                                <span className="slider round"></span>
                             </label>
                         </div>
                     </div>

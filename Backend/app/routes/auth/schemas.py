@@ -67,3 +67,17 @@ login_schema = {
     "additionalProperties": False,
     "required": ["email", "password", "honeypot"]
 }
+
+change_name_schema = {
+    "type": "object",
+    "properties": {
+        "new_name": {
+            "type": "string", 
+            "minLength": INPUT_LENGTH['name']['minValue'], 
+            "maxLength": INPUT_LENGTH['name']['maxValue'],
+            "pattern": NAME_PATTERN
+            },
+    },
+    "additionalProperties": False,
+    "required": ["new_name"]
+}
