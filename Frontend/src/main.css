@@ -191,6 +191,11 @@ textarea {
     display: none;
 }
 
+.MAIN-DeleteBtn {
+    background-color: var(--RedColor);
+    color: var(--FontColorPrimary);
+}
+
 /* P-tag classes 
     - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well.
     - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page.

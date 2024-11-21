@@ -26,6 +26,7 @@ function AccountSettings() {
     //upload user to pre-fill name and email fields
     const user = useSelector((state) => state.user);
 
+    //set up of modal and action that triggers it
     const [modalChangeAccount, setModalChangeAccount] = useState(false)
     const [accountAction, setAccountAction] = useState("")
 
@@ -60,6 +61,9 @@ function AccountSettings() {
                 <div>
                     <button onClick={() => { selectAccountAction("name"); toggleModal() }}>
                         Change name
+                    </button>
+                    <button className="MAIN-DeleteBtn" onClick={() => { console.log("deleted") }}>
+                        Delete account
                     </button>
                 </div>
                 <br />

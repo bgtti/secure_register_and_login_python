@@ -16,6 +16,8 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 
 # TODO: create script to delete entries older than 90 days
 
+# What is SecretKey supposed to do: check https://stackoverflow.com/questions/23039734/flask-login-password-reset
+
 def get_uuid():
     return uuid4().hex
 

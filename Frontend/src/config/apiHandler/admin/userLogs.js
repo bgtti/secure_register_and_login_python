@@ -1,5 +1,5 @@
 import { apiHandle404 } from "../../axios";
-import apiEndpoints from "../../apiEndPoints";
+import apiEndpoints from "../../apiEndpoints.js";
 
 /**
  * Function makes api call to retrieve an array of logs for a particular user.

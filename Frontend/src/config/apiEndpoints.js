@@ -17,13 +17,16 @@ export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
-    //authentication
+    //authentication -- main
     userSignUp: `${urlPrefix.auth}/signup`, //OK
     userLogIn: `${urlPrefix.auth}/login`, //OK
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
-    userDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
-    userChangeEmail: `${urlPrefix.auth}/...`, //MISSING
+    //authentication -- account
+    acctChangeName: `${urlPrefix.auth}/change_user_name`, //--working on
+    acctChangeEmail: `${urlPrefix.auth}/...`, //MISSING 2-step
+    acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
+    acctDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING
     //admin - users

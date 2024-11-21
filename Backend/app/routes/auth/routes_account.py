@@ -4,9 +4,9 @@
 auth/routes_account.py contains routes responsible for account management functionalities related to authentication.
 Here you will find the following routes:
 - **change_user_name** route
-- **change_email** route
-- **change_password** route
-- **reset_password** route
+- **change_email** route #TODO
+- **change_password** route #TODO
+- **reset_password** route #TODO
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -43,7 +43,7 @@ from . import auth
 @login_required
 @validate_schema(change_name_schema)
 @limiter.limit("10/day")
-def change_user_name():
+def change_user_name(): # TODO --> Add to logs so user actions can show in history
     """
     change_user_name() -> JsonType
     ----------------------------------------------------------
@@ -76,10 +76,12 @@ def change_user_name():
     new_name = json_data["new_name"]
 
     the_user = User.query.filter_by(email=current_user.email).first()
+    old_name = the_user.name
 
     try:
         the_user.name = new_name
         db.session.commit()
+        logging.info(f"User {current_user.email} name changed from {old_name} to {new_name}.")
         
     except Exception as e:
         db.session.rollback()

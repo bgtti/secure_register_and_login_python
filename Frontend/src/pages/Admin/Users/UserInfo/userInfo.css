@@ -35,8 +35,3 @@
     padding-right: 5px;
     width: 140px;
 }
-
-.UserInfo-DeleteBtn {
-    background-color: var(--RedColor);
-    color: var(--FontColorPrimary);
-}

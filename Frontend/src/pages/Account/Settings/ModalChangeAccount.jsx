@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
 import { INPUT_LENGTH } from "../../../utils/constants";
-import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation";
 import "./modalChangeAccount.css"
+import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
+import { setLoader } from "../../../redux/loader/loaderSlice.js"
+import { acctNameChange } from "../../../config/apiHandler/authAccount/changeName.js"
+import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
 
 /**
  * This component is a modal used to change sensitive account informatiom.
@@ -16,6 +19,10 @@ import "./modalChangeAccount.css"
  */
 function ModalChangeAccount(props) {
     const { action, modalToggler } = props;
+
+    const isComponentMounted = useIsComponentMounted();
+    const dispatch = useDispatch();
+
     const actionLowerCase = action.toLowerCase()
 
     const user = useSelector((state) => state.user);
@@ -41,7 +48,7 @@ function ModalChangeAccount(props) {
         message: "",
     });
 
-    const formIsValid = !formError.occurred;
+    const formIsValid = !formError.occurred; // ==> TODO: NO
 
     const checkPwMatch = () => {
         if (formData.confirmPassword.length === 0) {
@@ -121,18 +128,67 @@ function ModalChangeAccount(props) {
         return user[actionLowerCase] !== formData.inputField;
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e) => { //===> TODO: improve
         e.preventDefault();
-        //===> TODO
+
         validateForm(true)
         let dataChanged = checkIfDataChanged()
 
-        if (formData.isValid && dataChanged) {
-            console.log('Form submitted:');
-            const requestData = {
-                action: actionLowerCase,
-                newInput: formData.inputField
+        if (!formData.isValid || !dataChanged) {
+            console.log('not submitting'); //===> TODO: handle
+        }
+
+        dispatch(setLoader(true));
+
+        const errorMsg = "An error occurred. Please close modal and try again."
+
+        const handleResponse = (response, successMessage) => {
+            if (isComponentMounted()) {
+                setFormError(() => ({
+                    occurred: response.success,
+                    message: (response.success ? successMessage : errorMsg),
+                    show: true
+                }));
             }
+        };
+
+        const handleError = (error) => {
+            console.warn("clickHandler in modal encountered an error", error);
+        };
+
+        const handleFinally = () => {
+            dispatch(setLoader(false));
+        };
+
+        let requestAction;
+        let responseActionMessage;
+
+        switch (actionLowerCase) {
+            case "name":
+                requestAction = function () { return acctNameChange(formData.inputField) };
+                responseActionMessage = "Name changed successfully!";
+                break
+            case "email":
+                requestAction = function () { return console.log("email") }; //===> TODO: missing
+                responseActionMessage = "Please check your email to confirm the change.";
+                break
+            case "password":
+                requestAction = function () { return console.log("pw") }; //===> TODO: missing
+                responseActionMessage = "Please check your email to confirm the change.";
+                break
+            default:
+                requestAction = function () { return console.error("Wrong action input in ModalChangeAcct.") };
+                responseActionMessage = "An error occurred: action input invalid.";
+        }
+
+        try {
+            requestAction()
+                .then(response => handleResponse(response, responseActionMessage))
+                .catch(error => { handleError(error) })
+                .finally(handleFinally);
+        } catch (error) {
+            console.error("Error in ModalChangeAcct", error);
+            dispatch(setLoader(false));
         }
     };
 

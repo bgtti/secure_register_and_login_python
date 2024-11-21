@@ -225,7 +225,7 @@ function UserInfo() {
                             {
                                 ((user.access === USER_ACCESS_DIC.user) || (user.access === USER_ACCESS_DIC.admin && isSuperAdmin)) && (
                                     <button
-                                        className="UserInfo-ActBtn UserInfo-DeleteBtn"
+                                        className="UserInfo-ActBtn MAIN-DeleteBtn"
                                         onClick={() => { setUserAction(ACTIONS.delete); toggleModal() }}>
                                         Delete user
                                     </button>
