@@ -1,5 +1,5 @@
 import { api } from "../../axios";
-import apiEndpoints from "../../apiEndPoints";
+import apiEndpoints from "../../apiEndpoints.js";
 import { FLAG_TYPES, USER_TYPE_REQUEST } from "../../../utils/constants";
 
 // In this file: API Handlers to change user type, change user flag, delete user, and block/unblock user

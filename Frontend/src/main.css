@@ -113,6 +113,13 @@ h3 {
     margin: 10px 0;
 }
 
+h4 {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 10px 0;
+    color: var(--FontColorSecondary)
+}
+
 p,
 label,
 button,
@@ -180,6 +187,14 @@ textarea {
 *                                                           *
 ********************************************************** */
 
+.MAIN-display-none {
+    display: none;
+}
+
+.MAIN-DeleteBtn {
+    background-color: var(--RedColor);
+    color: var(--FontColorPrimary);
+}
 
 /* P-tag classes 
     - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well.

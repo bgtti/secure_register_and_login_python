@@ -3,14 +3,14 @@ from datetime import datetime, timezone, timedelta
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 import logging
-from app.config import EMAIL_CREDENTIALS, MODE
-from app.extensions import limiter, db
+from utils.print_to_terminal import print_to_terminal
+from config.values import EMAIL_CREDENTIALS, ENVIRONMENT
+from app.extensions.extensions import limiter, db
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.message import Message
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.console_warning.print_warning import console_warn
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
@@ -305,8 +305,8 @@ def answer_message():
         subject = json_data.get("subject", "Re: contact form submission")
 
         if EMAIL_CREDENTIALS["email_set"] is False:
-            if MODE == "dev":
-                console_warn("Email credentials not set up. Email was not sent but will be recorded in DB to make testing possible. ", "RED")
+            if ENVIRONMENT != "production":
+                print_to_terminal("Email credentials not set up. Email was not sent but will be recorded in DB to make testing possible. ", "RED")
                 email_sent = True
             else:
                 logging.error(f"Email credentials not set up. Email could not be sent and system will return a 500 response.")

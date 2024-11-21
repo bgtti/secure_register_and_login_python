@@ -3,7 +3,7 @@ from unittest.mock import patch
 from flask import url_for
 from datetime import datetime, timezone
 from flask_login import  current_user, login_user, logout_user
-from app.extensions import flask_bcrypt, db, limiter, login_manager
+from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
 from app.models.user import User
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag

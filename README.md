@@ -171,6 +171,20 @@ Flask-React software template for secure registration and login of users.
   </tr>
 </table>
 
+### Todo:
+→ BE: Unit Testing<br>
+→ Messages table - pagination and filter improvement<br>
+→ FE: Api handlers substitute returning object by returning promise<br>
+→ BE: Cleaning up and improving Config files<br>
+→ User should be able to change email<br>
+
+### Conventions & stuff to keep in mind while developing:
+→ Seed: Seeding in the context of web development and databases refers to the process of populating a database with initial data. Used for initial setup, make testing easier, and demo purposes<br>
+→ User Roles: e.g., "admin," "user," "guest."<br>
+→ worker.py file: comonly used for background tasks such as backups, cleanups, notifications, sumarizing logs 
+
+check out:
+https://github.com/realpython/flask-by-example/blob/master/config.py
 
 
 ## Design and other useful links for inspiration:
@@ -274,3 +288,6 @@ https://stackoverflow.com/a/24689738
 
 Third-party cookies and local host issue:
 https://web.dev/articles/how-to-use-local-https
+
+tips:
+vs code shortcuts and "Keyboard reference sheet" available at https://code.visualstudio.com/docs/getstarted/tips-and-tricks

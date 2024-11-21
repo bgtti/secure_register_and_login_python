@@ -1,26 +1,23 @@
 # from enum import Enum
+import ast
 import enum
 import logging
-from random import randint
-from flask_login import UserMixin
-import ast
 from datetime import datetime, timedelta, timezone
+from flask_login import UserMixin
 from uuid import uuid4
+from random import randint
 from sqlalchemy import Enum
-from app.extensions import db
-from app.config import ADMIN_ACCT, USER_ID_SALT
+from utils.print_to_terminal import print_to_terminal
+from config.values import SUPER_USER
+from app.extensions.extensions import db
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.console_warning.print_warning import console_warn
 
-ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
-ADMIN_PW = ADMIN_DATA[2]
-
+ADMIN_PW = SUPER_USER["password"]
 
 def get_uuid():
     return uuid4().hex
-
 
 
 # Notes:
@@ -82,6 +79,7 @@ class User(db.Model, UserMixin):
     last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    secret_keys = db.relationship("SecretKey", backref="user", lazy="select", cascade="all, delete-orphan")
     
     def __init__(self, name, email, password, salt, created_at, **kwargs):
         self.name = name
@@ -254,4 +252,4 @@ class User(db.Model, UserMixin):
             self.flagged = flag
         else:
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
-            console_warn("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")
+            print_to_terminal("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")

@@ -1,5 +1,5 @@
 import logging
-from app.extensions import db
+from app.extensions.extensions import db
 from app.models.bot_catch import BotCatch
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip 

@@ -2,6 +2,8 @@ import { Outlet, NavLink } from "react-router-dom"
 import { Helmet } from "react-helmet-async";
 import "./adminArea.css"
 
+// TODO: Logs and Tasks
+
 function AdminArea() {
 
     return (
@@ -21,9 +23,6 @@ function AdminArea() {
                     </li>
                     <li>
                         <NavLink to="messages" >Messages</NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="adminSettings" >Settings</NavLink>
                     </li>
                 </ul>
             </nav>

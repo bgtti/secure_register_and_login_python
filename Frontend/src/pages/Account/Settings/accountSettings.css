@@ -1,0 +1,117 @@
+.AccountSettings>h3 {
+    margin-top: 0;
+    border-left: 2px solid var(--BlueColour);
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--BackgroudPrimary)) 2;
+    padding: 10px 0 10px 7px;
+    color: var(--FontColorSecondary);
+}
+
+.AccountSettings p {
+    color: var(--FontColorSecondary);
+}
+
+.AccountSettings-Section1>p {
+    margin-bottom: 10px !important;
+}
+
+.AccountSettings-Section1 {
+    margin-bottom: 20px !important;
+}
+
+.AccountSettings-Section1>div {
+    display: flex;
+    gap: 10px;
+    /* margin-bottom: 10px; */
+}
+
+.AccountSettings-Section1>div>button {
+    font-size: 0.9em !important;
+    width: 11em;
+    padding: 5px;
+}
+
+/* PREFERENCES */
+.AccountSettings-Preferences {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.AccountSettings-Preferences>div {
+    display: grid;
+    grid-template-columns: 9em 7em;
+    padding: 7px;
+    border-radius: 5px;
+
+}
+
+/* copied from userInfo.css */
+.AccountSettings-hr {
+    border: 1px solid var(--BackgroudTertiary);
+    margin: 15px 0;
+}
+
+/* TOGGLE BUTTON */
+/* The toggleBtn - the box around the slider */
+.toggleBtn {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+/* Hide default HTML checkbox */
+.toggleBtn input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--BackgroundDisabled);
+    ;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--BackgroudPrimary);
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: var(--BlueColour);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--BlueColour);
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 25px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}

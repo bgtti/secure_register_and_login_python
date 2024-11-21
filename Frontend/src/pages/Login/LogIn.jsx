@@ -93,7 +93,7 @@ function LogIn() {
             loginUser(requestData)
                 .then(res => {
                     if (res.response) {
-                        navigate("/dashboard");
+                        navigate("/userAccount");
                     } else {
                         setFormData((prevData) => ({
                             ...prevData,

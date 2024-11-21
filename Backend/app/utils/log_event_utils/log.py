@@ -1,4 +1,4 @@
-from app.extensions import  db
+from app.extensions.extensions import  db
 from app.models.log_event import LogEvent
 from app.utils.log_event_utils.events_for_account import signup_event, login_event
 from app.utils.log_event_utils.events_for_admin import flag_user_event, user_access_change, block_user_event, delete_user_event

@@ -3,13 +3,13 @@ import re
 from flask_login import UserMixin
 from datetime import datetime, timezone
 from sqlalchemy import Enum
-from app.config import EMAIL_CREDENTIALS
-from app.extensions import db
+from utils.print_to_terminal import print_to_terminal
+from app.extensions.extensions import db
 from app.utils.constants.enum_class import UserFlag, modelBool
 from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.console_warning.print_warning import console_warn
 from app.utils.constants.account_constants import EMAIL_PATTERN
+from config.values import EMAIL_CREDENTIALS
 
 # Saves messages sent through the contact form
 
@@ -135,7 +135,7 @@ class Message(UserMixin, db.Model):
             self.flagged = flag
         else:
             logging.error(f"Message flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
-            console_warn("Error (message method flag_change): flag color not found. Message's flagged status not changed.")
+            print_to_terminal("Error (message method flag_change): flag color not found. Message's flagged status not changed.")
 
     def mark_spam(self):
         """

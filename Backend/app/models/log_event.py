@@ -1,7 +1,7 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
 from datetime import datetime, timezone
-from app.extensions import db
+from app.extensions.extensions import db
 
 # TODO: create function to delete old logs on a schedule
 

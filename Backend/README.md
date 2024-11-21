@@ -1,5 +1,13 @@
 # Secure Register and Login: Backend template
 
+## Features
+User accounts implemented with SQLite, cookies and Flask-Login
+Passwords hashed with bcrypt
+CSRF protection with Flask-CSRF ----(?)
+Email with Flask-Mail
+Login/logout/forgot password workflow
+Basic HTML Email templates  ----(?)
+testing with pytest
 
 ## Installation
 
@@ -133,9 +141,6 @@ More information flask-session: https://flask-session.readthedocs.io/en/latest/i
 More information: https://github.com/redis/redis-py
 
 
-
-
-
 ## Running tests
 Pytest was used for unit testing.
 To run the tests use the following command in the terminal:
@@ -148,7 +153,7 @@ testing examples: https://testdriven.io/blog/flask-pytest/
 ## Pytho quick fuction testing
 https://www.online-python.com/
 
-# why flas bcript: https://flask-bcrypt.readthedocs.io/en/1.0.1/
+# why flask bcript: https://flask-bcrypt.readthedocs.io/en/1.0.1/
 
 # Password handling
 link: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
@@ -199,3 +204,21 @@ Run the code again. If it still doesn't work, try openssl_path = "openssl". If t
 Add a certificate named "cert.pem" and a key named "key.pem" to the ssl_certificate folder manually. 
 3)
 Just run the code as HTTP. This will happen automatically, but if it does, don't forget to change the API route in the React frontend as well. https://127.0.0.1:5000/ to http://127.0.0.1:5000/ (or whichever port you are runnning this application from). Also here, you may have to the browser third-party-cookie thing as well, an perhaps change a thing or two in the Config file regarding session cookies.
+
+
+# design choices:
+ORM: portability = SQL-Alchemy due to it's support of major relational database engines (SQLite, MySQL, Postgres), ease of use, flask-integration. Performance penalty vs using ODM is negligible. pg60 Flask Web Dev book)
+
+flask-- designed to be extended. some important functionality need external packages, giving freedom of choice on what to use. Example: user authentication and database.
+
+files containing routes or view functions are named 'routes.py' instead of 'views.py' to emphasize the routing aspect, since no specific page is rendered (react takes care of FE, no web templates)
+
+# folder structure
+app/__init__ contains the factory function that creates the application (create_app) and is invoked in manage.py.
+
+manage.py is the application script
+
+
+# resources
+PEP257: docstrings at https://peps.python.org/pep-0257/
+PEP8: python conventions at https://peps.python.org/pep-0008/

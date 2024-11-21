@@ -1,5 +1,5 @@
 import { apiCredentials } from "../axios";
-import apiEndpoints from "../apiEndPoints.js";
+import apiEndpoints from "../apiEndpoints.js";
 import { emailValidation, passwordValidationForLogin } from "../../utils/validation"
 import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
 

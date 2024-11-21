@@ -2,9 +2,9 @@ import json
 import ast
 from datetime import datetime, timezone
 from flask_login import login_user, logout_user
-from app.config import ADMIN_ACCT
-from app.extensions import flask_bcrypt, db
-from app.extensions import faker
+from config.values import SUPER_USER
+from Backend.app.extensions.extensions import flask_bcrypt, db
+from Backend.app.extensions.extensions import faker
 from app.models.user import User
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
@@ -19,10 +19,9 @@ def test_admin_users_table(client, app_test):
     # Log in the admin user
     with app_test.test_request_context():
         # Create super admin
-        ADMIN_DATA = ast.literal_eval(ADMIN_ACCT)
-        ADMIN_NAME = ADMIN_DATA[0]
-        ADMIN_EMAIL = ADMIN_DATA[1]
-        ADMIN_PW = ADMIN_DATA[2]
+        ADMIN_NAME = SUPER_USER["name"]
+        ADMIN_EMAIL = SUPER_USER["email"]
+        ADMIN_PW = SUPER_USER["password"]
         date = datetime.now(timezone.utc)
         salt = generate_salt()
         pepper = get_pepper(date)

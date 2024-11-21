@@ -2,7 +2,7 @@ import logging
 from flask_login import UserMixin
 from datetime import datetime, timezone
 from sqlalchemy import Enum
-from app.extensions import db
+from app.extensions.extensions import db
 from app.utils.constants.enum_class import UserFlag, modelBool
 from app.utils.constants.account_constants import INPUT_LENGTH
 

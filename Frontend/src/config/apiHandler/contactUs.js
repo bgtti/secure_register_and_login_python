@@ -1,5 +1,5 @@
 import { api } from "../axios";
-import apiEndpoints from "../apiEndPoints";
+import apiEndpoints from "../apiEndpoints.js";
 import { nameValidation, emailValidation, passwordValidation } from "../../utils/validation"
 import { setReduxLogOutUser } from "../../redux/utilsRedux/setReduxUserState.js";
 import { INPUT_LENGTH } from "../../utils/constants.js"

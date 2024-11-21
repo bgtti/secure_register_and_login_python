@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone, timedelta
 from flask_login import login_required
-from app.extensions import limiter
 import logging
+from app.extensions.extensions import limiter
 from app.models.user import User
 from app.models.log_event import LogEvent
 from app.models.message import Message

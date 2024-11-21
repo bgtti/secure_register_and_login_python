@@ -67,7 +67,7 @@ function NavBar() {
                                         <NavLink to="/login" onClick={() => { logOut(); handleShowNavbar(); }}>Logout</NavLink>
                                     </li>
                                     <li>
-                                        <NavLink to="/dashboard" onClick={handleShowNavbar}>Dashboard</NavLink>
+                                        <NavLink to="/userAccount" onClick={handleShowNavbar}>Account</NavLink>
                                     </li>
                                 </>
 

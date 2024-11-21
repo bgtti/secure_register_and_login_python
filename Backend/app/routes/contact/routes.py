@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import logging
 import jsonschema
 from flask_login import current_user
-from app.extensions import db, limiter
+from app.extensions.extensions import db, limiter
 from app.routes.contact.schemas import contact_form_schema
 from app.routes.contact.helpers import contact_form_email_forwarding
 from app.models.message import Message
