@@ -34,7 +34,7 @@ from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip 
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.routes.auth.schemas import change_name_schema
+from app.routes.auth.schemas import change_name_schema, auth_change_req_schema
 from app.routes.auth.helpers import is_good_password
 from . import auth
 
@@ -103,6 +103,63 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
     if flag:
             the_user.flag_change(flag)
             db.session.commit()
+
+    response_data ={
+            "response":"success",
+            "user": {
+                "access": the_user.access_level.value, 
+                "name": the_user.name, 
+                "email": the_user.email},
+        }
+    return jsonify(response_data)
+
+# REQUEST TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 1)
+@auth.route("/request_auth_change", methods=["POST"])
+@login_required
+@validate_schema(auth_change_req_schema)
+@limiter.limit("10/day")
+def change_user_email(): # TODO --> Add to logs so user actions can show in history
+    """
+    change_user_email() -> JsonType
+    ----------------------------------------------------------
+
+    Route changes the email associated with the user's account. 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "user" value only included if response is "success".
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "user": {
+                    "name": "John", 
+                    "email": "john@email.com",
+                    "access": "user"
+                    }, 
+            }
+    ``` 
+    """
+    # Standard error response
+    error_response = {"response": "There was an error changing user's email."}
+
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+    change_request_type = json_data["type"]
+
+    the_user = User.query.filter_by(email=current_user.email).first()
+    old_email = the_user.email
+
+    # Create a secret key TODO
+
+    # Send secret key by email TODO
+
+    # Log this event TODO
+
+    
 
     response_data ={
             "response":"success",

@@ -70,8 +70,10 @@ login_schema = {
 
 change_name_schema = {
     "type": "object",
+    "title": "Will change a user's name.", 
     "properties": {
         "new_name": {
+            "description": "The name the user wishes to have. ",
             "type": "string", 
             "minLength": INPUT_LENGTH['name']['minValue'], 
             "maxLength": INPUT_LENGTH['name']['maxValue'],
@@ -80,4 +82,30 @@ change_name_schema = {
     },
     "additionalProperties": False,
     "required": ["new_name"]
+}
+
+auth_change_req_schema = {
+    "type": "object",
+    "title": "Request a change of user password or email. First step of 2-step process.", 
+    "properties": {
+        "type": {
+            "description": "Request type can be either 'email' or 'password'. ",
+            "type": "string",
+            "enum": ["email", "password"],
+            },
+        "new_email": {
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'],
+            "pattern": EMAIL_PATTERN
+            },
+        "new_password": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'], 
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN
+            },
+    },
+    "additionalProperties": False,
+    "required": ["type"]
 }
