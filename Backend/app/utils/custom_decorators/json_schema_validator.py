@@ -27,7 +27,7 @@ def validate_schema(schema_name):
                 return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
             except Exception as e:
                 logging.info(f"Request rejected by schema validation: {e}")
-                return jsonify({"response": "Request should be a valid JSON.", "error": str(e)}), 400
+                return jsonify({"response": "Request should be a valid JSON.", "error": "An internal error has occurred."}), 400
             return f(*args, **kw)
         return wrapper
     return decorator
