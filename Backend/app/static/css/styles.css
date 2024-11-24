@@ -1,0 +1,73 @@
+:root {
+    --BackgroudPrimary: #0d1618;
+    --BackgroudSecondary: #111c1e;
+    --BackgroudTertiary: #152325;
+    --BackgroundDisabled: #384d4f;
+    --BackgroundInput: #162427;
+    --FontColorInput: #F0F0F0;
+    --FontColorPrimary: #EBEBEB;
+    --FontColorSecondary: #B3B3B3;
+    --FontColorDarker: #3d515c;
+    --FontColorDarkerFilter: invert(24%) sepia(40%) saturate(326%) hue-rotate(157deg) brightness(102%) contrast(85%);
+    --FontColorDark: #0d1618;
+    --BlueColour: #4B83E3;
+    --MiddleBlueColour: #376073;
+    --YellowColor: #DB9A02;
+    --RedColor: #aa0000;
+
+    font-family: 'Inter Tight', sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--BackgroudPrimary);
+    color: var(--FontColorPrimary);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: var(--BlueColour)
+}
+
+b {
+    font-weight: bold;
+}
+
+.header {
+    border-bottom: 1px solid var(--MiddleBlueColour);
+}
+
+.header>p {
+    color: var(--BlueColour);
+    font-size: 1.2em;
+}
+
+.footer {
+    border-top: 1px solid var(--MiddleBlueColour);
+}
+
+.footer>p {
+    color: var(--MiddleBlueColour);
+    font-size: .9em;
+}
+
+.button_parent {
+    text-align: center;
+}
+
+.button {
+    font-weight: bold;
+    padding: 7px 25px;
+    background-color: var(--BlueColour);
+    border: none;
+    border-radius: 7px;
+    box-shadow: #13202389 0px 7px 29px 0px;
+    color: var(--FontColorDark);
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .button:hover {
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+    }
+}

@@ -53,3 +53,6 @@ then, in index.html you will see a link tag. Replace the name in the href with t
 # React Helmet Async:
 used to handle meta tags and other header elements.
 https://www.youtube.com/watch?v=wWeG8rWkMsM
+
+# Checkout this repo:
+https://github.com/jonalxh/Flask-Admin-Dashboard
