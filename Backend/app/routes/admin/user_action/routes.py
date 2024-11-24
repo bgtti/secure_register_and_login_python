@@ -247,7 +247,7 @@ def block_unblock_user():
             log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
             log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user", "error": "An internal error has occurred."}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user block/unblock: {e}")
@@ -255,7 +255,7 @@ def block_unblock_user():
             log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
             log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
-        return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
+        return jsonify({"response": "Error blocking/unblocking user", "error": "An internal error has occurred."}), 500
     
 
 # ----- ACTION: DELETE USER -----
