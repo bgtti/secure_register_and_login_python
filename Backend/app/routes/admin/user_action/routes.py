@@ -171,7 +171,7 @@ def change_user_access():
             log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, integrity error raised.")
         except Exception as e:
             logging.error(f"Error prevented user access change log to be saved: {e}")
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user type change: {e}")
@@ -179,7 +179,7 @@ def change_user_access():
             log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, error raised.")
         except Exception as e:
             logging.error(f"Error prevented user access change log to be saved: {e}")
-        return jsonify({"response": "Error changing user type", "error": str(e)}), 500
+        return jsonify({"response": "Error changing user type"}), 500
 
 
 # ----- ACTION: BLOCK/UNBLOCK -----
