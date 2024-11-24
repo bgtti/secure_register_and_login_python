@@ -327,9 +327,9 @@ def admin_delete_user():
         db.session.rollback()
         logging.error(f"DB integrity error prevented user deletion: {e}")
         log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
 
     except Exception as e:
         logging.error(f"Error prevented user deletion: {e}")
         log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
