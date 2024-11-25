@@ -47,16 +47,3 @@ class UserFlag(enum.Enum):
     PURPLE = "purple"
     BLUE = "blue" 
 
-class SecretKeyPurpose(enum.Enum):
-    """
-    `SecretKeyPurpose` is an Enum to indicate the purpose for which a SecretKey was created.
-    Currently secret keys are used to validate a request to change password or email.
-
-    ------------------------------------------------------------
-    **Options:**
-    
-    - `EMAIL_CHANGE = "email_change"` 
-    - `PASSWORD_CHANGE = "password_change"`
-    """
-    EMAIL_CHANGE = "email_change" 
-    PASSWORD_CHANGE = "password_change" 

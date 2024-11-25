@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from flask_login import UserMixin
 from uuid import uuid4
+import secrets
 from random import randint
 from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
@@ -16,8 +17,24 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 
 ADMIN_PW = SUPER_USER["password"]
 
+
 def get_uuid():
     return uuid4().hex
+
+def get_token():
+    return secrets.token_urlsafe(32)
+
+def get_six_digit_code():
+    # Generate a secure random integer between 100000 and 999999
+    return secrets.randbelow(900000) + 100000  # Ensures a 6-digit number
+
+def token_expiration_date():
+    """
+    Returns a string representation of the date and time 1 hour from now.
+    Format: YYYY-MM-DD HH:MM:SS
+    """
+    expiration_date = datetime.now() + timedelta(hours=1)
+    return expiration_date.strftime("%Y-%m-%d %H:%M:%S")
 
 
 # Notes:
@@ -62,25 +79,41 @@ class User(db.Model, UserMixin):
         db.session.commit() 
     """
     __tablename__ = "user"
+    # TABLE
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    uuid = db.Column(db.String(32), unique=True, default=get_uuid)
-    session = db.Column(db.String(32), nullable=False, default=get_uuid)
-    remember_me = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    uuid = db.Column(db.String(32), unique=True, default=get_uuid) #...
+    session = db.Column(db.String(32), nullable=False, default=get_uuid) #...
+    remember_me = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) #...
     name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), nullable=False)
+    # auth:
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
+    auth_token = db.Column(db.String(6), nullable=True)
+    auth_token_creation = db.Column(db.DateTime, nullable=True)
+    # acct
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
-    last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    #access
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
-    flagged = db.Column(db.Enum(UserFlag), default=UserFlag.BLUE, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    # activity
+    flagged = db.Column(db.Enum(UserFlag), default=UserFlag.BLUE, nullable=False)
+    last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_attempts = db.Column(db.Integer, default=0)
     last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
-    secret_keys = db.relationship("SecretKey", backref="user", lazy="select", cascade="all, delete-orphan")
+    # auth credential change or verification
+    # change_request_date = db.Column(db.DateTime, nullable=True)
+    # change_token = db.Column(db.String(32), nullable=True) 
+    # change_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
+    new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
+    # new_email_token = db.Column(db.String(32), nullable=True) # used for email change only
+    # new_email_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    validation_token = db.relationship("ValidationToken", backref="user", lazy="select", cascade="all, delete-orphan")
     
+    # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):
         self.name = name
         self.email = email
@@ -237,6 +270,7 @@ class User(db.Model, UserMixin):
             "flagged": self.flagged.value,
             "is_blocked": self.is_blocked.value,
         }
+    
     def flag_change(self, flag_colour):
         """
         Changes the user flag to the appropriate colour.
@@ -253,3 +287,111 @@ class User(db.Model, UserMixin):
         else:
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
             print_to_terminal("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")
+
+    def change_email(self):
+        """
+        change_email()-> bool
+        
+        ------------------------------------------------
+
+        Changes the user's account email to a new email address stored at user.new_email.
+        Make sure a VerificationToken was validated before making this change.
+
+        ------------------------------------------------
+
+        Example usage:
+        user.change_email()
+        """
+        if self.new_email is None:
+            logging.error("Attempted email change but no new_email stored.")
+            return False
+        
+        self.email = self.new_email 
+
+        if self.access_level == UserAccessLevel.SUPER_ADMIN:
+            logging.warning("Super admin account email change.")
+
+        if self.access_level == UserAccessLevel.ADMIN:
+            logging.info("Admin account email change.")
+
+        return True
+    
+    # def generate_auth_change_token(self, email=False):
+    #     """
+    #     Initiate a change of authentication credentials: email or password.
+    #     ------------------------------------------------
+        
+    #     If an email change is initiated, pass the new email as a string to this function.
+    #     This function will generate self.change_token_one and self.change_token_two.
+
+    #     ------------------------------------------------
+    #     Example usage:
+    #     `generate_auth_change_token() # for password changes`
+    #     `generate_auth_change_token("new.email@fakemail.com") # for email changes`
+    #     """
+    #     self.change_request_date = datetime.now(timezone.utc)
+    #     self.change_token = get_token()
+    #     self.change_verified = modelBool.FALSE 
+        
+    #     if email:
+    #         self.new_email = email
+    #         self.new_email_token = get_token()
+    #         self.new_email_verified = modelBool.FALSE
+
+    # def validate_change_token(self):
+    #     """
+    #     Verifies a token for a change request to change auth credentials: email or password.
+    #     ------------------------------------------------
+        
+    #     Will return true if the token is valid and false otherwise.
+    #     If the token is valid, it will delete the token from the db.
+
+    #     ------------------------------------------------
+    #     Example usage:
+    #     `user.validate_change_token() # for password changes`
+    #     `user.auth_credential_change("new.email@fakemail.com") # for email changes`
+    #     """
+    #     if self.change_token is None:
+    #         return False
+        
+    #     now = datetime.now(timezone.utc)
+    #     expiry = token_expiration_date()
+    #     token_is_valid = self.change_request_date < now <= expiry
+    #     token_was_not_used = self.change_verified == modelBool.FALSE
+
+    #     if token_is_valid and token_was_not_used:
+    #         self.change_verified = modelBool.TRUE
+    #         return True
+    #     else:
+    #         self.change_token = None
+    #         return False
+
+
+
+        
+    # def validate_change_email_token(self):
+    #     """
+    #     Change authentication credentials: email or password.
+    #     ------------------------------------------------
+        
+    #     If an email change is initiated, pass the new email as a string to this function.
+    #     This function will generate self.change_token_one and self.change_token_two.
+    #     ------------------------------------------------
+    #     Example usage:
+    #     `user.auth_credential_change() # for password changes`
+    #     `user.auth_credential_change("new.email@fakemail.com") # for email changes`
+    #     """
+    #     if self.new_email_token is None:
+    #         return False
+        
+    #     now = datetime.now(timezone.utc)
+    #     expiry = token_expiration_date()
+    #     token_is_valid = self.change_request_date < now <= expiry
+    #     token_was_not_used = self.new_email_verified == modelBool.FALSE
+
+    #     if token_is_valid and token_was_not_used:
+    #         self.new_email_verified = modelBool.TRUE
+    #         return True
+    #     else:
+    #         self.new_email_token = None
+    #         return False

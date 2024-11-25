@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+Successfully changed {{ auth_type }}
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<p>The {{ auth_type }} associated with your account was changed successfully.</p>
+
+<p>{{ more_info }}</p>
+
+<p>If you did not request this, contact our support team immediately.</p>
+
+<p>You can see more information about this request in your account history.</p>
+
+<p>Thank you,</p>
+
+<p>---The SafeDev Team</p>
+{% endblock %}
