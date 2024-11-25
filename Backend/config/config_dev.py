@@ -11,6 +11,7 @@ from config.config_base import BaseConfig
 from config.loggig_config import LOGGING_CONFIG as BASE_LOGGING_CONFIG
 
 class DevelopmentConfig(BaseConfig):
+
     # Flask Config
     DEBUG = True
 

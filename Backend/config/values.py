@@ -5,7 +5,7 @@ values.py centralizes all important constants needed in config files, manage.py,
 
 These values are derived from an .env file if it exist, if it does't, from .env.default if it exists, and it case it also does not, default values will be assigned. 
 """
-from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS
+from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS, BASE_URLS
 
 ENVIRONMENT_OPTIONS = ENVIRONMENT_OPTIONS
 """`ENVIRONMENT_OPTIONS = ["local", "development", "production"]`"""
@@ -77,6 +77,26 @@ Example:
 *Changing the values in the list while having registered users will cause authentication issues for these users if the authentication logic is not adapted to handle the change beforehand. This is added to the user's password (along with the salt), and the hashed version of that is added to the db. Possible solutions would be: ask the users to change their passwords (and save the new hash logic) OR store the PEPPER used for that users in the db model to bridge the change in the authentication process.*
 """ 
 
+BASE_URLS = BASE_URLS
+"""`BASE_URLS` is a dictionary containing the following keys: frontend: str, and backend: str. 
 
+These are used to configure the app and generate links throughout the application and do not contain trailing slashes.
 
+Example:
 
+    "BASE_URLS": {
+        "frontend": "http://localhost:5173",
+        "backend": "http://localhost:5000"
+    }
+
+--------------------
+**INFO:**
+
+These values are required for running the app. You can define url for local development in value_setter.py, and urls for development and production environments in an env file, like so: 
+- `DEV_URL_FRONTEND="http://localhost:5173"`
+- `DEV_URL_BACKEND="http://localhost:5173"`
+- `PROD_URL_FRONTEND="https:..."`
+- `PROD_URL_BACKEND="https:..."`
+""" 
+
+# NOTE it would be best to set the base (and any) url in a shared env or json file -- along with the relative paths for both FE and BE apps -- so as to keep one source of truth. hardcoding links is a bad idea.

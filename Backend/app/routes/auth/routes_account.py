@@ -115,7 +115,7 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
     return jsonify(response_data)
 
 # REQUEST TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 1)
-@auth.route("/request_auth_change", methods=["POST"])
+@auth.route("/request_auth_change", methods=["POST"]) # TODO: TEST
 @login_required
 @validate_schema(auth_change_req_schema)
 @limiter.limit("5/day")
@@ -197,7 +197,7 @@ def change_user_email(): # TODO --> Add to logs so user actions can show in hist
     return jsonify(response_data)
 
 @limiter.limit("5/day")
-@auth.route('/confirm_email_change/<token>', methods=['GET'])
+@auth.route('/confirm_email_change/<token>', methods=['GET']) # TODO: TEST
 def confirm_email_change(token):
     """
     confirm_email_change() -> JsonType 
@@ -263,7 +263,7 @@ def confirm_email_change(token):
     return jsonify(response_data)
 
 @limiter.limit("5/day")
-@auth.route('/confirm_new_email/<token>', methods=['GET'])
+@auth.route('/confirm_new_email/<token>', methods=['GET']) # TODO: TEST
 def confirm_new_email(token):
     """
     confirm_new_email() -> JsonType 
@@ -330,7 +330,7 @@ def confirm_new_email(token):
 
 
 @limiter.limit("5/day")
-@auth.route('/confirm_password_change/<token>', methods=['GET'])
+@auth.route('/confirm_password_change/<token>', methods=['GET']) # TODO: TEST
 def confirm_password_change(token):
     """
     confirm_password_change() -> JsonType 

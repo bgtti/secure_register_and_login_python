@@ -17,9 +17,23 @@ from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
 import logging
 from flask_mail import Message as EmailMessage
 from utils.print_to_terminal import print_to_terminal
-from config.values import EMAIL_CREDENTIALS
+from config.values import EMAIL_CREDENTIALS, BASE_URLS
 from app.extensions.extensions import mail
 from flask import render_template
+
+# TODO: hardcoded links are a bad idea. The urls bellow should be transfered to a common file used by both FE and BE
+BE_URL = BASE_URLS["backend"]
+FE_URL = BASE_URLS["frontend"]
+
+# TODO: build FE pages
+LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange"
+LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail"
+LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw"
+
+# TODO: Name of app appears in email title. Perhaps should be mainstreamed by including it in a top-level file and importing
+APP_NAME = "[SafeDev]"
+
+
 
 def is_good_password(password):
     """
@@ -71,7 +85,7 @@ def send_pw_change_email(user_name, token, recipient_email):
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
         return False
     
-    verification_link = f"www..../{token}" #TODO
+    verification_link = f"{LINK_CONFIRM_PASSWORD_CHANGE}/{token}" 
 
 
     email_body = render_template(
@@ -82,7 +96,7 @@ def send_pw_change_email(user_name, token, recipient_email):
         btn_link=verification_link
     )
     new_email = EmailMessage(
-        subject = f"[SafeDev] Password change request.",
+        subject = f"{APP_NAME} Password change request.",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [recipient_email]
     )
@@ -114,8 +128,8 @@ def send_email_change_emails(user_name, token, new_email_token, old_email, new_e
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
         return False
     
-    link_1 = f"www..../{token}" #TODO
-    link_2 = f"www..../{new_email_token}" #TODO
+    link_1 = f"{LINK_CONFIRM_EMAIL_CHANGE_OLD}{token}" 
+    link_2 = f"{LINK_CONFIRM_EMAIL_CHANGE_NEW}/{new_email_token}" 
 
     msg_1 = "After confirming the change, you still need to verify the new email address so that the changes can take place."
     msg_2 = "If you confirm the change this will become the new email associated with your account. You will also be required to confirm the change through a link sent to the email address that has been associated with your account so far. Please contact support in case you lost access to your original email account."
@@ -129,7 +143,7 @@ def send_email_change_emails(user_name, token, new_email_token, old_email, new_e
             btn_link=link
         )
         email_message = EmailMessage(
-            subject = f"[SafeDev] Email change requested ",
+            subject = f"{APP_NAME} Email change requested ",
             sender = EMAIL_CREDENTIALS["email_address"],
             recipients = [recipient]
         )
@@ -176,7 +190,7 @@ def send_pw_change_sucess_email(user_name, user_email):
         more_info = "You can now log in using your new password.",
     )
     new_email = EmailMessage(
-        subject = f"[SafeDev] Password changed successfully.",
+        subject = f"{APP_NAME} Password changed successfully.",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [user_email]
     )
@@ -220,7 +234,7 @@ def send_email_change_sucess_emails(user_name, old_email, new_email):
             btn_link=link
         )
         email_message = EmailMessage(
-            subject = f"[SafeDev] Email change successfull ",
+            subject = f"{APP_NAME} Email change successfull ",
             sender = EMAIL_CREDENTIALS["email_address"],
             recipients = [recipient]
         )

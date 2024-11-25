@@ -15,6 +15,8 @@ from app.utils.constants.account_constants import INPUT_LENGTH
 from app.utils.constants.enum_class import modelBool
 from app.utils.constants.enum_helpers import map_string_to_enum
 
+# TODO: implement in user model. Currently not implemented or used anywhere
+
 class Roles(db.Model, UserMixin):
     """
     Role db model.

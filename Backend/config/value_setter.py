@@ -34,6 +34,11 @@ DEFAULT = {
     "PEPPER": ["&Yz1", "X$Z2", "z£@5", "3F29", "7*yx", "Y8zp"]
 }
 
+DEFAULT_URL = {
+    "FRONTEND":"http://localhost:5173",
+    "BACKEND":"https://localhost:5000"
+}
+
 ENVIRONMENT_OPTIONS: List[str] = ["local", "development", "production"]
 """Available environment options: `["local", "development", "production"]`
 
@@ -227,3 +232,51 @@ assert isinstance(CURRENT_PEPPER, list), "CURRENT_PEPPER should be a list. Check
 assert len(CURRENT_PEPPER) == 6, "CURRENT_PEPPER should contain exactly 6 items. Check value_setter.py inside the config directory."
 assert all(isinstance(item, str) and len(item) == 4 for item in CURRENT_PEPPER), \
     "Each item in CURRENT_PEPPER should be a 4-character string. Check value_setter.py inside the config directory."
+
+# Define the base urls 
+def set_base_urls():
+    """
+    set_base_urls() -> Dict[str, str]
+    ------------------------------------------------------
+
+    Returns a dictionary containing the base urls being used in the front and backend apps. 
+    If the environment it is running is 'local' or if DEV or PROD urls are not available in the env file, 
+    defaults (localhost) will be used.
+    Ensures no trailing slashes in the URLs.
+
+    ------------------------------------------------------
+    Returns a string like:
+
+    `set_base_urls() #--> {
+    "FRONTEND":"http://...",
+    "BACKEND":"http://..."
+    }`
+    """
+    fe_url = DEFAULT_URL["FRONTEND"]
+    be_url = DEFAULT_URL["BACKEND"]
+
+    if CURRENT_ENVIRONMENT == "development":
+        fe_url = os.getenv("DEV_URL_FRONTEND", fe_url)
+        be_url = os.getenv("DEV_URL_BACKEND", be_url)
+    elif CURRENT_ENVIRONMENT == "production":
+        fe_url = os.getenv("PROD_URL_FRONTEND", fe_url)
+        be_url = os.getenv("PROD_URL_BACKEND", be_url)
+
+    URLS = {
+    "frontend":fe_url.rstrip('/'),
+    "backend":be_url.rstrip('/')
+    }
+    
+    return URLS
+
+
+BASE_URLS: Dict[str, str] = set_base_urls() 
+
+assert isinstance(BASE_URLS["frontend"], str) and \
+       isinstance(BASE_URLS["backend"], str), \
+    "BASE_URLS should have 'frontend' and 'backend' as strings. Check value_setter.py inside the config directory."
+
+assert BASE_URLS["frontend"].startswith("http"), \
+    f"frontend URL should start with 'http': {BASE_URLS['frontend']}, check url format!"
+assert BASE_URLS["backend"].startswith("http"), \
+    f"backend URL should start with 'http': {BASE_URLS['backend']}, check url format!"

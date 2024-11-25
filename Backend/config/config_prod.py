@@ -16,6 +16,7 @@ ENV_REDIS_SESSION_PORT = os.getenv('REDIS_SESSION_PORT')
 ENV_RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI')
 
 class ProductionConfig(BaseConfig):
+
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///prod.db" #---> TODO
     TESTING = False #---> ??
