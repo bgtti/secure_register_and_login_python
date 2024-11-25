@@ -56,3 +56,7 @@ https://www.youtube.com/watch?v=wWeG8rWkMsM
 
 # Checkout this repo:
 https://github.com/jonalxh/Flask-Admin-Dashboard
+
+# json schema validation for the front end:
+
+https://ajv.js.org/

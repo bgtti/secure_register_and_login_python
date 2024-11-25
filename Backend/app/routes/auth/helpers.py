@@ -26,12 +26,16 @@ BE_URL = BASE_URLS["backend"]
 FE_URL = BASE_URLS["frontend"]
 
 # TODO: build FE pages
-LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange"
-LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail"
-LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw"
+LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange/token="
+LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail/token="
+LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw/token="
 
 # TODO: Name of app appears in email title. Perhaps should be mainstreamed by including it in a top-level file and importing
 APP_NAME = "[SafeDev]"
+
+# Templates
+CHANGE_AUTH_CRED = "emails/change_auth_creds.html"
+CHANGE_AUTH_CRED_SUCCESS = "emails/change_auth_creds_success.html"
 
 
 
@@ -89,7 +93,7 @@ def send_pw_change_email(user_name, token, recipient_email):
 
 
     email_body = render_template(
-        'change_auth_creds.html',  # email template name
+        CHANGE_AUTH_CRED,  # email template name
         user_name=user_name,
         auth_type="password",
         more_info = "By confirming the change you will be directed to a link where you can reset your password.",
@@ -129,14 +133,14 @@ def send_email_change_emails(user_name, token, new_email_token, old_email, new_e
         return False
     
     link_1 = f"{LINK_CONFIRM_EMAIL_CHANGE_OLD}{token}" 
-    link_2 = f"{LINK_CONFIRM_EMAIL_CHANGE_NEW}/{new_email_token}" 
+    link_2 = f"{LINK_CONFIRM_EMAIL_CHANGE_NEW}{new_email_token}" 
 
     msg_1 = "After confirming the change, you still need to verify the new email address so that the changes can take place."
     msg_2 = "If you confirm the change this will become the new email associated with your account. You will also be required to confirm the change through a link sent to the email address that has been associated with your account so far. Please contact support in case you lost access to your original email account."
 
     def send_mail(link, msg, recipient):
         email_body = render_template(
-            'change_auth_creds.html',  # email template name
+            CHANGE_AUTH_CRED,  # email template name
             user_name=user_name,
             auth_type="email",
             more_info = msg,
@@ -184,7 +188,7 @@ def send_pw_change_sucess_email(user_name, user_email):
 
 
     email_body = render_template(
-        'change_auth_creds_success.html', 
+        CHANGE_AUTH_CRED_SUCCESS, # email template name
         user_name=user_name,
         auth_type="email",
         more_info = "You can now log in using your new password.",
@@ -227,7 +231,7 @@ def send_email_change_sucess_emails(user_name, old_email, new_email):
 
     def send_mail(link, msg, recipient):
         email_body = render_template(
-            'change_auth_creds_success.html',  
+            CHANGE_AUTH_CRED_SUCCESS, # email template name 
             user_name=user_name,
             auth_type="email",
             more_info = msg,

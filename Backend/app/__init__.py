@@ -84,5 +84,9 @@ def create_app(config_class):
     @app.route('/test/')
     def test_page():
         return '<h1> Testing the App </h1>'
+    
+    @app.route('/static_debug/') 
+    def static_debug():
+        return f"Static folder is: {app.static_folder}"
 
     return app

@@ -1,21 +1,40 @@
-{% extends "base.html" %}
+{% extends "emails/base.html" %}
 
 {% block title %}
 Successfully changed {{ auth_type }}
 {% endblock %}
 
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <p>Dear {{ user_name }},</p>
 
-<p>The {{ auth_type }} associated with your account was changed successfully.</p>
+<div class="p_block">
+    <p>The {{ auth_type }} associated with your account was changed successfully.</p>
 
-<p>{{ more_info }}</p>
+    <p>{{ more_info }}</p>
+</div>
 
-<p>If you did not request this, contact our support team immediately.</p>
+<div class="p_block">
+    <p>If you did not request this, contact our support team immediately.</p>
 
-<p>You can see more information about this request in your account history.</p>
+    <p>You can see more information about this request in your account history.</p>
+</div>
 
-<p>Thank you,</p>
 
-<p>---The SafeDev Team</p>
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
 {% endblock %}

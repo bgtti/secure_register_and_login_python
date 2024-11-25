@@ -99,13 +99,44 @@ auth_change_req_schema = {
             "maxLength": INPUT_LENGTH['email']['maxValue'],
             "pattern": EMAIL_PATTERN
             },
-        "new_password": {
+        "user_agent": {
             "type": "string", 
-            "minLength":  INPUT_LENGTH['password']['minValue'], 
-            "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
-            },
+            "minLength": 0, 
+            "maxLength": 255 #TODO get regex pattern
+            }
+        # "new_password": {
+        #     "type": "string", 
+        #     "minLength":  INPUT_LENGTH['password']['minValue'], 
+        #     "maxLength": INPUT_LENGTH['password']['maxValue'], 
+        #     "pattern": PASSWORD_PATTERN
+        #     },
     },
     "additionalProperties": False,
     "required": ["type"]
 }
+
+#when verifying token use:
+# name_of_schema = {
+#     "properties": {
+#         "token": {
+#             "description": "Token ",
+#             "type": "string",
+#             "minLength": 20,
+#         "maxLength": 100,
+#         "pattern": "^[a-zA-Z0-9_-]+$"
+#             },
+#     },
+# }
+
+#when verifying token use if token is signed:
+# name_of_schema = {
+#     "properties": {
+#         "token": {
+#             "description": "Token ",
+#             "type": "string",
+#             "minLength": 20,
+#         "maxLength": 200,
+#         "pattern":  "^[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+$"
+#             },
+#     },
+# }

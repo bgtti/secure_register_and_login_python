@@ -10,6 +10,8 @@ import Home from '../pages/Home/Home';
 import LogIn from "../pages/Login/LogIn";
 import SignUp from "../pages/SignUp/SignUp";
 import Contact from "../pages/Contact/Contact";
+//Pages: unprotected but no-follow
+import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
 //Pages: protected route (registered users)
 import UserAccount from "../pages/Account/AccountMain"
 import UserDashboard from "../pages/Account/Dashboard/Dashboard";
@@ -37,6 +39,16 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 //include cookie policy page
 //include FAQ page
 
+// TODO: confirm email page
+// TODO: change password page
+
+// TODO: separation of user and admin logic
+// TODO: urls and relative urls in shared files with BE
+
+// FIXME: error occurs, page reloads, sends user to login but if I write the address on the browser, it will log the user in again. Not only annoying, but dangerous as user may thing its logged out...
+
+
+
 const Router = () => {
     const loaderDisplay = useSelector((state) => state.loader.display);
     return (
@@ -50,6 +62,8 @@ const Router = () => {
                 <Route exact path="login" element={<LogIn />} />
                 <Route exact path="signup" element={<SignUp />} />
                 <Route exact path="contact" element={<Contact />} />
+                <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
+                <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
                 <Route exact path="errorPage" element={<ErrorPage />} />
                 <Route exact path="botError" element={<BotError />} />
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />

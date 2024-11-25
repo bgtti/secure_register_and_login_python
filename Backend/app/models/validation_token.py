@@ -7,6 +7,7 @@ from flask_login import UserMixin
 from uuid import uuid4
 import secrets
 from random import randint
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
@@ -19,16 +20,36 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 
 # What is SecretKey supposed to do: check https://stackoverflow.com/questions/23039734/flask-login-password-reset
 
+# INFO: better way to generate token would be to sign it:
+# SECRET_KEY = "your-very-secret-key"
+# SIGNING_KEY = "unique-signing-salt"
+
+# def get_signed_token():
+#     serializer = URLSafeTimedSerializer(SECRET_KEY, salt=SIGNING_KEY)
+#     token = secrets.token_urlsafe(32)  # 43-character random token
+#     signed_token = serializer.dumps(token)  # Sign the token
+#     return signed_token
+
+# then validate it like:
+# def verify_signed_token(signed_token):
+#     serializer = URLSafeTimedSerializer(SECRET_KEY, salt=SIGNING_KEY)
+#     try:
+#         # Validate the token
+#         original_token = serializer.loads(signed_token)
+#         return original_token  # Returns the original random token
+#     except Exception as e:
+#         # Token is invalid or tampered
+#         print(f"Invalid token: {e}")
+#         return None
+
 def get_token():
     return secrets.token_urlsafe(32)
 
 def expiration_date():
     """
-    Returns a string representation of the date and time 1 hour from now.
-    Format: YYYY-MM-DD HH:MM:SS
+    Returns a datetime object of datetime one hour from 'now'.
     """
-    expiration_date = datetime.now() + timedelta(hours=1)
-    return expiration_date.strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(timezone.utc) + timedelta(hours=1)
 
 # class TokenPurpose(enum.Enum):
 #     """
@@ -57,16 +78,16 @@ class ValidationToken(db.Model, UserMixin):
     """
     __tablename__ = "validation_token"
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    token = db.Column(db.String(32), unique=True, default=get_token, nullable=False)
+    token = db.Column(db.String(90), unique=True, default=get_token, nullable=False)
     token_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) # user used the token
     # email change requests will require a second token
-    new_email_token = db.Column(db.String(32), unique=True, default=get_token, nullable=False)
+    new_email_token = db.Column(db.String(90), unique=True, default=get_token, nullable=False)
     new_email_token_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) # user used the token
     # token creation info
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
     expiry_date = db.Column(db.DateTime, default=expiration_date, nullable=False)
     ip_address = db.Column(db.String(250), nullable=True) # ip address of the request
-    user_agent = db.Column(db.String(250), nullable=True) # some device information
+    user_agent = db.Column(db.String(255), nullable=True) # some device information
     # token belonging info
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     

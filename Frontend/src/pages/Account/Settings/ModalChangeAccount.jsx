@@ -6,6 +6,7 @@ import "./modalChangeAccount.css"
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../redux/loader/loaderSlice.js"
 import { acctNameChange } from "../../../config/apiHandler/authAccount/changeName.js"
+import { acctEmailChange } from "../../../config/apiHandler/authAccount/changeEmail.js";
 import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
 
 /**
@@ -19,6 +20,8 @@ import { nameValidation, emailValidation, passwordValidation } from "../../../ut
  */
 function ModalChangeAccount(props) {
     const { action, modalToggler } = props;
+
+    const userAgent = navigator.userAgent; //info to be passed on to BE
 
     const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
@@ -144,9 +147,11 @@ function ModalChangeAccount(props) {
 
         const handleResponse = (response, successMessage) => {
             if (isComponentMounted()) {
+                let errorInfo = errorMsg
+                if (!response.success && response.info) { errorInfo = response.info }
                 setFormError(() => ({
                     occurred: response.success,
-                    message: (response.success ? successMessage : errorMsg),
+                    message: (response.success ? successMessage : errorInfo),
                     show: true
                 }));
             }
@@ -169,7 +174,7 @@ function ModalChangeAccount(props) {
                 responseActionMessage = "Name changed successfully!";
                 break
             case "email":
-                requestAction = function () { return console.log("email") }; //===> TODO: missing
+                requestAction = function () { return acctEmailChange(formData.inputField) }; //===> TODO: missing
                 responseActionMessage = "Please check your email to confirm the change.";
                 break
             case "password":
@@ -196,10 +201,18 @@ function ModalChangeAccount(props) {
         <>
             <form onSubmit={handleSubmit} className="ModalChangeAccount MAIN-form">
                 {
-                    actionLowerCase !== "name" && (
+                    actionLowerCase === "password" && (
                         <>
                             <p>Note: two-step verification required.</p>
-                            <br />
+                            <p>You will receive a confirmation email.</p>
+                        </>
+                    )
+                }
+                {
+                    actionLowerCase === "email" && (
+                        <>
+                            <p>Note: three-step verification required.</p>
+                            <p>Check your email after clicking "save".</p>
                         </>
                     )
                 }

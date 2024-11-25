@@ -222,3 +222,35 @@ manage.py is the application script
 # resources
 PEP257: docstrings at https://peps.python.org/pep-0257/
 PEP8: python conventions at https://peps.python.org/pep-0008/
+
+
+
+# Auth
+
+OWASP recommendation-based.
+
+## Registration
+- Required: Username, Email, Password
+- "Users should be permitted to use their email address as a username, provided the email is verified during signup."
+- "Additionally, they should have the option to choose a username other than an email address. "
+
+
+
+
+# Email change
+Using OWASP's recommendation for "DOES NOT HAVE Multifactor Authentication Enabled":
+-Process to be explained to user in advance
+-New email given
+-Password will be requested
+-New email will be temporarily stored
+-Route possibilities: 1. Fail: User said email address change was not requested. 2. Fail: New email address not confirmed. 3. Admin made aware of the 2 fails, 4. Success
+-Two emails are sent: to old and new email addresses
+
+## TODO Auth:
+
+TEST:
+(source: owasp: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#email-address-validation) 
+- confirm that registration email does not contain dangerous characters (such as backticks, single or double quotes, or null bytes).
+- The domain part contains only letters, numbers, hyphens (-) and periods (.).
+- The email address is a reasonable length: he local part (before the @) should be no more than 63 characters., The total length should be no more than 254 characters.
+- he links that are sent to users to prove ownership [of email] should be At least 32 characters long., time limited and using a good source of randomness (example: "secrets()): https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#secure-random-number-generation

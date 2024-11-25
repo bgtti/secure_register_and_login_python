@@ -177,7 +177,7 @@ def change_user_email(): # TODO --> Add to logs so user actions can show in hist
         except Exception as e:
             logging.error(f"New email could not be added to user. Error: {e}")
             return jsonify(error_response), 500
-        mail_sent = send_email_change_emails(user.name, token.token, token.new_email_token, new_email)
+        mail_sent = send_email_change_emails(user.name, token.token, token.new_email_token, user.email, new_email)
 
     
     # Log this event TODO
