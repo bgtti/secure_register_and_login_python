@@ -23,8 +23,8 @@ export const apiEndpoints = {
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
     //authentication -- account
-    acctChangeName: `${urlPrefix.auth}/change_user_name`, //--working on
-    acctChangeEmail: `${urlPrefix.auth}/...`, //MISSING 2-step
+    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
+    acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--working on MISSING 2-step
     acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
     acctDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
     //admin - dashboard

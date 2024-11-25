@@ -110,7 +110,7 @@ class VisitorStats(UserMixin, db.Model):
     country = db.Column(db.String(90), nullable=True)
     country_code = db.Column(db.String(3), nullable=True)
     city = db.Column(db.String(180), nullable=True)
-    user_agent = db.Column(db.String(250), nullable=True)
+    user_agent = db.Column(db.String(255), nullable=True)
     screen_size = db.Column(db.String(15), nullable=True)
     referrer = db.Column(db.String(100), nullable=True)
     page_accessed = db.Column(db.String(50), nullable=True)

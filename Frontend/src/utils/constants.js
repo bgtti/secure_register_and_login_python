@@ -73,6 +73,10 @@ export const INPUT_LENGTH = Object.freeze({
     contactMessage: {
         minValue: 1,
         maxValue: 300
+    },
+    userAgent: {
+        minValue: 0,
+        maxValue: 255
     }
 })
 

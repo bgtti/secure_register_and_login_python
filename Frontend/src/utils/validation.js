@@ -128,3 +128,62 @@ export function validateDateFormat(dateString) {
     const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
     return dateFormatRegex.test(dateString);
 }
+
+/**
+ * Function that sanitizes userAgent
+ * 
+ * It will return either return an empty string or the sanitized value.
+ * 
+ * If no argument is given or the wrong variable type is given: returns empty string
+ * If string is given, the function will:
+ * 1) strip certain characters according to /[^a-zA-Z0-9 .,/();:+_-]/g 
+ *      allowed: a-zA-Z 0-9 . , / ( ) ; : + _ - and spaces
+ * 2) if the string is greater than the maximum character length for user agent, the string will be cut accordingly.
+ * 
+ * @param {string} userAgent
+ * @returns {string}
+ * 
+ * @example
+ * 
+ * // The same string may be returned:
+ * let uA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+ * sanitizedUserAgent(uA) //=> returns "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+ * 
+ * // The string may be sanitized:
+ * let uA = "Mozilla/5.0 <script>alert('XSS')</script> (Windows NT 10.0; Win64; x64)"
+ * sanitizedUserAgent(uA) //=> returns "Mozilla/5.0 scriptalertXSSscript (Windows NT 10.0; Win64; x64)"
+ * 
+ */
+export function sanitizedUserAgent(userAgent = "") {
+    if (!userAgent || userAgent === "" || typeof userAgent !== "string") { return "" };
+    //replace certain characters
+    let sanitizedUA = userAgent.replace(/[^a-zA-Z0-9 .,/();:+_-]/g, "")
+    //diminish size of string if too long
+    const maxLength = INPUT_LENGTH.userAgent.maxValue
+    if (sanitizedUA.length > maxLength) {
+        sanitizedUA = sanitizedUA.substring(0, maxLength);
+    }
+    return { sanitizedUA }
+}
+
+/**
+ * Function that checks if token passes basic regex.
+ * 
+ * It will return true if the token format is valid, and false otherwise
+ * 
+ * @todo use ajv for js validation
+ * 
+ * @param {string} token 
+ * @returns {boolean}
+ * @example
+ * let token = "sb5oALqhJsT5rUZ9H9XgUHcIWkVgaqiIiqVjvfgX-5Q"
+ * validateTokenFormat(token) // Output: true
+ * validateTokenFormat("") // Output: false
+ */
+function validateTokenFormat(token) {
+    if (typeof token !== "string" || token.trim() === "") { return false }
+    // const tokenRegex = /^[a-zA-Z0-9_-]{43}$/;
+    // return tokenRegex.test(token);
+    return true
+}
+

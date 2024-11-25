@@ -5,23 +5,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style type="text/css">
+        :root {
+            font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            line-height: 1;
+        }
+
+        a {
+            color: #4B83E3;
+            text-decoration: none !important;
+        }
+
+        b {
+            font-weight: bold;
+        }
+
+        p {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            vertical-align: baseline;
+            font-size: 1em;
+            color: #1f2426;
+        }
+
+        .header {
+            border-bottom: 2px solid #EBEBEB;
+            padding-bottom: 5px;
+        }
+
+        .header>p {
+            color: #4B83E3;
+            font-size: 1.2em;
+        }
+
+        .header>p>b>span {
+            color: #152325;
+        }
+
+        .content {
+            padding: 10px 0 10px 0;
+        }
+
+        .footer {
+            border-top: 2px solid #EBEBEB;
+            padding-top: 5px;
+        }
+
+        .footer>* {
+            color: #7e7e7e;
+            font-size: .9em;
+        }
+
+        .need_help {
+            font-weight: bold;
+        }
+
+        .font_lighter>p {
+            color: #B3B3B3;
+        }
+    </style>
+    {% block extra_styles %}{% endblock %}
 </head>
 
 <body>
     <div>
         <div class="header">
-            <p><b>SafeDev</b></p>
+            <p><b><span>/</span> SafeDev</b></p>
         </div>
 
-        <div id="content">
+        <div class="content">
             {% block content %}{% endblock %}
         </div>
 
         <div class="footer">
-            <p>Need help? <a href="mailto:support@safedev.com">Contact us</a>.</p>
-            <p>Please do not reply to this email.</p>
-            <p>© 2024 SafeDev</p>
+            <p class="need_help">Need help? <a href="mailto:support@safedev.com">Contact us</a>.</p>
+            <div class="font_lighter">
+                <p>Please do not reply to this email.</p>
+            </div>
+
         </div>
     </div>
 </body>

@@ -10,8 +10,7 @@ import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.j
  * Requires argument: a data object with the new name as string value.
  * 
  * 
- * @param {object} data 
- * @param {string} data.name 
+ * @param {string} name
  * @returns {object}
  * 
  * @example

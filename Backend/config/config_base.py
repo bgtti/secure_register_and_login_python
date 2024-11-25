@@ -10,11 +10,12 @@ More information on how to handle configuration is available in the flask docs: 
 """
 from datetime import timedelta
 from config.rate_limit_config import rate_limit_exceeded
-from config.values import SECRET_KEY, SUPER_USER, EMAIL_CREDENTIALS, PEPPER
+from config.values import SECRET_KEY, SUPER_USER, EMAIL_CREDENTIALS, PEPPER, BASE_URLS
 
 
 # *** BASE CONFIGURATION: other classes derive from this one
 class BaseConfig:
+    BASE_URL = BASE_URLS["backend"]
 
     # App credentials configuration
     PEPPER = PEPPER # used in account module when handling passwords
