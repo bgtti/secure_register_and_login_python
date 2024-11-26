@@ -197,7 +197,7 @@ def change_user_email(): # TODO --> Add to logs so user actions can show in hist
     return jsonify(response_data)
 
 @limiter.limit("5/day")
-@auth.route('/confirm_email_change/<token>', methods=['GET']) # TODO: TEST
+@auth.route('/confirm_email_change', methods=['GET']) # TODO: TEST
 def confirm_email_change(token):
     """
     confirm_email_change() -> JsonType 

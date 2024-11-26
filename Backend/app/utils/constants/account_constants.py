@@ -32,6 +32,10 @@ INPUT_LENGTH = {
         "maxValue": 15
     }
 }
+"""`INPUT_LENGTH` is a dictionary containing the minimum and maximum input length for a number of variables that can be received in json or stored in the database.
+
+The keys: "name", "email", "password", "contact_message", "contact_message_subject", "contact_message_answer_subject", "honeypot"
+"""
 
 # Explanation of the NAME_PATTERN:
 # ^ asserts the start of the string.
@@ -40,6 +44,7 @@ INPUT_LENGTH = {
 # $ asserts the end of the string.
 
 NAME_PATTERN = r'^[A-Za-zÀ-ÖØ-öø-ÿ .\'-]+$'
+"""`NAME_PATTERN` is a regex to define the name of a user."""
 
 # Explanation of the EMAIL_PATTERN:
 # ^: Asserts the start of the string.
@@ -48,6 +53,7 @@ NAME_PATTERN = r'^[A-Za-zÀ-ÖØ-öø-ÿ .\'-]+$'
 # [^@\s]+: Matches one or more characters that are not '@' or whitespace.
 # $: Asserts the end of the string.
 EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
+"""`EMAIL_PATTERN` is a regex to define the email format of a user."""
 
 # Explanation of the PASSWORD_PATTERN:
 # ^: Asserts the start of the string.
@@ -55,14 +61,16 @@ EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 # {%d,%d}: Specifies the minimum and maximum length based on your constants.
 # $: Asserts the end of the string.
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
+"""`PASSWORD_PATTERN` is a regex to define the password format of a user (and specifies size constraints)."""
 
 # DATE_PATTERN for YYYY-MM-DD
 DATE_PATTERN =r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
+"""`DATE_PATTERN` is a regex to define the accepted format of YYYY-MM-DD dates."""
 
 # Most common password list based on: https://nordpass.com/most-common-passwords-list/
 # IMPORTANT:
 # The name of the app in question is commonly used in passwords. 
-# Substitute the first value of the list with the name of your app if you are using this template.
+# TODO Substitute the first value of the list with the name of your app if you are using this template.
 # Use lower case letters only, as a string will be compared to a value in this list in lower case.
 MOST_COMMON_PASSWORDS = [
     "safedev",
@@ -93,15 +101,19 @@ MOST_COMMON_PASSWORDS = [
     "qwerty",
     "yxcvbnm"
 ]
+"""`MOST_COMMON_PASSWORDS` is a list of easy-to-guess passwords that should not be accepted"""
 
+# there are a number of events in js that could be part of the list bellow... checkout http://help.dottoro.com/ljfvvdnm.php for more.
 COMMON_XSS_VECTORS = [
     "alert",
     "confirm",
     "data",
     "decode",  # decode.URI
     "document",  # "document.cookie"
+    "dynsrc",
     "eval",
     "expression",
+    "fromCharCode",
     "href",
     "html",
     "iframe",
@@ -115,8 +127,9 @@ COMMON_XSS_VECTORS = [
     "onmouseover",
     "prompt",
     "script", # catches also "javascrip"
-    "src",
+    "src", # "lowscr"
     "svg",
+    "textarea",
     "unescape",
     "window",
     "&lt", # <
@@ -126,6 +139,21 @@ COMMON_XSS_VECTORS = [
     "&#x3E;", # >
     "%3C", # <
     "%3E", # >
-    "u003" # < for \u003C, \u003E, %u003C, and %u003E
-    ""
+    "u003", # < for \u003C, \u003E, %u003C, and %u003E
+    ".js",
+    "$env"
 ]
+"""`COMMON_XSS_VECTORS` is a black list of words that may indicate an injection attempt."""
+
+# staff impersonation can be an issue. Do not allow users to register with a name that may indicate authority with the site.
+# the list bellow should be adapted according the context your app operated. Eg: a blog may include "author" or "reviewer" to this list.
+# NOTE OWASP recommendation: https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account
+# TODO include in account signup and name change
+RESERVED_NAMES = [
+    "admin",
+    "administrator",
+    "moderator",
+    "superadmin",
+    "super_admin",
+]
+"""`RESERVED_NAMES` is a list of reserved names that should not be used when users attempt to create an account or change their names."""

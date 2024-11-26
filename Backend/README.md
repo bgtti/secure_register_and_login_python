@@ -248,9 +248,32 @@ Using OWASP's recommendation for "DOES NOT HAVE Multifactor Authentication Enabl
 
 ## TODO Auth:
 
+Email validation:
+Notoriosly difficult to validate with regex.
+
+Testing guessable user accounts
+Available at: https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account
+
+Email change:
+Using OWASP's recommendation for the flow of changing a register user's email address.
+Available at: https://owasp.org/www-community/pages/controls/Changing_Registered_Email_Address_For_An_Account
+
+Testing for Weak Password Change or Reset Functionalities
+Available at: https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/09-Testing_for_Weak_Password_Change_or_Reset_Functionalities
+
+
 TEST:
 (source: owasp: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#email-address-validation) 
 - confirm that registration email does not contain dangerous characters (such as backticks, single or double quotes, or null bytes).
 - The domain part contains only letters, numbers, hyphens (-) and periods (.).
 - The email address is a reasonable length: he local part (before the @) should be no more than 63 characters., The total length should be no more than 254 characters.
 - he links that are sent to users to prove ownership [of email] should be At least 32 characters long., time limited and using a good source of randomness (example: "secrets()): https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#secure-random-number-generation
+
+
+Implement:
+For example, it would generally not be appropriate to notify a user that there had been an attempt to login to their account with an incorrect password. However, if there had been a login with the correct password, but which had then failed the subsequent MFA check, the user should be notified so that they can change their password. Subsequently, should the user request multiple password resets from different devices or IP addresses, it may be appropriate to prevent further access to the account pending further user verification processes.
+
+Details related to current or recent logins should also be made visible to the user. For example, when they login to the application, the date, time and location of their previous login attempt could be displayed to them. Additionally, if the application supports concurrent sessions, the user should be able to view a list of all active sessions, and to terminate any other sessions that are not legitimate.
+For credential stuffig prevention
+available at:
+https://cheatsheetseries.owasp.org/cheatsheets/Credential_Stuffing_Prevention_Cheat_Sheet.html

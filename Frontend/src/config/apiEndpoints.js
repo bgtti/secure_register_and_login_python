@@ -25,6 +25,7 @@ export const apiEndpoints = {
     //authentication -- account
     acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
     acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--working on MISSING 2-step
+    acctChangeTokenVerify: `${urlPrefix.auth}/request_auth_change_token_validation`, //--working on for email (password uses same route)
     acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
     acctDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
     //admin - dashboard
