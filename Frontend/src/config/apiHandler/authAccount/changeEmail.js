@@ -2,7 +2,7 @@ import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
 import { nameValidation, emailValidation, passwordValidation, sanitizedUserAgent, tokenFormatIsValid } from "../../../utils/validation.js"
 import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
-import { validateTokenFormat } from "../../../utils/validation.js"
+
 
 
 /**
@@ -166,10 +166,7 @@ export function confirmEmailChange(pathUsed, tokenUsed) {
                  * 
                  * TODO
                  * 
-                 * - reform BE api to receive the endpoint request_auth_change_token_validation
-                 * - the endpoint should accept the type of token validation: "old_email", "old_email", "password"
-                 * - the endpoint should return more information about the email change if token is validated: is change completed or step missing?
-                 * 
+                 * - BE api reformed: adapt changes in FE
                  * 
                  * 
                  */

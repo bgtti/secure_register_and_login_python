@@ -1,4 +1,4 @@
-
+import PropTypes from "prop-types";
 /**
  * Component returns div with UI of a successful token verification (step 1/2) of changing the email
  * @param {object} props
