@@ -54,6 +54,7 @@ def create_app(config_class):
     # Initialization of app extensions
     extensions.cors.init_app(app, supports_credentials=True, resources=r"/api/*", origins=["http://localhost:5173"]) # consider adding allowed origin from requests: https://flask-cors.corydolphin.com/en/latest/api.html#extension TODO: hardcoding the origin is not a good idea --- change this so as to allow for production-specific stuff as well
     extensions.db.init_app(app)
+    # extensions.db_migrate(app, extensions.db) ==> TODO: implementation missing
     extensions.flask_bcrypt.init_app(app)
     extensions.limiter.init_app(app)
     extensions.login_manager.init_app(app)

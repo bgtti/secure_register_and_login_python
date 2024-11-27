@@ -5,7 +5,7 @@ values.py centralizes all important constants needed in config files, manage.py,
 
 These values are derived from an .env file if it exist, if it does't, from .env.default if it exists, and it case it also does not, default values will be assigned. 
 """
-from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS, BASE_URLS
+from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SERIALIZER_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS, BASE_URLS
 
 ENVIRONMENT_OPTIONS = ENVIRONMENT_OPTIONS
 """`ENVIRONMENT_OPTIONS = ["local", "development", "production"]`"""
@@ -26,7 +26,10 @@ It's value should be equal to that of `FLASK_ENV` set in an env file. If not giv
 """ 
 
 SECRET_KEY = CURRENT_KEY
-"""`SECRET_KEY` should be a string value pulled from an env file. If none is given, a default value is used. """ 
+"""`SECRET_KEY` should be a string value pulled from an env file. If none is given, a default value is used. Required value to initiate flask.""" 
+
+SERIALIZER_SECRET_KEY = CURRENT_SERIALIZER_KEY
+"""`SERIALIZER_SECRET_KEY` should be a string value pulled from an env file. If none is given, a default value is used. Required value to initiate itsdangerous (used to sign tokens).""" 
 
 SUPER_USER = CURRENT_SUPER_USER
 """`SUPER_USER` is a dictionary containing the following keys: name, email, and password. Their values are imported from an env file (if it exists and contains values for `SUPER_ADMIN_NAME`, `SUPER_ADMIN_EMAIL`, and `SUPER_ADMIN_PASSWORD`) or defaults are assigned otherwise. 

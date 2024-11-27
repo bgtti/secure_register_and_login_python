@@ -30,6 +30,10 @@ INPUT_LENGTH = {
     "honeypot":{
         "minValue": 0,
         "maxValue": 15
+    },
+    "signed_token":{
+        "minValue": 40, # consider 100. Test first though.
+        "maxValue": 300, # consider 200. Test first though.
     }
 }
 """`INPUT_LENGTH` is a dictionary containing the minimum and maximum input length for a number of variables that can be received in json or stored in the database.

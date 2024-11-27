@@ -22,21 +22,21 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 import logging
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user as flask_login_user, current_user, logout_user as flask_logout_user, login_required
-from datetime import datetime, timezone
 from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
 from app.models.user import User
-from app.models.validation_token import ValidationToken
+from app.models.token import Token
+from app.utils.constants.enum_class import TokenPurpose, modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-from app.utils.log_event_utils.log import log_event
 from app.utils.detect_html.detect_html import check_for_html
-from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.ip_utils.ip_geolocation import geolocate_ip 
-from app.utils.ip_utils.ip_anonymization import anonymize_ip
-from app.utils.bot_detection.bot_detection import bot_caught
-from app.routes.auth.schemas import change_name_schema, auth_change_req_schema
-from app.routes.auth.helpers import is_good_password, send_pw_change_email, send_email_change_emails, send_email_change_sucess_emails, send_pw_change_sucess_email
+from app.utils.profanity_check.profanity_check import has_profanity
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.token_utils.group_id_creation import get_group_id
+from app.utils.token_utils.sign_and_verify import verify_signed_token
+from app.utils.token_utils.verification_urls import create_verification_url
+from app.routes.auth.schemas import change_name_schema, req_auth_change_schema, req_token_validation_schema
+from app.routes.auth.helpers import is_good_password, get_hashed_pw
+from app.routes.auth.email_helpers import send_pw_change_email, send_email_change_emails, send_email_change_sucess_emails, send_pw_change_sucess_email
 from . import auth
 
 # CHAGE USER'S NAME
@@ -117,18 +117,19 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
 # REQUEST TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 1)
 @auth.route("/request_auth_change", methods=["POST"]) # TODO: TEST
 @login_required
-@validate_schema(auth_change_req_schema)
+@validate_schema(req_auth_change_schema)
 @limiter.limit("5/day")
-def change_user_email(): # TODO --> Add to logs so user actions can show in history
+def request_auth_change(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
     """
-    change_user_email() -> JsonType
-    ----------------------------------------------------------
+    **request_auth_change() -> JsonType**
 
-    Route changes the email associated with the user's account. # TODO
+    ----------------------------------------------------------
+    Route receives the request to change a user's login credential (email or password)
+    and sends email(s) with verification url(s) to the user. 
     
     Returns Json object containing strings:
     - "response" value is always included.  
-    - "mail_sent" value only included if response is "success".
+    - "mail_sent" boolean value only included if response is "success".
 
     ----------------------------------------------------------
     **Response example:**
@@ -152,62 +153,66 @@ def change_user_email(): # TODO --> Add to logs so user actions can show in hist
 
     user = User.query.filter_by(email=current_user.email).first()
 
-    # Create verification token TODO
-
-    try:
-        token = ValidationToken(user_id=user.id, ip_address=client_ip, user_agent=user_agent) 
-        db.session.add(token)
-        db.session.commit()
-
-    except Exception as e:
-        logging.error(f"Token creation failed. Error: {e}")
-        return jsonify(error_response), 500
-
-    # Send token by email TODO: check helper function and add verification link
     if change_request_type == "password":
-        mail_sent = send_pw_change_email(user.name, token.token, user.email)
-    else:
-        new_email = json_data["new_email"]
-        if new_email is None:
-            return jsonify(error_response), 400
         try:
-            user.new_email = new_email
+            token = Token(user_id=user.id, purpose=TokenPurpose.PW_CHANGE, ip_address=client_ip, user_agent=user_agent) 
             db.session.add(token)
             db.session.commit()
+
         except Exception as e:
-            logging.error(f"New email could not be added to user. Error: {e}")
+            logging.error(f"Token creation failed. Error: {e}")
             return jsonify(error_response), 500
-        mail_sent = send_email_change_emails(user.name, token.token, token.new_email_token, user.email, new_email)
-
+        
+        link = create_verification_url(token.token, TokenPurpose.PW_CHANGE)
+        mail_sent = send_pw_change_email(user.name, link, user.email)
     
-    # Log this event TODO
-
-    # Log event to user and system logs
-    # try:
-    #     logging.info(f"Initiated auth credential change")
-    #     log_event("ACCOUNT_....", "... successful", user.id)
-
-    # except Exception as e:
-    #     logging.error(f"Log event error. Error: {e}")
-
+    elif change_request_type == "email":
+        new_email = json_data["new_email"]
+        if new_email is None:
+            return jsonify({"response": "New email is required."}), 400
+        try:
+            user.new_email = new_email
+            token_group = get_group_id(user.id)
+            # logging.debug(f"Creating token for EMAIL_CHANGE_OLD_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_OLD_EMAIL}")
+            token_old_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_OLD_EMAIL, ip_address=client_ip, user_agent=user_agent) 
+            # logging.debug(f"Creating token for EMAIL_CHANGE_NEW_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_NEW_EMAIL}")
+            token_new_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_NEW_EMAIL, ip_address=client_ip, user_agent=user_agent) 
+            db.session.add(token_old_email)
+            db.session.add(token_new_email)
+            db.session.commit()
+        except Exception as e:
+            logging.error(f"New email/Token could not be added to user. Error: {e}")
+            return jsonify(error_response), 500
+        link_old_email = create_verification_url(token_old_email.token, TokenPurpose.EMAIL_CHANGE_OLD_EMAIL)
+        link_new_email = create_verification_url(token_new_email.token, TokenPurpose.EMAIL_CHANGE_NEW_EMAIL)
+        mail_sent = send_email_change_emails(user.name, link_old_email, link_new_email, user.email, new_email)
+    else:
+        return jsonify(error_response), 400
+    
     response_data ={
             "response":"success",
             "mail_sent": mail_sent,
         }
     return jsonify(response_data)
 
+# VALIDATE TOKEN TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 2)
+@auth.route('/request_token_validation', methods=['GET']) # TODO: TEST and improve logging, consider db rollbacks
 @limiter.limit("5/day")
-@auth.route('/confirm_email_change', methods=['GET']) # TODO: TEST
-def confirm_email_change(token):
+@validate_schema(req_token_validation_schema)
+def request_token_validation(token):
     """
-    confirm_email_change() -> JsonType 
-    ----------------------------------------------------------
+    request_token_validation() -> JsonType 
 
-    Route changes the email associated with the user's account. # TODO
+    ----------------------------------------------------------
+    Validate a token to change the user's email or password.
     
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" value only included if response is "success".
+    Returns:
+        JsonType: Response JSON containing:
+            - "response": String status of the operation ("success" or error message).
+            - "cred_changed": Boolean indicating if auth credentials were changed.
+            - "signed_token": String echo of the input token.
+            - "purpose": String echo purpose of the token. One of: TokenPurpose.value
+            - "email_sent": Boolean whether a success email was sent to user or not
 
     ----------------------------------------------------------
     **Response example:**
@@ -215,192 +220,117 @@ def confirm_email_change(token):
     ```python
         response_data = {
                 "response":"success",
-                "mail_sent": True, 
-            }
-    ``` 
-    """
-    # Standard error response
-    error_response = {"response": "Invalid or expired token."}
-
-    the_token = ValidationToken.query.filter_by(token=token).first()
-
-    if not the_token:
-        return jsonify(error_response), 400
-    
-    validated = the_token.validate_token()
-
-    if validated is False:
-        return jsonify(error_response), 400
-    
-    user_may_change_email = the_token.user_may_change_email
-
-
-    if user_may_change_email is False:
-        response_data ={
-            "response":"success",
-            "cred_changed": False,
-        }
-        return jsonify(response_data), 200
-
-    # Update the email 
-    user = the_token.user
-    new_email = user.new_email
-    old_email = user.email
-    user.change_email()
-    db.session.delete(the_token)
-    db.session.commit()
-
-    # TODO: log event
-
-    # Notify the old email
-    email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
-
-    response_data ={
-            "response":"success",
-            "cred_changed": True,
-            "mail_sent": email_sent,
-        }
-    return jsonify(response_data)
-
-@limiter.limit("5/day")
-@auth.route('/confirm_new_email/<token>', methods=['GET']) # TODO: TEST
-def confirm_new_email(token):
-    """
-    confirm_new_email() -> JsonType 
-    ----------------------------------------------------------
-
-    Route changes the email associated with the user's account. # TODO
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" value only included if response is "success".
-
-    ----------------------------------------------------------
-    **Response example:**
-
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-            }
-    ``` 
-    """
-    # Standard error response
-    error_response = {"response": "Invalid or expired token."}
-
-    the_token = ValidationToken.query.filter_by(new_email_token=token).first()
-
-    if not the_token:
-        return jsonify(error_response), 400
-    
-    validated = the_token.validate_email_token()
-
-    if validated is False:
-        return jsonify(error_response), 400
-    
-    user_may_change_email = the_token.user_may_change_email
-
-
-    if user_may_change_email is False:
-        response_data ={
-            "response":"success",
-            "cred_changed": False,
-        }
-        return jsonify(response_data), 200
-
-    # Update the email 
-    user = the_token.user
-    new_email = user.new_email
-    old_email = user.email
-    user.change_email()
-    db.session.delete(the_token)
-    db.session.commit()
-
-    # TODO: log event
-
-    # Notify the old email
-    email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
-
-    response_data ={
-            "response":"success",
-            "cred_changed": True,
-            "mail_sent": email_sent,
-        }
-    return jsonify(response_data)
-
-
-@limiter.limit("5/day")
-@auth.route('/confirm_password_change/<token>', methods=['GET']) # TODO: TEST
-def confirm_password_change(token):
-    """
-    confirm_password_change() -> JsonType 
-    ----------------------------------------------------------
-
-    Route changes the password associated with the user's account. # TODO
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" value only included if response is "success".
-
-    ----------------------------------------------------------
-    **Response example:**
-
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
+                "cred_changed": True, 
+                "signed_token": "knslsknskns27t21o....", 
+                "purpose": "pw_change",
+                "email_sent": True
             }
     ``` 
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
-    password = json_data["password"]
+    signed_token = json_data["signed_token"]
+    purpose = json_data["purpose"]
 
     # Standard error response
-    error_response = {"response": "Invalid or expired token."}
+    error_response = {
+        "response": "Invalid or expired token.",
+        "cred_changed": False,
+        "signed_token": signed_token,
+        "purpose": purpose,
+        "email_sent": False
+        }
 
-    the_token = ValidationToken.query.filter_by(token=token).first()
+    token_purpose = TokenPurpose(purpose) 
+
+    # Verify token signature and timestamp
+    token = verify_signed_token(signed_token, token_purpose)
+
+    if not token:
+        logging.info(f"Invalid or expired token could not be validated.")
+        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
+    
+    # Fetch the token from the database
+    try:
+        the_token =Token.query.filter_by(token=token).first()
+    except Exception as e:
+        logging.error(f"Database error while fetching token. Error: {e}")
+        return jsonify(error_response), 500
 
     if not the_token:
-        return jsonify(error_response), 400
+        logging.info(f"Token not found in the database.")
+        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
     
-    validated = the_token.validate_token()
-
-    if validated is False:
-        return jsonify(error_response), 400
+    # Validate token
+    if the_token.validate_token() is False:
+        logging.info(f"Token validation failed.")
+        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
     
+    # Token validated, now take appropriate action
+    credentials_changed = False
+    email_sent = False
 
-    # Check if password meets safe password criteria
-    if not is_good_password(password):
-            has_weak_password = True
-            logging.info("Weak password provided.")
-            # log_event("ACCOUNT_SIGNUP", "weak password") TODO
-            return jsonify({"response": "There was an error registering user."}), 400 
+    # Case: password change
+    if token_purpose == TokenPurpose.PW_CHANGE:
+        new_pw = json_data["new_password"]
+        if not new_pw:
+            logging.error(f"No new password provided in request. Failed to change password.")
+            return jsonify(error_response), 400  
+        
+        try: 
+            user = the_token.user
+            new_pw_hashed = get_hashed_pw(new_pw, user.created_at, user.salt)
+            if not new_pw_hashed:
+                logging.error(f"Password in request does not meet standards.")
+                return jsonify(error_response), 400
+            
+            user.password = new_pw_hashed
+            db.session.delete(the_token)
+            db.session.commit()
+            credentials_changed = True
+            email_sent = send_pw_change_sucess_email(user.name, user.email)
+        except Exception as e:
+            logging.error(f"Failed to change password. Error: {e}")
+            return jsonify(error_response), 500
+        
+    # Case: email change    
+    else:
+        related_tokens = Token.query.filter_by(group_id=the_token.group_id).all()
+        if len(related_tokens) != 2:
+            logging.error(f"Invalid number of related tokens for group_id: {the_token.group_id}. 2 are required for email changes")
+            return jsonify(error_response), 500
+        
+        second_token = next((t for t in related_tokens if t != the_token), None)
+        if not second_token:
+            logging.error(f"Second token not found for group_id: {the_token.group_id}.")
+            return jsonify(error_response), 500
+        
+        if second_token.token_verified == modelBool.TRUE:
+            # User has validated both required tokens and may now change emails
+            try: 
+                user = the_token.user
+                new_email = user.new_email
+                old_email = user.email
+                email_was_changed = user.change_email() 
 
-    # Prepare pw to save in db
-    user = the_token.user
-
-    date = user.created_at
-    salt = generate_salt()
-    pepper = get_pepper(date)
-    salted_password = salt + password + pepper
-    hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode("utf-8")
-    
-    
-    # Update the password 
-
-    user.password = hashed_password
-    db.session.delete(the_token)
-    db.session.commit()
-
-    # TODO: log event
-
-    # Notify the old email
-    email_sent = send_pw_change_sucess_email(user.name, user.email)
+                if email_was_changed:
+                    db.session.delete(the_token)
+                    db.session.delete(second_token)
+                    db.session.commit()
+                    email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
+                    credentials_changed = True
+                else:
+                    logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
+                    return jsonify(error_response), 500
+            except Exception as e:
+                logging.error(f"Failed to change email. Error: {e}")
+                return jsonify(error_response), 500
 
     response_data ={
-            "response":"success",
-            "cred_changed": True,
-            "mail_sent": email_sent,
-        }
-    return jsonify(response_data)
+                "response":"success",
+                "cred_changed": credentials_changed,
+                "signed_token": signed_token,
+                "purpose": purpose,
+                "email_sent": email_sent
+            }
+    return jsonify(response_data), 200
