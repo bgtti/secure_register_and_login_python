@@ -6,19 +6,11 @@ import PropTypes from "prop-types";
  * @returns {React.ReactElement}
  * 
  */
-function ChangeEmailHalfPath() {
+function ChangeEmailHalfPath(props) {
     const { verifiedNewEmail } = props;
 
-    let missingEmail = ""
-    let stepCompleted = ""
-
-    if (verifiedNewEmail) {
-        missingEmail = "current"
-        stepCompleted = "3"
-    } else {
-        missingEmail = "new"
-        stepCompleted = "2"
-    }
+    const missingEmail = verifiedNewEmail ? "current" : "new";
+    const stepCompleted = verifiedNewEmail ? "3" : "2";
 
     return (
         <div>
@@ -26,7 +18,7 @@ function ChangeEmailHalfPath() {
             <h3>1 out of 2 links verified!</h3>
             <br />
 
-            <p >
+            <p>
                 The email change process is <b>not complete yet</b>: please click on the link we sent to your <b>{missingEmail}</b> email address as well.
             </p>
 

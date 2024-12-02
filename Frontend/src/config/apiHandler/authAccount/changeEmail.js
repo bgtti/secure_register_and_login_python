@@ -101,37 +101,38 @@ export function acctEmailChange(newEmail, userAgent) {
  * @todo fix this docstring
  * 
  * 
- * @param {string} newEmail
- * @param {string} userAgent
+ * @param {string} pathUsed # one of ["confirmEmailChange", "confirmNewEmail"]
+ * @param {string} tokenUsed
  * @returns {object}
  * The return will always contain a boolean "success".
- * The return may contain "info" in the response when relevant.
+ * The return may contain emailWasSent and credChanged when there is a successfull response. Their values are boolean and indicate whether an email has been sent to the user and the email credentials were changed in relation to this request
  * 
  * @example
  * //Input example:
  * const data = {
- *     new_email: "josy@example.com",
- *     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+ *     pathUsed: "confirmEmailChange",
+ *     tokenUsed: "Il94YzZPcElIUFdjRi0wZ3MyelU2NW91Unl0b3lJMlN3RWpkTGctblBvT3Mi.Z03aPA.CtQImrnVkLtUH0VpAyRrdzIcuGU",
  * }
- * acctEmailChange(data.new_email, data.user_agent)
+ * confirmEmailChange(data.pathUsed, data.tokenUsed)
  * 
  * //Original API response:
  * {
  *  "response": "success",
  *  "mail_sent": true,
+ *  "cred_changed": true,
  * }
  * 
- * // Response from acctEmailChange:
- * acctEmailChange(requestData)
+ * // Response from confirmEmailChange:
+ * confirmEmailChange(data.pathUsed, data.tokenUsed)
  *      .then(response => {
  *          console.log (response)
  * })
- * // a successfull response will yield:
- * { success: true }
- * // an error response might yield:
- * { success: false }
- * // a successfull response, but mail_sent is false (meaning there was a problem sending the verification email):
- * { success: false, info: "A problem occurred" }
+ * // a successfull response where the credentials have not been changed (only one token was verified):
+ * { success: true, emailWasSent: false, credChanged: false }
+ * // a successfull response where the credentials were changed and a success email was sent to user:
+ * { success: true, emailWasSent: true, credChanged: true }
+ * // a failed response:
+ * { success: false, info: "An error occurred." }
  */
 export function confirmEmailChange(pathUsed, tokenUsed) {
     // checking if argument was received correctly
@@ -139,17 +140,16 @@ export function confirmEmailChange(pathUsed, tokenUsed) {
     const urlPath = (pathUsed && validPaths.includes(pathUsed)) ? pathUsed : false;
     const token = (tokenUsed && tokenFormatIsValid(tokenUsed)) ? tokenUsed.trim() : false;
 
-    validateTokenFormat(tokenUsed)
     if (!urlPath || !token) {
         console.error("Error: invalid input.")
         return { success: false }
     }
 
-    const type = urlPath === "confirmEmailChange" ? "old_email" : "old_email"
+    const type = urlPath === "confirmEmailChange" ? "email_change_old_email" : "email_change_new_email"
 
     let requestData = {
-        "type": type,
-        "token": token,
+        "purpose": type,
+        "signed_token": token,
     }
 
     // making the request
@@ -161,19 +161,12 @@ export function confirmEmailChange(pathUsed, tokenUsed) {
 
             switch (responseStatus) {
                 case 200:
-                    let emailWasSent = response.data.mail_sent
-                /**
-                 * 
-                 * TODO
-                 * 
-                 * - BE api reformed: adapt changes in FE
-                 * 
-                 * 
-                 */
-                // answer with: fail, success, or half process completed
-                // inform user in case success mail does not send?
-                // if (emailWasSent) { return { success: true } }
-                // else { return { success: false, info: "One or more emails invalid" } }
+                    let res = {
+                        success: true,
+                        emailWasSent: response.data.email_sent, //this variable is not being used by the component at the moment
+                        credChanged: response.data.cred_changed,
+                    }
+                    return res
                 case 400:
                 case 401:
                 case 409:
@@ -182,7 +175,7 @@ export function confirmEmailChange(pathUsed, tokenUsed) {
             }
         }
         catch (error) {
-            console.error(`Api handler to change name encountered an error: ${error}`)
+            console.error(`Api handler to change email encountered an error: ${error}`)
             return { success: false, info: "An error occurred." }
         }
     }

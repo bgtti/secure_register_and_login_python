@@ -181,13 +181,12 @@ def send_email_change_sucess_emails(user_name, old_email, new_email):
     msg_1 = "This email address is no longer associated with your account. You can now log in using your new email address."
     msg_2 = "You can now log in using this email address."
 
-    def send_mail(link, msg, recipient):
+    def send_mail(msg, recipient):
         email_body = render_template(
             CHANGE_AUTH_CRED_SUCCESS, # email template name 
             user_name=user_name,
             auth_type="email",
             more_info = msg,
-            btn_link=link
         )
         email_message = EmailMessage(
             subject = f"{APP_NAME} Email change successfull ",
@@ -207,7 +206,7 @@ def send_email_change_sucess_emails(user_name, old_email, new_email):
     
     # Sending email to both old and new accounts
     email_1_sent = send_mail(msg_1, old_email)
-    email_2_sent = send_mail( msg_2, new_email)
+    email_2_sent = send_mail(msg_2, new_email)
     
     if email_1_sent and email_2_sent:
         return True

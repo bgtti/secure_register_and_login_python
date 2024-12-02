@@ -43,7 +43,7 @@ def sign_token(token, purpose):
 
 def verify_signed_token(signed_token, purpose, max_age_in_sec = 3600):
     """
-    **verify_signed_token(signed_token: str, purpose: enum,  max_age_in_sec: int=3600) --> str | None**
+    **verify_signed_token(signed_token: str, purpose: enum | str,  max_age_in_sec: int=3600) --> str | None**
 
     Verifies a signed token and validates its purpose and expiration.
 
@@ -51,18 +51,25 @@ def verify_signed_token(signed_token, purpose, max_age_in_sec = 3600):
     **Parameters:**
 
         signed_token (str): The signed token to verify.
-        purpose (enum class TokenPurpose): The purpose of the token (used as a salt).
+        purpose (enum class TokenPurpose or its string value): The purpose of the token (used as a salt).
         max_age_in_sec (int): Maximum age of the token in seconds (default: 3600, 1 hr).
     
     Returns:
         str or None: The decoded token data if valid; otherwise None.
+
+    Example:
+
     """
-    if purpose not in TokenPurpose.__members__.values():
+    # if purpose is passed as an enum, it should be translated to string
+    purpose_str = purpose if isinstance(purpose, str) else purpose.value
+
+    if purpose_str not in [member.value for member in TokenPurpose]:
         logging.error(f"Failed to provide a valid purpose to the verify_signed_token function. Purpose must e a member of the enum class TokenPurpose defined in the util package constants.")
         raise ValueError(f"Invalid token purpose: {purpose}")
+
     token_preview = "Signed_token(first 8 digs)= " + signed_token[:8] + "..." if signed_token else "None"
     try:
-        token= serializer.loads(signed_token, salt=purpose, max_age=max_age_in_sec)
+        token= serializer.loads(signed_token, salt=purpose_str, max_age=max_age_in_sec)
         return token #compare this value to the one in the db to see if matches
     except SignatureExpired:
         logging.info(f"Token verification failed: token has expired. {token_preview}")

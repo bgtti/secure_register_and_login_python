@@ -187,7 +187,13 @@ class Token(db.Model, UserMixin):
         Will mark the token as used by setting token_verified to true.
         """
         now = datetime.now(timezone.utc)
-        token_is_valid = self.created_at < now <= self.expiry_date
+        # Normalize created_at and expiry_date to offset-aware datetimes
+        # The normalization is due to the "TypeError: can't compare offset-naive and offset-aware datetimes" received in the console...
+        created_at_aware = self.created_at.replace(tzinfo=timezone.utc) if self.created_at.tzinfo is None else self.created_at
+        expiry_date_aware = self.expiry_date.replace(tzinfo=timezone.utc) if self.expiry_date.tzinfo is None else self.expiry_date
+
+        # Perform comparison using aware datetimes
+        token_is_valid = created_at_aware < now <= expiry_date_aware
         token_was_not_used = self.token_verified == modelBool.FALSE
 
         if token_is_valid and token_was_not_used:

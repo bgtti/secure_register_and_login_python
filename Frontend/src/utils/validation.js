@@ -181,15 +181,23 @@ export function sanitizedUserAgent(userAgent = "") {
  * validateTokenFormat("") // Output: false
  */
 export function tokenFormatIsValid(token) {
-    console.log(token.trim() === "")
+    // check for type
     if (typeof token !== "string" || token.trim() === "") { return false }
+
     const trimmedToken = token.trim()
-    // check for length.. min max..
+
+    //check for length
+    if (trimmedToken.length < INPUT_LENGTH.signedToken.minValue || trimmedToken.length > INPUT_LENGTH.signedToken.maxValue) {
+        return false;
+    }
+    // token should contain only: alphanumeric, period, dash, and underscore
+    const tokenRegex = /^[a-zA-Z0-9._-]+$/;
+    if (!tokenRegex.test(trimmedToken)) { return false; }
+
     // next may be a silly black list check, but why not...
     const noGoInput = ["document", "href", "html", "http", "select", "script", "where", "www."]
     if (noGoInput.some(weirdInput => trimmedToken.toLowerCase().includes(weirdInput))) { return false }
-    // const tokenRegex = /^[a-zA-Z0-9_-]{43}$/;
-    // return tokenRegex.test(token);
+
     return true
 }
 

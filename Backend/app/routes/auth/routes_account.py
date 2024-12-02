@@ -196,10 +196,10 @@ def request_auth_change(): # TODO --> Add to logs so user actions can show in hi
     return jsonify(response_data)
 
 # VALIDATE TOKEN TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 2)
-@auth.route('/request_token_validation', methods=['GET']) # TODO: TEST and improve logging, consider db rollbacks
+@auth.route('/request_token_validation', methods=['POST']) # TODO: improve + logging
 @limiter.limit("5/day")
 @validate_schema(req_token_validation_schema)
-def request_token_validation(token):
+def request_token_validation():
     """
     request_token_validation() -> JsonType 
 
@@ -238,17 +238,15 @@ def request_token_validation(token):
         "cred_changed": False,
         "signed_token": signed_token,
         "purpose": purpose,
-        "email_sent": False
+        "email_sent": False #=> TODO: whether emails are sent or not, the front end is not handling this data
         }
 
-    token_purpose = TokenPurpose(purpose) 
-
     # Verify token signature and timestamp
-    token = verify_signed_token(signed_token, token_purpose)
+    token = verify_signed_token(signed_token, purpose)
 
     if not token:
         logging.info(f"Invalid or expired token could not be validated.")
-        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
+        return jsonify(error_response), 400 
     
     # Fetch the token from the database
     try:
@@ -258,17 +256,26 @@ def request_token_validation(token):
         return jsonify(error_response), 500
 
     if not the_token:
-        logging.info(f"Token not found in the database.")
-        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
+        logging.info(f"Verified token not found in the database.")
+        return jsonify(error_response), 400 
     
     # Validate token
-    if the_token.validate_token() is False:
-        logging.info(f"Token validation failed.")
-        return jsonify(error_response), 400 #=> TODO: make sure front end displays this correctly
+    try:
+        if the_token.validate_token():
+            db.session.commit()
+        else:
+            logging.info(f"Token validation failed.")
+            return jsonify(error_response), 400 
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Database error while validating token. Error: {e}")
+        return jsonify(error_response), 500
     
     # Token validated, now take appropriate action
     credentials_changed = False
     email_sent = False
+
+    token_purpose = TokenPurpose(purpose) 
 
     # Case: password change
     if token_purpose == TokenPurpose.PW_CHANGE:
@@ -290,6 +297,7 @@ def request_token_validation(token):
             credentials_changed = True
             email_sent = send_pw_change_sucess_email(user.name, user.email)
         except Exception as e:
+            db.session.rollback()
             logging.error(f"Failed to change password. Error: {e}")
             return jsonify(error_response), 500
         
@@ -317,14 +325,24 @@ def request_token_validation(token):
                     db.session.delete(the_token)
                     db.session.delete(second_token)
                     db.session.commit()
-                    email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
                     credentials_changed = True
+                    # If success emails fail to be sent, no error should be returned 
+                    try:
+                        email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
+                    except Exception as e:
+                        logging.warning(f"Failed to send email change success notification. Error: {e}") 
                 else:
                     logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
                     return jsonify(error_response), 500
             except Exception as e:
+                db.session.rollback()
                 logging.error(f"Failed to change email. Error: {e}")
                 return jsonify(error_response), 500
+
+    # Log out user from any open session in case the credentials have changed.
+    if credentials_changed:
+        print("chedentials changed")
+        #TODO: login manager logic should be changed to use an alternative id. Make changes in the user model and Flask-Login manager to query a user based on a different method. Then change this alternative id in the user model so that the user is logged out of all sessions that might be open.
 
     response_data ={
                 "response":"success",

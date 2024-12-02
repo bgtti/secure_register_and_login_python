@@ -16,6 +16,7 @@ from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EM
 from app.utils.constants.enum_class import TokenPurpose
 
 token_purpose_values = [purpose.value for purpose in TokenPurpose]
+"""purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
 
 signup_schema = {
     "type": "object",

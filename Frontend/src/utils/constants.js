@@ -77,6 +77,10 @@ export const INPUT_LENGTH = Object.freeze({
     userAgent: {
         minValue: 0,
         maxValue: 255
+    },
+    signedToken: {
+        minValue: 40,
+        maxValue: 300
     }
 })
 
