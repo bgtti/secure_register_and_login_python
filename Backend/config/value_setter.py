@@ -21,6 +21,7 @@ from utils.print_to_terminal import print_to_terminal
 
 DEFAULT = {
     "SECRET_KEY": "unsafeSecretKey123",
+    "SERIALIZER_SECRET_KEY": "anotherUnsafeSecretKeyUsedHere456",
     "SUPER_USER": {
         "name": "Super Admin",
         "email": "super@admin",
@@ -99,6 +100,34 @@ def set_secret_key():
 CURRENT_KEY: str = set_secret_key()
 
 assert isinstance(CURRENT_KEY, str), "CURRENT_KEY should be a string. Check value_setter.py inside the config directory."
+
+# Define the current secret key value.
+def set_serializer_secret_key():
+    """
+    set_serializer_secret_key() -> str
+    ------------------------------------------------------
+
+    Returns the value of SERIALIZER_SECRET_KEY if it exists in env file. 
+    Otherwise, returns a default (DEFAULT["SERIALIZER_SECRET_KEY"]).
+    This value will be used by the itsdangerous extension.
+
+    ------------------------------------------------------
+    Returns a string like:
+
+    `set_serializer_secret_key() #--> "unsafeSecretKey123"`
+    """
+    if CURRENT_ENVIRONMENT == "local":
+        return DEFAULT["SERIALIZER_SECRET_KEY"]
+    secret = os.getenv("SERIALIZER_SECRET_KEY")
+    if secret:
+        return secret
+    else:
+        print_to_terminal("Set SERIALIZER_SECRET_KEY in a .env file before using this app in production.", "MAGENTA")
+        return DEFAULT["SERIALIZER_SECRET_KEY"]
+    
+CURRENT_SERIALIZER_KEY: str = set_serializer_secret_key()
+
+assert isinstance(CURRENT_SERIALIZER_KEY, str), "SERIALIZER_SECRET_KEY should be a string. Check value_setter.py inside the config directory."
 
 # Define the admin credentials.
 # Ps: Used to create super admin user

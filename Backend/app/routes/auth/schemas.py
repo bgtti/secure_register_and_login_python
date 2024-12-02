@@ -13,6 +13,10 @@ These schemas are passed in to `validate_schema` (see `app/utils/custom_decorato
 
 """
 from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
+from app.utils.constants.enum_class import TokenPurpose
+
+token_purpose_values = [purpose.value for purpose in TokenPurpose]
+"""purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
 
 signup_schema = {
     "type": "object",
@@ -84,7 +88,7 @@ change_name_schema = {
     "required": ["new_name"]
 }
 
-auth_change_req_schema = {
+req_auth_change_schema = {
     "type": "object",
     "title": "Request a change of user password or email. First step of 2-step process.", 
     "properties": {
@@ -114,6 +118,41 @@ auth_change_req_schema = {
     "additionalProperties": False,
     "required": ["type"]
 }
+
+req_token_validation_schema = {
+    "type": "object",
+    "title": "Validate a token that leads to password or email change.", 
+    "properties": {
+        "signed_token": {
+            "description": "The signed token",
+            "type": "string",
+            "minLength": INPUT_LENGTH['signed_token']['minValue'],
+            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
+            },
+        "purpose": {
+            "description": "Token purpose can be one of: TokenPurpose enum. This should answer the questions: what is this token validating? ",
+            "type": "string",
+            "enum": token_purpose_values,
+            },
+        "new_password": {
+            "description": "New password only required if the purpose is to change passwords",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'], 
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN
+            },
+        # "user_agent": {
+        #     "type": "string", 
+        #     "minLength": 0, 
+        #     "maxLength": 255 #TODO get regex pattern
+        #     },
+    },
+    "additionalProperties": False,
+    "required": ["signed_token", "purpose"]
+}
+
+
+
 
 #when verifying token use:
 # name_of_schema = {

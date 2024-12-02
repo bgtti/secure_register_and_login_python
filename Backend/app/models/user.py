@@ -82,7 +82,7 @@ class User(db.Model, UserMixin):
     # TABLE
     id = db.Column(db.Integer, primary_key=True, unique=True)
     uuid = db.Column(db.String(32), unique=True, default=get_uuid) #...
-    session = db.Column(db.String(32), nullable=False, default=get_uuid) #...
+    session = db.Column(db.String(32), nullable=False, default=get_uuid) #...used in the login manager (reserved for when user does not want to be forgotten... check if it will be implemented)
     remember_me = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) #...
     name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), nullable=False)
     # auth:
@@ -111,7 +111,7 @@ class User(db.Model, UserMixin):
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
     # new_email_token = db.Column(db.String(32), nullable=True) # used for email change only
     # new_email_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    validation_token = db.relationship("ValidationToken", backref="user", lazy="select", cascade="all, delete-orphan")
+    token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     
     # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):
@@ -293,12 +293,10 @@ class User(db.Model, UserMixin):
         change_email()-> bool
         
         ------------------------------------------------
-
         Changes the user's account email to a new email address stored at user.new_email.
         Make sure a VerificationToken was validated before making this change.
 
         ------------------------------------------------
-
         Example usage:
         user.change_email()
         """

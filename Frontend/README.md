@@ -60,3 +60,7 @@ https://github.com/jonalxh/Flask-Admin-Dashboard
 # json schema validation for the front end:
 
 https://ajv.js.org/
+
+# adopt the gitlab flow
+review info about release branches here:
+[What Is GitLab Workflow](https://www.youtube.com/watch?v=7lgGEXpsflI)
