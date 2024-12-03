@@ -3,10 +3,10 @@
 
 auth/routes_account.py contains routes responsible for account management functionalities related to authentication.
 Here you will find the following routes:
+- **acct_verification** route #TODO
 - **change_user_name** route
-- **change_email** route #TODO
-- **change_password** route #TODO
-- **reset_password** route #TODO
+- **request_auth_change** route #TODO: pw missing
+- **request_token_validation** route #TODO: pw missing
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -14,15 +14,12 @@ Reoutes receiving client data are decorated with `@validate_schema(name_of_schem
 ------------------------
 ## More information
 
-This app relies on Flask-Login (see `app/extensions`) to handle authentication. It provides user session management, allowing us to track user logins, manage sessions, and protect routes.
-
-Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
-
+Email verification relies on token management. For more information about how tokens are used, please refer to the Token db model at app/models/token.py
 """
 import logging
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user as flask_login_user, current_user, logout_user as flask_logout_user, login_required
-from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
+from app.extensions.extensions import db, limiter, login_manager
 from app.models.user import User
 from app.models.token import Token
 from app.utils.constants.enum_class import TokenPurpose, modelBool
@@ -30,12 +27,11 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.token_utils.group_id_creation import get_group_id
 from app.utils.token_utils.sign_and_verify import verify_signed_token
 from app.utils.token_utils.verification_urls import create_verification_url
 from app.routes.auth.schemas import change_name_schema, req_auth_change_schema, req_token_validation_schema
-from app.routes.auth.helpers import is_good_password, get_hashed_pw
+from app.routes.auth.auth_helpers import reset_user_session, get_hashed_pw
 from app.routes.auth.email_helpers import send_pw_change_email, send_email_change_emails, send_email_change_sucess_emails, send_pw_change_sucess_email
 from . import auth
 
@@ -341,8 +337,7 @@ def request_token_validation():
 
     # Log out user from any open session in case the credentials have changed.
     if credentials_changed:
-        print("chedentials changed")
-        #TODO: login manager logic should be changed to use an alternative id. Make changes in the user model and Flask-Login manager to query a user based on a different method. Then change this alternative id in the user model so that the user is logged out of all sessions that might be open.
+        reset_user_session(user)
 
     response_data ={
                 "response":"success",

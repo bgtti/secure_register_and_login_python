@@ -1,8 +1,10 @@
 """
 **ABOUT THIS FILE**
 
-auth/helpers.py contains the following helper function(s):
+auth/auth_helpers.py contains the following helper function(s):
 
+- **reset_user_session**
+- **get_hashed_pw**
 - **is_good_password**
 
 ------------------------
@@ -13,9 +15,31 @@ Helper functions to auth routes
 """
 import re
 import logging
-from app.extensions.extensions import flask_bcrypt
+from flask_login import current_user
+from app.extensions.extensions import db, flask_bcrypt
 from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.salt_and_pepper.helpers import get_pepper
+
+def reset_user_session(user):
+    """
+    **reset_user_session(user: User) -> None**
+
+    ---------------------------------------
+    Resets the user's session by invalidating old sessions and committing the changes to the database.
+    It does this by overwriting the alternative id (used by Flask-Login to identify the user) with a new one.
+
+    **Argumets:**
+        user: The User object whose session is being reset
+    ---------------------------------------
+    **Example usage:**
+    ```python
+        # inside route:
+        user = current_user
+        reset_user_session(user)
+    ```
+    """
+    user.new_session()  
+    db.session.commit()
 
 def is_good_password(password):
     """
@@ -70,7 +94,7 @@ def get_hashed_pw(password, date, salt):
         None: If the password is weak or hashing fails.
     """
     if not is_good_password(password):
-        logging.info("Weak password provided. Hashing pw failed.")
+        logging.info("Weak password provided. Hashing password failed.")
         return None
     pepper = get_pepper(date)
     salted_password = salt + password + pepper

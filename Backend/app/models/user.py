@@ -17,18 +17,29 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 
 ADMIN_PW = SUPER_USER["password"]
 
+def get_session_id(user_id=0):
+    random_number = secrets.randbelow(90000000) + 10000000  # 8-digit number
 
-def get_uuid():
-    return uuid4().hex
+    # as a user is created, a session id should be generated using the model's method
+    # however, in the case this step is forgotten ( or in the case the database is being seeded with some fake test users), a random number will be assigned
+    if user_id == 0:
+        use_random = secrets.randbelow(90000000) + 10000000  # another 8-digit number
+        return f"0{use_random}-{random_number}"
+    
+    return f"{user_id}-{random_number}"
 
-def get_token():
-    return secrets.token_urlsafe(32)
-
-def get_six_digit_code():
+def get_six_digit_code(): # TODO: check owasp oppinion on one-time passwords
     # Generate a secure random integer between 100000 and 999999
     return secrets.randbelow(900000) + 100000  # Ensures a 6-digit number
 
-def token_expiration_date():
+# possibly delete the functions bellow
+def get_uuid(): # TODO: delete
+    return uuid4().hex
+
+def get_token(): # TODO: delete
+    return secrets.token_urlsafe(32)
+
+def token_expiration_date(): # TODO: delete
     """
     Returns a string representation of the date and time 1 hour from now.
     Format: YYYY-MM-DD HH:MM:SS
@@ -82,7 +93,7 @@ class User(db.Model, UserMixin):
     # TABLE
     id = db.Column(db.Integer, primary_key=True, unique=True)
     uuid = db.Column(db.String(32), unique=True, default=get_uuid) #...
-    session = db.Column(db.String(32), nullable=False, default=get_uuid) #...used in the login manager (reserved for when user does not want to be forgotten... check if it will be implemented)
+    session = db.Column(db.String(50), nullable=False, default=get_session_id) # used by the login manager to get the user
     remember_me = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) #...
     name = db.Column(db.String(INPUT_LENGTH['name']['maxValue']), nullable=False)
     # auth:
@@ -105,12 +116,7 @@ class User(db.Model, UserMixin):
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     # auth credential change or verification
-    # change_request_date = db.Column(db.DateTime, nullable=True)
-    # change_token = db.Column(db.String(32), nullable=True) 
-    # change_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
-    # new_email_token = db.Column(db.String(32), nullable=True) # used for email change only
-    # new_email_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     
     # METHODS
@@ -123,22 +129,25 @@ class User(db.Model, UserMixin):
     
     def __repr__(self):
         return f"<User: {self.id} {self.name} {self.email}>"
-    
-    def new_session(self):
-        new_session_id = get_uuid()
-        self.session = new_session_id
-        return self.session 
-    
-    # def end_session(self):
-    #     self._session = ""
 
     def should_be_remembered(self):
-        """
+        """ TODO:
         should_be_remembered()-> bool
         -----------------------------
         Returns a boolean indicated whether user wants to be remembered or whether the session should expire when browser closes.
         """
         return self.remember_me == modelBool.TRUE
+    
+    # used in routes to invalidate active sessions
+    def new_session(self):
+        """
+        new_session() -> str
+        ----------------------------
+        Use this method as soon as the user is created to generate a new session id.
+        Every time a new session id is created, any open user session will be invalidated (a new log in will be required).
+        """
+        self.session = get_session_id(self.id)
+        return self.session 
 
     # used by flask_login to get a session id
     def get_id(self):
@@ -147,10 +156,7 @@ class User(db.Model, UserMixin):
         ----------------------------
         Used by the login manager from flask_login to create a session cookie.
         """
-        if self.should_be_remembered():
-            return self.session
-        else:
-            return str(self.id)
+        return self.session
     
     def increment_login_attempts(self):
         """
@@ -313,83 +319,3 @@ class User(db.Model, UserMixin):
             logging.info("Admin account email change.")
 
         return True
-    
-    # def generate_auth_change_token(self, email=False):
-    #     """
-    #     Initiate a change of authentication credentials: email or password.
-    #     ------------------------------------------------
-        
-    #     If an email change is initiated, pass the new email as a string to this function.
-    #     This function will generate self.change_token_one and self.change_token_two.
-
-    #     ------------------------------------------------
-    #     Example usage:
-    #     `generate_auth_change_token() # for password changes`
-    #     `generate_auth_change_token("new.email@fakemail.com") # for email changes`
-    #     """
-    #     self.change_request_date = datetime.now(timezone.utc)
-    #     self.change_token = get_token()
-    #     self.change_verified = modelBool.FALSE 
-        
-    #     if email:
-    #         self.new_email = email
-    #         self.new_email_token = get_token()
-    #         self.new_email_verified = modelBool.FALSE
-
-    # def validate_change_token(self):
-    #     """
-    #     Verifies a token for a change request to change auth credentials: email or password.
-    #     ------------------------------------------------
-        
-    #     Will return true if the token is valid and false otherwise.
-    #     If the token is valid, it will delete the token from the db.
-
-    #     ------------------------------------------------
-    #     Example usage:
-    #     `user.validate_change_token() # for password changes`
-    #     `user.auth_credential_change("new.email@fakemail.com") # for email changes`
-    #     """
-    #     if self.change_token is None:
-    #         return False
-        
-    #     now = datetime.now(timezone.utc)
-    #     expiry = token_expiration_date()
-    #     token_is_valid = self.change_request_date < now <= expiry
-    #     token_was_not_used = self.change_verified == modelBool.FALSE
-
-    #     if token_is_valid and token_was_not_used:
-    #         self.change_verified = modelBool.TRUE
-    #         return True
-    #     else:
-    #         self.change_token = None
-    #         return False
-
-
-
-        
-    # def validate_change_email_token(self):
-    #     """
-    #     Change authentication credentials: email or password.
-    #     ------------------------------------------------
-        
-    #     If an email change is initiated, pass the new email as a string to this function.
-    #     This function will generate self.change_token_one and self.change_token_two.
-    #     ------------------------------------------------
-    #     Example usage:
-    #     `user.auth_credential_change() # for password changes`
-    #     `user.auth_credential_change("new.email@fakemail.com") # for email changes`
-    #     """
-    #     if self.new_email_token is None:
-    #         return False
-        
-    #     now = datetime.now(timezone.utc)
-    #     expiry = token_expiration_date()
-    #     token_is_valid = self.change_request_date < now <= expiry
-    #     token_was_not_used = self.new_email_verified == modelBool.FALSE
-
-    #     if token_is_valid and token_was_not_used:
-    #         self.new_email_verified = modelBool.TRUE
-    #         return True
-    #     else:
-    #         self.new_email_token = None
-    #         return False
