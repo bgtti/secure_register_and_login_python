@@ -6,9 +6,9 @@ import { setLoader } from "../../../redux/loader/loaderSlice.js"
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js"
 import { tokenFormatIsValid } from "../../../utils/validation"
 import { confirmEmailChange } from "../../../config/apiHandler/authAccount/changeEmail.js"
-import ChangeEmailFailed from "./Outcome/ChangeEmailFailed"
-import ChangeEmailHalfPath from "./Outcome/ChangeEmailHalfPath"
-import ChangeEmailSucceeded from "./Outcome/ChangeEmailSucceeded"
+import ChangeEmailFailed from "./SubComponents/ChangeEmailFailed.jsx"
+import ChangeEmailHalfPath from "./SubComponents/ChangeEmailHalfPath.jsx"
+import ChangeEmailSucceeded from "./SubComponents/ChangeEmailSucceeded.jsx"
 import "./changeEmail.css"
 
 
