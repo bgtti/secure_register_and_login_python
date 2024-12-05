@@ -56,10 +56,10 @@ if __name__ == "__main__":
         # If an SSL certificate and key are available in the specified folder, they will be used to build an HTTP connection. This is recommended.
         if os.path.exists(os.path.join(os.getcwd(), "certs")) and os.listdir(os.path.join(os.getcwd(), "certs")):
             # print_to_terminal(f"App running in HTTPS: be sure to check front end path.", "BLUE")
-            app.run(ssl_context=("certs/cert.pem", "certs/key.pem"), debug=True)
+            app.run(ssl_context=("certs/cert.pem", "certs/key.pem"), debug=(ENVIRONMENT == "development"))
         else:
             # print_to_terminal(f"App running in HTTP: be sure to check front end path.", "BLUE")
-            app.run(debug=True)
+            app.run(debug=(ENVIRONMENT == "development"))
     else:
         app.run() # set accordingly for production. 
         #Eg: if using waitress something like: serve(app, host='0.0.0.0', port=5000, threads=4)
