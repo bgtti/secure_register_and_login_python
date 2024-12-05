@@ -9,6 +9,7 @@ import Footer from "../layout/Footer";
 import Home from '../pages/Home/Home';
 import LogIn from "../pages/Login/LogIn";
 import SignUp from "../pages/SignUp/SignUp";
+import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
@@ -61,6 +62,7 @@ const Router = () => {
                 <Route exact path="/" element={<Home />} />
                 <Route exact path="login" element={<LogIn />} />
                 <Route exact path="signup" element={<SignUp />} />
+                <Route exact path="resetPassword" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />

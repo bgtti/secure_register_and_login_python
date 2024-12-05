@@ -201,6 +201,9 @@ function LogIn() {
             <p className="MAIN-info-paragraph">
                 Don't have an account yet? <a href="/signup">Sign up</a> instead.
             </p>
+            <p className="MAIN-info-paragraph">
+                Forgot your password? <a href="/resetPassword">Reset password</a>.
+            </p>
         </div>
     );
 };
