@@ -53,7 +53,7 @@ def signup_user():
     Sets a session cookie in response.
     Returns Json object containing strings:
     - "response" value is always included.  
-    - "user" value only included if response is "success".
+    - "user" and "preferences" values only included if response is "success".
 
     ----------------------------------------------------------
     **Response example:**
@@ -66,6 +66,11 @@ def signup_user():
                     "email": "john@email.com",
                     "email_is_verified": False # will always be false after signup
                     }, 
+                "preferences":{
+                    "mfa_enabled": False,
+                    "in_mailing_list": False,
+                    "night_mode_enabled": True,
+                }
             } 
     ```
     ----------------------------------------------------------
@@ -177,6 +182,11 @@ def signup_user():
                 "email": new_user.email,
                 "email_is_verified": False
                 },
+            "preferences":{
+                "mfa_enabled": False,
+                "in_mailing_list": False,
+                "night_mode_enabled": True,
+            }
         }
     return jsonify(response_data)
 
@@ -208,7 +218,12 @@ def login_user():
                     "email": "john@email.com",
                     "access": "user",
                     "email_is_verified": False
-                    }, 
+                    },
+                "preferences":{
+                    "mfa_enabled": False,
+                    "in_mailing_list": False,
+                    "night_mode_enabled": True,
+                } 
             }
     ``` 
     ----------------------------------------------------------
@@ -335,7 +350,12 @@ def login_user():
                 "name": user.name, 
                 "email": user.email,
                 "email_is_verified": user.email_is_verified.value
-                }, 
+                },
+            "preferences":{
+                "mfa_enabled": user.mfa_enabled.value,
+                "in_mailing_list": user.in_mailing_list.value,
+                "night_mode_enabled": user.night_mode_enabled.value,
+            } 
         }
     return jsonify(response_data)
 
@@ -391,6 +411,11 @@ def get_current_user():
                     "access": "user",
                     "email_is_verified": False
                     }, 
+                "preferences":{
+                    "mfa_enabled": False,
+                    "in_mailing_list": True,
+                    "night_mode_enabled": False,
+                }
             }
     ``` 
     """
@@ -405,5 +430,10 @@ def get_current_user():
                 "email": user.email,
                 "email_is_verified": user.email_is_verified.value
                 },
+            "preferences":{
+                "mfa_enabled": user.mfa_enabled.value,
+                "in_mailing_list": user.in_mailing_list.value,
+                "night_mode_enabled": user.night_mode_enabled.value,
+            }
         }
     return jsonify(response_data)

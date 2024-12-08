@@ -1,6 +1,6 @@
-import { apiCredentials } from "../axios";
-import apiEndpoints from "../apiEndpoints.js";
-import { setReduxLogOutUser } from "../../redux/utilsRedux/setReduxUserState.js";
+import { apiCredentials } from "../../axios.js";
+import apiEndpoints from "../../apiEndpoints.js";
+import { setReduxLogOutUser } from "../../../redux/utilsRedux/setReduxUserState.js";
 
 /**
  * Function makes api call to logout the user, and also logs out user from the redux store.

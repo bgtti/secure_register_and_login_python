@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../redux/loader/loaderSlice"
-import { loginUser } from "../../config/apiHandler/login"
+import { loginUser } from "../../config/apiHandler/authMain/login"
 import { emailValidation, passwordValidationForLogin } from "../../utils/validation";
 import { INPUT_LENGTH } from "../../utils/constants";
 import Honeypot from "../../components/Honeypot/Honeypot";

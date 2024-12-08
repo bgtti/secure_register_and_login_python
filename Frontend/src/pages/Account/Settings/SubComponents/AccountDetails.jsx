@@ -61,6 +61,7 @@ function AccountDetails(props) {
 
     //Css class to hide/show modal
     modalChangeCreds ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
+    // TODO: css class for other model..?
 
     //Modal content
     const modalChangeCredsContent = modalChangeCreds && accountAction !== "" && (
@@ -133,7 +134,7 @@ function AccountDetails(props) {
 
             <p><b>Status:</b> {acctVerificationStatus}</p>
             <div>
-                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }}>
+                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }} title={acctCanBeVerified ? "Your account has already been verified" : ""}>
                     Verify account
                 </button>
             </div>

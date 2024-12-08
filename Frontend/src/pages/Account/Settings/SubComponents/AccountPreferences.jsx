@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { PropTypes } from "prop-types";
+import Tooltip from "../../../../components/Tooltip/Tooltip"
 /**
  * Component returns section with UI for a user's setting of account preferences
  * 
@@ -6,27 +9,60 @@
  * @returns {React.ReactElement}
  * 
  */
-function AccountPreferences() {
+function AccountPreferences(props) {
+    const { user, preferences } = props;
+
+    //State of MFA
+    const [mfaEnabled, setMfaEnabled] = useState(preferences.mfa)
+    //State of mailing list
+    const [inMailingList, setInMailingList] = useState(preferences.mailingList)
+    //State of night mode
+    const [nightModeEnabled, setNightModeEnabled] = useState(preferences.nightMode)
+
+    // MFA toggle only possible if the account has been verified
+    let mfaToggleEnable = user.acctVerified === true;
+
+    // Handlers for toggles
+    const handleMfaToggle = () => {
+        if (mfaToggleEnable) {
+            setMfaEnabled((prev) => !prev);
+        }
+    };
+    const handleMailingListToggle = () => {
+        setInMailingList((prev) => !prev);
+    };
+
+    const handleNightModeToggle = () => {
+        setNightModeEnabled((prev) => !prev);
+    };
+
 
     return (
         <section >
             <h4>Preferences</h4>
             <div className="AccountSettings-Preferences">
                 <div>
-                    <p>MFA</p>
+                    <p><Tooltip text="MFA" message="Enable multi-factor authentication" /></p>
                     <div>
-                        <label className="toggleBtn">
-                            <input type="checkbox" />
+                        <label className="toggleBtn" title={mfaToggleEnable ? "" : "Verify your account to enable MFA"}>
+                            <input
+                                checked={mfaEnabled}
+                                disabled={!mfaToggleEnable}
+                                onChange={handleMfaToggle}
+                                type="checkbox" />
                             <span className="slider round"></span>
                         </label>
                     </div>
                 </div>
 
                 <div>
-                    <p>Mailing list</p>
+                    <p><Tooltip text="Mailing List" message="Receive app news per email" /></p>
                     <div>
                         <label className="toggleBtn">
-                            <input type="checkbox" />
+                            <input
+                                checked={inMailingList}
+                                onChange={handleMailingListToggle}
+                                type="checkbox" />
                             <span className="slider round"></span>
                         </label>
                     </div>
@@ -36,7 +72,10 @@ function AccountPreferences() {
                     <p>Night mode</p>
                     <div>
                         <label className="toggleBtn">
-                            <input type="checkbox" />
+                            <input
+                                checked={nightModeEnabled}
+                                onChange={handleNightModeToggle}
+                                type="checkbox" />
                             <span className="slider round"></span>
                         </label>
                     </div>
@@ -44,6 +83,21 @@ function AccountPreferences() {
             </div>
         </section>
     );
+};
+AccountPreferences.propTypes = {
+    preferences: PropTypes.shape({
+        mfa: PropTypes.bool.isRequired,
+        mailingList: PropTypes.bool.isRequired,
+        nightMode: PropTypes.bool.isRequired
+    }).isRequired,
+    user: PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        email: PropTypes.string.isRequired,
+        acctVerified: PropTypes.oneOfType([
+            PropTypes.bool,
+            PropTypes.string
+        ])
+    }).isRequired,
 };
 
 export default AccountPreferences;

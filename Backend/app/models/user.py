@@ -102,6 +102,10 @@ class User(db.Model, UserMixin):
     # auth credential change or verification:
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
+    # preferences
+    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) # multi-factor authentication
+    in_mailing_list = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
+    night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
     
     # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):

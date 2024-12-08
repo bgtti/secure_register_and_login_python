@@ -1,18 +1,21 @@
-import { apiCredentials } from "../axios";
-import apiEndpoints from "../apiEndpoints.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../utils/validation"
-import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
+import { apiCredentials } from "../../axios.js";
+import apiEndpoints from "../../apiEndpoints.js";
+import { emailValidation, passwordValidationForLogin } from "../../../utils/validation.js";
+import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
+import { setReduxPreferences } from "../../../redux/utilsRedux/setReduxPreferenceState.js";
 
 /**
- * Function makes api call to register a user, and if successfull logs the user information in the appropriate redux store. Returns a boolean indicating the response status and a message to be displayed to the user in case of failure.
+ * Function makes api call to request log in authorization, and if successfull logs the user information in the appropriate redux store. Returns a boolean indicating the response status and a message to be displayed to the user in case of failure.
  * 
- * Requires parameters: a data object with a name, email, and password keys with string values.
+ * Requires parameters: a data object with an email and password keys with string values.
+ * 
+ * Returns an object with a key named response that indicates if the response was an error (=false) or successfull (=true). If response is successfull, the user's information will be sent. In the case of failure, an error message will be sent that can be used to inform the user what happened, which should be displayed on the page.
  * 
  * Note the function accepts a string for honeypot value. Empty stings will be understood as humans, while non-empty strings will yield an error.
  * 
+ * 
  * @param {object} data 
- * @param {string} data.name 
- * @param {string} data.email 
+ * @param {string} data.email
  * @param {string} data.password
  * @param {string} data.honeypot
  * @returns {object}
@@ -20,9 +23,8 @@ import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
  * @example
  * //Input example:
  * const data = {
- *     name: "Josy",
- *     email: "josy@example.comm",
- *     password: "3f61108854cd4b58",
+ *     email: "josy@example.com",
+ *     password: "108854cd4b588sszb64010",
  *     honeypot: ""
  * }
  * 
@@ -30,14 +32,14 @@ import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
  * {
  *  "response": "success"
  *  "user": {
- *        access: "user",
- *        name: "Josy",
- *        email: "josy@example.com",
- *  }
+ *      "access": "user",
+ *      "name": "Josy",
+ *      "email": "josy@example.com",
+ *   }
  * }
  * 
- * // Response from signupUser:
- * signupUser(requestData)
+ * // Response from loginUser:
+ * loginUser(requestData)
  *      .then(response => {
  *          console.log (response)
  * })
@@ -49,12 +51,11 @@ import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
     // an error response might yield:
     {
         response: false,
-        message: "Error: Registration failed."
+        message: "Error: Failed to log in."
     }
  */
-export function signupUser(data = {}) {
+export function loginUser(data) {
     // checking if data was received correctly
-    const name = data.name ? data.name : false;
     const password = data.password ? data.password : false;
     const email = data.email ? data.email : false;
     const honeypot = data.honeypot ? data.honeypot : "";
@@ -64,22 +65,19 @@ export function signupUser(data = {}) {
         message: "Error: Invalid input."
     };
 
-    if (!data.name || !data.email || !data.password) {
+    if (!password || !email) {
         return errorResponse
-    }
-
+    };
     // double-checking the data
-    const nameIsValid = nameValidation(name);
-    const passwordIsValid = passwordValidation(password);
+    const passwordIsValid = passwordValidationForLogin(password);
     const emailIsValid = emailValidation(email);
-    const dataIsValid = emailIsValid.response && passwordIsValid.response && nameIsValid.response;
+    const dataIsValid = emailIsValid.response && passwordIsValid.response;
 
     if (!dataIsValid) {
         return errorResponse
     }
 
     let requestData = {
-        "name": name,
         "email": email,
         "password": password,
         "honeypot": honeypot
@@ -88,13 +86,13 @@ export function signupUser(data = {}) {
     // preparing the returned response
     let res = {
         response: false,
-        message: "",
+        message: ""
     }
 
     // making the request
-    const signup = async () => {
+    const logInRequest = async () => {
         try {
-            const response = await apiCredentials.post(apiEndpoints.userSignUp, requestData)
+            const response = await apiCredentials.post(apiEndpoints.userLogIn, requestData);
 
             let responseStatus = response.request.status;
 
@@ -108,23 +106,25 @@ export function signupUser(data = {}) {
                     )
                     res.response = userIsLoggedIn;
                     res.message = userIsLoggedIn ? "" : "Error: Registration failed."
+                    setReduxPreferences(
+                        response.data.preferences.mfa_enabled,
+                        response.data.preferences.in_mailing_list,
+                        response.data.preferences.night_mode_enabled
+                    )
                     break;
                 case 400:
                 case 401:
-                case 409:
-                    res.message = "Error: Registration failed."
+                case 403:
+                    res.message = "Error: Failed to log in."
                     break;
                 default:
                     res.message = "Error: Please refresh the page and try again."
                     break;
             }
-        }
-        catch (error) {
+        } catch {
             res.message = "Error: Please refresh the page and try again."
-            console.warn(`Api handler signup encountered an error: ${error}`)
         }
         return res;
     }
-
-    return signup();
-};
+    return logInRequest()
+}

@@ -14,6 +14,7 @@ import "./accountSettings.css"
 function AccountSettings() {
 
     const user = useSelector((state) => state.user);
+    const preferences = useSelector((state) => state.preferences);
 
     return (
         <div className="AccountSettings">
@@ -25,7 +26,9 @@ function AccountSettings() {
 
             <hr className="AccountSettings-hr" />
 
-            <AccountPreferences />
+            <AccountPreferences
+                user={user}
+                preferences={preferences} />
 
             <hr className="AccountSettings-hr" />
             <AccountDeletion />
