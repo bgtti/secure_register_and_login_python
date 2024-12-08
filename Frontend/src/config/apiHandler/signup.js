@@ -103,7 +103,8 @@ export function signupUser(data = {}) {
                     let userIsLoggedIn = setReduxLogInUser(
                         response.data.user.name,
                         response.data.user.email,
-                        response.data.user.access
+                        response.data.user.access,
+                        response.data.user.email_is_verified
                     )
                     res.response = userIsLoggedIn;
                     res.message = userIsLoggedIn ? "" : "Error: Registration failed."

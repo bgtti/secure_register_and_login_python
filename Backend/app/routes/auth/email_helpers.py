@@ -22,9 +22,86 @@ from config.values import EMAIL_CREDENTIALS
 APP_NAME = "[SafeDev]"
 
 # Templates for emails
+VERIFY_EMAIL = "emails/verify_email.html"
+VERIFY_EMAIL_SUCCESS = "emails/verify_email_success.html"
 CHANGE_AUTH_CRED = "emails/change_auth_creds.html"
 CHANGE_AUTH_CRED_SUCCESS = "emails/change_auth_creds_success.html"
 
+def send_acct_verification_req_email(user_name, verification_url, recipient_email):
+    """
+    **send_acct_verification_req_email(user_name: str, verification_url: str, recipient_email: str) -> bool**
+
+    -----------------------------------------------------------------------------
+    Function sends user an email with the link to securely verify their email account.
+    Email will only be sent if email credentials were set up in the .env file correctly.
+
+    -----------------------------------------------------------------------------
+    Returns `True` if email sending succeeded and `False` otherwise.
+    """
+
+    if EMAIL_CREDENTIALS["email_set"] == False:
+        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
+        return False
+    
+    url_link = verification_url
+
+    email_body = render_template(
+        VERIFY_EMAIL,  # email template name
+        user_name=user_name,
+        btn_link=url_link
+    )
+    new_email = EmailMessage(
+        subject = f"{APP_NAME} Email verification request.",
+        sender = EMAIL_CREDENTIALS["email_address"],
+        recipients = [recipient_email]
+    )
+    new_email.html = email_body
+
+    try:
+        mail.send(new_email)
+    except Exception as e:
+        logging.error(f"Could not send email. Error: {e}")
+        return False
+
+    logging.info(f"Message sent to email.")
+
+    return True
+
+def send_acct_verification_sucess_email(user_name, user_email):
+    """
+    **send_pw_change_email(user_name: str, user_email: str) -> bool**
+
+    -----------------------------------------------------------------------------
+    Function sends user an email informing about a successfull email verification.
+
+    -----------------------------------------------------------------------------
+    Returns `True` if email sending succeeded and `False` otherwise.
+    """
+
+    if EMAIL_CREDENTIALS["email_set"] == False:
+        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
+        return False
+
+    email_body = render_template(
+        VERIFY_EMAIL_SUCCESS, # email template name
+        user_name=user_name,
+    )
+    new_email = EmailMessage(
+        subject = f"{APP_NAME} Account verified successfully.",
+        sender = EMAIL_CREDENTIALS["email_address"],
+        recipients = [user_email]
+    )
+    new_email.html = email_body
+
+    try:
+        mail.send(new_email)
+    except Exception as e:
+        logging.error(f"Could not send email. Error: {e}")
+        return False
+
+    logging.info(f"Message sent to email.")
+
+    return True
 
 def send_pw_change_email(user_name, verification_url, recipient_email):
     """

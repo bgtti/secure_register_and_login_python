@@ -63,7 +63,9 @@ def signup_user():
                 "user": {
                     "access": "user"
                     "name": "John", 
-                    "email": "john@email.com"}, 
+                    "email": "john@email.com",
+                    "email_is_verified": False # will always be false after signup
+                    }, 
             } 
     ```
     ----------------------------------------------------------
@@ -172,7 +174,9 @@ def signup_user():
             "user": {
                 "access": new_user.access_level.value, 
                 "name": new_user.name, 
-                "email": new_user.email},
+                "email": new_user.email,
+                "email_is_verified": False
+                },
         }
     return jsonify(response_data)
 
@@ -202,7 +206,8 @@ def login_user():
                 "user": {
                     "name": "John", 
                     "email": "john@email.com",
-                    "access": "user"
+                    "access": "user",
+                    "email_is_verified": False
                     }, 
             }
     ``` 
@@ -328,7 +333,9 @@ def login_user():
             "user": {
                 "access": user.access_level.value,
                 "name": user.name, 
-                "email": user.email}, 
+                "email": user.email,
+                "email_is_verified": user.email_is_verified.value
+                }, 
         }
     return jsonify(response_data)
 
@@ -381,7 +388,8 @@ def get_current_user():
                 "user": {
                     "name": "John", 
                     "email": "john@email.com",
-                    "access": "user"
+                    "access": "user",
+                    "email_is_verified": False
                     }, 
             }
     ``` 
@@ -394,6 +402,8 @@ def get_current_user():
             "user": {
                 "access": user.access_level.value, 
                 "name": user.name, 
-                "email": user.email},
+                "email": user.email,
+                "email_is_verified": user.email_is_verified.value
+                },
         }
     return jsonify(response_data)

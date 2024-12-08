@@ -277,6 +277,25 @@ class User(db.Model, UserMixin):
         else:
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
             print_to_terminal("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")
+    
+    def verify_account(self):
+        """
+        verify_account()-> bool
+        
+        ------------------------------------------------
+        Verifies user account email by registering user.email_is_verified as modelBool.TRUE.
+        Make sure a VerificationToken was validated before making this change.
+
+        ------------------------------------------------
+        Example usage:
+        user.verify_account()
+        """
+        if self.email_is_verified == modelBool.FALSE:
+            self.email_is_verified = modelBool.TRUE
+            return True
+        else:
+            logging.error(f"User account could not be verified. It is possible the account has been verified before. email_is_verified = {self.email_is_verified}. Check User model.")
+            return False
 
     def change_email(self):
         """

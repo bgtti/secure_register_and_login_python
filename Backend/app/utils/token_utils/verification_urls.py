@@ -19,13 +19,13 @@ FE_URL = BASE_URLS["frontend"]
 LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw/token="
 LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange/token="
 LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail/token="
-LINK_EMAIL_VERIFICATION = f"{FE_URL}/confirmEmail/token=" # does not exist / not yet in use! reserved for future development
+LINK_EMAIL_VERIFICATION = f"{FE_URL}/verifyEmail/token=" # does not exist / not yet in use! reserved for future development
 
 purpose_urd_dic = {
     "pw_change": LINK_CONFIRM_PASSWORD_CHANGE,
     "email_change_old_email": LINK_CONFIRM_EMAIL_CHANGE_OLD,
     "email_change_new_email": LINK_CONFIRM_EMAIL_CHANGE_NEW,
-    "email_verification" : LINK_CONFIRM_EMAIL_CHANGE_NEW,
+    "email_verification" : LINK_EMAIL_VERIFICATION,
 }
 
 def create_verification_url(token, purpose):

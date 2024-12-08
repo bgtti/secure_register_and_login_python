@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "../Modals/ModalAccountDetailChange";
-import ModalVerifyEmail from "../Modals/ModalVerifyEmail";
+import ModalVerifyEmail from "../Modals/modalVerifyEmail";
 
 /** 
  * @constant
@@ -40,6 +40,25 @@ function AccountDetails(props) {
     //Desired modal action of modalChangeCreds (ie: what credential to be changed)
     const [accountAction, setAccountAction] = useState("")
 
+    //Account verification status
+    const [acctVerificationStatus, setAcctVerificationStatus] = useState("")
+
+    // Set account verification status
+    useEffect(() => {
+        let str;
+        if (user.acctVerified === "pending") {
+            str = "verification pending (check your email)"
+        } else if (user.acctVerified === true) {
+            str = "account verified"
+        } else {
+            str = "account not verified"
+        }
+        setAcctVerificationStatus(str)
+    }, [user.acctVerified]);
+
+    //Whether user may verify the account (disabling button)
+    let acctCanBeVerified = user.acctVerified ? true : false
+
     //Css class to hide/show modal
     modalChangeCreds ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
 
@@ -61,7 +80,7 @@ function AccountDetails(props) {
         setModalChangeAcctCreds(!modalChangeCreds);
     }
     function toggleModalVerify() {
-        setModalVerifyEmail(!modalChangeCreds);
+        setModalVerifyEmail(!modalVerifyEmail);
     }
 
     return (
@@ -112,9 +131,9 @@ function AccountDetails(props) {
 
             <br />
 
-            <p><b>Status:</b> {user.acctVerified ? "Verified" : "Email has not been verified"}</p>
+            <p><b>Status:</b> {acctVerificationStatus}</p>
             <div>
-                <button disabled={user.acctVerified} onClick={() => { toggleModalVerify() }}>
+                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }}>
                     Verify account
                 </button>
             </div>
@@ -125,7 +144,10 @@ AccountDetails.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string.isRequired,
         email: PropTypes.string.isRequired,
-        acctVerified: PropTypes.bool.isRequired
+        acctVerified: PropTypes.oneOfType([
+            PropTypes.bool,
+            PropTypes.string
+        ])
     }).isRequired,
 };
 

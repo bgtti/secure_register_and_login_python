@@ -5,10 +5,9 @@ import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice.js"
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js"
 import { tokenFormatIsValid } from "../../../utils/validation"
-import { confirmEmailVerification } from "../../../config/apiHandler/authAccount/changeEmail.js"
+import { confirmEmailVerification } from "../../../config/apiHandler/authAccount/verifyEmail.js"
 import VerifyEmailFailed from "./SubComponents/VerifyEmailFailed.jsx"
 import VerifyEmailSucceeded from "./SubComponents/VerifyEmailSucceeded.jsx"
-// import "./changeEmail.css"
 
 
 /**
@@ -38,14 +37,13 @@ function VerifyEmail() {
     let token = tokenFormatIsValid(tokenInUrl)
 
     // Store API response in state
-    const [tokenValid, setTokenValid] = useState(false);
+    const [tokenValid, setTokenValid] = useState(null);
 
     // 2 types of response: token validation failed or token validation succeeded.
     const handleResponse = (response) => {
+        console.log(response)
         if (isComponentMounted()) {
-            if (response.success) {
-                setTokenValid(true)
-            }
+            setTokenValid(response.success)
         }
     }
 
@@ -61,21 +59,17 @@ function VerifyEmail() {
 
     // API request: check token and email credential change status
     const checkEmailVerificationToken = () => {
-        if (!token) { return }
+        if (!token) { setTokenValid(false); return }
+
         dispatch(setLoader(true));
 
-        try {
-            confirmEmailVerification(tokenInUrl)
-                .then(response => handleResponse(response))
-                .catch(error => handleError(error))
-                .finally(handleFinally)
-        } catch (error) {
-            console.log(error)
-            dispatch(setLoader(false));
-        }
+        confirmEmailVerification(tokenInUrl)
+            .then(response => handleResponse(response))
+            .catch(error => handleError(error))
+            .finally(handleFinally)
     }
 
-    // Make this request only once
+    //Make this request only once
     useEffect(() => {
         checkEmailVerificationToken()
     }, []);
@@ -90,10 +84,15 @@ function VerifyEmail() {
 
             <h2>Email Verification</h2>
             <br />
-
-            {!tokenValid && <VerifyEmailFailed />}
-
-            {tokenValid && <VerifyEmailSucceeded />}
+            {tokenValid === null ? (
+                <>
+                    <p>Validating token...</p>
+                </>
+            ) : tokenValid ? (
+                <VerifyEmailSucceeded />
+            ) : (
+                <VerifyEmailFailed />
+            )}
 
         </div>
     );

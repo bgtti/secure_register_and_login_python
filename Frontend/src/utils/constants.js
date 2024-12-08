@@ -85,6 +85,17 @@ export const INPUT_LENGTH = Object.freeze({
 })
 
 /**
+ * Acct verification status
+ * @readonly
+ * @enum {Array<boolean|string>}
+ */
+export const ACCT_VERIFICATION_STATUS = [
+    true,
+    false,
+    "pending"
+]
+
+/**
  * User access types
  * @readonly
  * @enum {string[]}

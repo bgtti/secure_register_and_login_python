@@ -1,5 +1,5 @@
 import { apiCredentials } from "../axios";
-import apiEndpoints from "../apiEndPoints";
+import apiEndpoints from "../apiEndpoints.js";
 import { setReduxLogOutUser } from "../../redux/utilsRedux/setReduxUserState.js";
 
 /**
@@ -25,7 +25,10 @@ export function logoutUser() {
         response: false,
     }
 
-    // making the request
+    // log out front end
+    setReduxLogOutUser();
+
+    // making the request (log out backend)
     const logout = async () => {
         try {
             const response = await apiCredentials.post(apiEndpoints.userLogOut)
@@ -35,8 +38,6 @@ export function logoutUser() {
             if (responseStatus === 200) {
                 res.response = true;
             }
-
-            setReduxLogOutUser();
 
         }
         catch (error) {

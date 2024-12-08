@@ -1,7 +1,7 @@
 import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
 import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
-import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
+import { setReduxUserName } from "../../../redux/utilsRedux/setReduxUserState.js";
 
 
 /**
@@ -69,10 +69,8 @@ export function acctNameChange(newName) {
 
             switch (responseStatus) {
                 case 200:
-                    setReduxLogInUser(
+                    setReduxUserName(
                         response.data.user.name,
-                        response.data.user.email,
-                        response.data.user.access
                     )
                     return { success: true }
                 case 400:
