@@ -35,10 +35,8 @@ from app.utils.ip_utils.ip_geolocation import geolocate_ip
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.bot_detection.bot_detection import bot_caught
 from app.routes.auth.schemas import signup_schema, login_schema
-from app.routes.auth.helpers import is_good_password
+from app.routes.auth.auth_helpers import reset_user_session, get_hashed_pw, is_good_password
 from . import auth
-
-# auth = Blueprint("auth", __name__) 
 
 # SIGN UP
 @auth.route("/signup", methods=["POST"])
@@ -65,7 +63,9 @@ def signup_user():
                 "user": {
                     "access": "user"
                     "name": "John", 
-                    "email": "john@email.com"}, 
+                    "email": "john@email.com",
+                    "email_is_verified": False # will always be false after signup
+                    }, 
             } 
     ```
     ----------------------------------------------------------
@@ -103,24 +103,12 @@ def signup_user():
         except Exception as e:
             logging.error(f"Could not log event in signup: {e}")
     
-    # Check if password meets safe password criteria
-    if not user_exists:
-        has_weak_password = False 
-        if not is_good_password(password):
-            has_weak_password = True
-            logging.info("Weak password provided.")
-            log_event("ACCOUNT_SIGNUP", "weak password")
-    
-    if user_exists or has_weak_password:
-        return jsonify({"response": "There was an error registering user."}), 400 
-
-    # Not to use same pepper for every user, pepper array has 6 values, and pepper will rotate according to the month the user created the account. If pepper array does not contain 6 values, this will fail. Make sure pepper array is setup correctly in env file.
-    date = datetime.now(timezone.utc)
+    # Check if password meets safe password criteria, salt and pepper password, then hash it
+    date = datetime.now(timezone.utc) # date is required to get apropriate Pepper value
     salt = generate_salt()
-    pepper = get_pepper(date)
-    salted_password = salt + password + pepper
-
-    # Determine if user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
+    hashed_password = get_hashed_pw(password, date, salt) # will be null if password does not meet criteria
+    
+    # Determine if the new user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
     flag = False
 
     html_in_name = check_for_html(name, "signup - name field", email)
@@ -133,14 +121,21 @@ def signup_user():
         profanity_in_email = has_profanity(email)
         if profanity_in_name or profanity_in_email:
             flag = "PURPLE"
+    
+    # Return if: user already exists or hashed_password is Null
+    # Note we ran most of the function before returning. The reason is to diminish the response time discrepancy between a successfully created user and a failed response. The difference in response time can be used by bad actors to deduce whether an account exists or not in the system.
+    
+    if user_exists or not hashed_password:
+        return jsonify({"response": "There was an error registering user."}), 400 
 
     # Create user
     try:
-        hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode("utf-8")
+        # hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode("utf-8")
         new_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=date) # passing on the creation date to make sure it is the same used for pepper
         db.session.add(new_user)
         if flag:
-            user.flag_change(flag)
+            new_user.flag_change(flag)
+        new_user.new_session() # an alternative id should be created to be used in session management
         db.session.commit()
 
     except Exception as e:
@@ -179,7 +174,9 @@ def signup_user():
             "user": {
                 "access": new_user.access_level.value, 
                 "name": new_user.name, 
-                "email": new_user.email},
+                "email": new_user.email,
+                "email_is_verified": False
+                },
         }
     return jsonify(response_data)
 
@@ -209,7 +206,8 @@ def login_user():
                 "user": {
                     "name": "John", 
                     "email": "john@email.com",
-                    "access": "user"
+                    "access": "user",
+                    "email_is_verified": False
                     }, 
             }
     ``` 
@@ -316,6 +314,10 @@ def login_user():
     except Exception as e:
         logging.error(f"Failed to create event log. Error: {e}")
 
+    # TODO: consider the bellow if user does not want to be remembered:
+    # user.new_session() 
+    # db.session.commit()
+
     # Use Flask-Login to log in the user
     flask_login_user(user)
 
@@ -331,7 +333,9 @@ def login_user():
             "user": {
                 "access": user.access_level.value,
                 "name": user.name, 
-                "email": user.email}, 
+                "email": user.email,
+                "email_is_verified": user.email_is_verified.value
+                }, 
         }
     return jsonify(response_data)
 
@@ -356,7 +360,8 @@ def logout_user():
             }
     ``` 
     """
-    flask_logout_user()
+    reset_user_session(current_user) # invalidate old auth sessions
+    flask_logout_user() # classic flask-login log out
     logging.info(f"Successful logout") 
     return jsonify({"response":"success"})
 
@@ -383,7 +388,8 @@ def get_current_user():
                 "user": {
                     "name": "John", 
                     "email": "john@email.com",
-                    "access": "user"
+                    "access": "user",
+                    "email_is_verified": False
                     }, 
             }
     ``` 
@@ -396,6 +402,8 @@ def get_current_user():
             "user": {
                 "access": user.access_level.value, 
                 "name": user.name, 
-                "email": user.email},
+                "email": user.email,
+                "email_is_verified": user.email_is_verified.value
+                },
         }
     return jsonify(response_data)

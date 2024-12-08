@@ -72,6 +72,35 @@ login_schema = {
     "required": ["email", "password", "honeypot"]
 }
 
+req_email_verification_schema = {
+    "type": "object",
+    "title": "Request a token be sent per email to verify account.", 
+    "properties": {
+        "user_agent": {
+            "type": "string", 
+            "minLength": 0, 
+            "maxLength": 255 #TODO get regex pattern
+            }
+    },
+    "additionalProperties": False,
+    "required": ["user_agent"]
+}
+
+verify_acct_email_schema = {
+    "type": "object",
+    "title": "Validates token that leads to account/email verification.", 
+    "properties": {
+        "signed_token": {
+            "description": "The signed token",
+            "type": "string",
+            "minLength": INPUT_LENGTH['signed_token']['minValue'],
+            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
+            },
+    },
+    "additionalProperties": False,
+    "required": ["signed_token"]
+}
+
 change_name_schema = {
     "type": "object",
     "title": "Will change a user's name.", 

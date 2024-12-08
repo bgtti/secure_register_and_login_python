@@ -55,7 +55,8 @@ export function getUserData() {
                 res.response = setReduxLogInUser(
                     response.data.user.name,
                     response.data.user.email,
-                    response.data.user.access
+                    response.data.user.access,
+                    response.data.user.email_is_verified
                 )
             }
             return res;

@@ -1,3 +1,31 @@
+// ABOUT THIS FILE
+// Helper functions that can be used in components, utils, apiHandlers, etc
+
+
+/**
+  * Converts a string or boolean to a boolean value.
+ * - If a boolean is passed, it is returned as-is.
+ * - If the string "true" or "false" is passed, it is converted to a boolean.
+ * - Logs an error and returns null if the input cannot be processed.
+ * 
+ * @param {string|boolean} input
+ * @returns {bool | null}
+ * @example
+ * stringToBool("true"); // -> true
+ * stringToBool("false"); // -> false
+ * stringToBool(true);    // -> true
+ * stringToBool(false);   // -> false
+ * stringToBool("hello"); // -> null (logs error)
+ */
+export function stringToBool(input) {
+    if (typeof input === "boolean") { return input }
+    if (input === "true") { return true }
+    if (input === "false") { return false }
+    console.error("Input cannot be transformed into boolean. Check stringToBool.")
+    return null;
+}
+
+
 /**
  * Function that capitalizes the first letter of each word in a string.
  * 

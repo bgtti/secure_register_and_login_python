@@ -1,25 +1,25 @@
-.ModalChangeAccount-BtnContainer {
+.ModalAccountDetailChange-BtnContainer {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-around;
 }
 
-.ModalChangeAccount-BtnContainer>* {
+.ModalAccountDetailChange-BtnContainer>* {
     width: 9em;
 }
 
-.ModalChangeAccount-ActionBtn {
+.ModalAccountDetailChange-ActionBtn {
     background-color: var(--YellowColor);
 }
 
 @media screen and (min-width: 600px) {
-    .ModalChangeAccount-BtnContainer {
+    .ModalAccountDetailChange-BtnContainer {
         width: auto;
         display: block;
     }
 
-    .ModalChangeAccount-ActionBtn {
+    .ModalAccountDetailChange-ActionBtn {
         margin-right: 20px;
     }
 }

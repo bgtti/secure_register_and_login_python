@@ -1,24 +1,28 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
-import { INPUT_LENGTH } from "../../../utils/constants";
-import "./modalChangeAccount.css"
-import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
-import { setLoader } from "../../../redux/loader/loaderSlice.js"
-import { acctNameChange } from "../../../config/apiHandler/authAccount/changeName.js"
-import { acctEmailChange } from "../../../config/apiHandler/authAccount/changeEmail.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
+import { INPUT_LENGTH } from "../../../../utils/constants";
+import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
+import { setLoader } from "../../../../redux/loader/loaderSlice.js"
+import { acctNameChange } from "../../../../config/apiHandler/authAccount/changeName.js"
+import { acctEmailChange } from "../../../../config/apiHandler/authAccount/changeEmail.js";
+import { nameValidation, emailValidation, passwordValidation } from "../../../../utils/validation.js"
+import "./modalAccountDetailChange.css"
 
 /**
- * This component is a modal used to change sensitive account informatiom.
+ * This component is a modal used to change sensitive account information.
  * 
- * @visibleName Modal Change Account Info
+ * Used for: user's name, email, and password change
+ * 
+ * @todo improvement and pw change missing
+ * 
+ * @visibleName Modal Change Account Detail Change
  * @param {object} props
  * @param {string} props.action one of:'name', 'email', 'password.
  * @param {func} props.modalToggler opens/closes modal
  * @returns {React.ReactElement}
  */
-function ModalChangeAccount(props) {
+function ModalAccountDetailChange(props) {
     const { action, modalToggler } = props;
 
     const userAgent = navigator.userAgent; //info to be passed on to BE
@@ -50,6 +54,8 @@ function ModalChangeAccount(props) {
         show: false,
         message: "",
     });
+
+    const [formSubmitted, setFormSubmitted] = useState(false);
 
     const formIsValid = !formError.occurred; // ==> TODO: NO
 
@@ -162,6 +168,7 @@ function ModalChangeAccount(props) {
         };
 
         const handleFinally = () => {
+            setFormSubmitted(true)
             dispatch(setLoader(false));
         };
 
@@ -199,7 +206,7 @@ function ModalChangeAccount(props) {
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="ModalChangeAccount MAIN-form">
+            <form onSubmit={handleSubmit} className="ModalAccountDetailChange MAIN-form">
                 {
                     actionLowerCase === "password" && (
                         <>
@@ -288,18 +295,18 @@ function ModalChangeAccount(props) {
                 }
                 <br />
 
-                <div className="ModalChangeAccount-BtnContainer">
-                    <button disabled={!formData.isValid} type="submit" className="ModalChangeAccount-ActionBtn">Save</button>
-                    <button onClick={modalToggler}>Cancel</button>
+                <div className="ModalAccountDetailChange-BtnContainer">
+                    <button disabled={formSubmitted} type="submit" className="ModalAccountDetailChange-ActionBtn">Save</button>
+                    <button onClick={modalToggler}>{formSubmitted ? "Close" : "Cancel"}</button>
                 </div>
             </form>
         </>
     );
 };
 
-ModalChangeAccount.propTypes = {
+ModalAccountDetailChange.propTypes = {
     action: PropTypes.oneOf(['name'.toLowerCase(), 'email'.toLowerCase(), 'password'.toLowerCase()]),
     modalToggler: PropTypes.func.isRequired
 };
 
-export default ModalChangeAccount;
+export default ModalAccountDetailChange;
