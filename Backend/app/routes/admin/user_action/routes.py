@@ -88,7 +88,7 @@ def change_user_flag():
             log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, integrity error raised.")
         except Exception as e:
             logging.error(f"Error prevented user flag change log to be saved: {e}")
-        return jsonify({"response": "Error changing user flag - integrity error", "error": str(e)}), 500
+        return jsonify({"response": "Error changing user flag - integrity error"}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user flag change: {e}")
@@ -96,7 +96,7 @@ def change_user_flag():
             log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, error raised.")
         except Exception as e:
             logging.error(f"Error prevented user flag change log to be saved: {e}")
-        return jsonify({"response": "Error changing user flag", "error": str(e)}), 500
+        return jsonify({"response": "Error changing user flag"}), 500
     
 # ----- ACTION: CHANGE USER ACCESS TYPE -----
 @user_action.route("/access_change", methods=["POST"])
@@ -171,7 +171,7 @@ def change_user_access():
             log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, integrity error raised.")
         except Exception as e:
             logging.error(f"Error prevented user access change log to be saved: {e}")
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user type change: {e}")
@@ -179,7 +179,7 @@ def change_user_access():
             log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, error raised.")
         except Exception as e:
             logging.error(f"Error prevented user access change log to be saved: {e}")
-        return jsonify({"response": "Error changing user type", "error": str(e)}), 500
+        return jsonify({"response": "Error changing user type"}), 500
 
 
 # ----- ACTION: BLOCK/UNBLOCK -----
@@ -247,7 +247,7 @@ def block_unblock_user():
             log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
             log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user", "error": "An internal error has occurred."}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user block/unblock: {e}")
@@ -255,7 +255,7 @@ def block_unblock_user():
             log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
             log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
-        return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
+        return jsonify({"response": "Error blocking/unblocking user", "error": "An internal error has occurred."}), 500
     
 
 # ----- ACTION: DELETE USER -----
@@ -327,9 +327,9 @@ def admin_delete_user():
         db.session.rollback()
         logging.error(f"DB integrity error prevented user deletion: {e}")
         log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
 
     except Exception as e:
         logging.error(f"Error prevented user deletion: {e}")
         log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting user", "error": str(e)}), 500
+        return jsonify({"response": "Error deleting user"}), 500
