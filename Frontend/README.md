@@ -64,3 +64,24 @@ https://ajv.js.org/
 # adopt the gitlab flow
 review info about release branches here:
 [What Is GitLab Workflow](https://www.youtube.com/watch?v=7lgGEXpsflI)
+
+# Style
+## React order of import
+Built-in Modules:
+
+First, import native or built-in modules from the language/framework (e.g., react, react-dom, or Node.js modules).
+Third-Party Packages:
+
+Next, import third-party libraries or dependencies installed via package managers like npm or yarn.
+Absolute Imports or Aliased Paths:
+
+If you are using an alias for your paths (e.g., @components/ or @utils/), group these next.
+Relative Imports:
+
+Finally, import project files using relative paths, grouped by type:
+Components
+Utilities
+Constants
+Styles, assets, or others.
+
+Within the last group: 'general' components (utils, api handlers) come before common components (Error message, ToolTips), and those come before sub-components 

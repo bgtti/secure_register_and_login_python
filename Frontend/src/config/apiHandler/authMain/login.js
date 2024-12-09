@@ -1,6 +1,6 @@
 import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
-import { emailValidation, passwordValidationForLogin } from "../../../utils/validation.js";
+import { emailValidation, passwordValidationSimplified } from "../../../utils/validation.js";
 import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
 import { setReduxPreferences } from "../../../redux/utilsRedux/setReduxPreferenceState.js";
 
@@ -69,7 +69,7 @@ export function loginUser(data) {
         return errorResponse
     };
     // double-checking the data
-    const passwordIsValid = passwordValidationForLogin(password);
+    const passwordIsValid = passwordValidationSimplified(password);
     const emailIsValid = emailValidation(email);
     const dataIsValid = emailIsValid.response && passwordIsValid.response;
 

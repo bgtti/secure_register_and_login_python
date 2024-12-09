@@ -8,6 +8,7 @@ import Footer from "../layout/Footer";
 //Pages: open website pages
 import Home from '../pages/Home/Home';
 import LogIn from "../pages/Login/LogIn";
+import Login from "../pages/Auth/Login/Login";
 import SignUp from "../pages/SignUp/SignUp";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
@@ -61,7 +62,8 @@ const Router = () => {
             <Routes>
                 <Route index element={<Home />} />
                 <Route exact path="/" element={<Home />} />
-                <Route exact path="login" element={<LogIn />} />
+                {/* <Route exact path="login" element={<LogIn />} /> */}
+                <Route exact path="login" element={<Login />} />
                 <Route exact path="signup" element={<SignUp />} />
                 <Route exact path="resetPassword" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />

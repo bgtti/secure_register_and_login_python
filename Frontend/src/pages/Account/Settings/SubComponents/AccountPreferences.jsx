@@ -5,6 +5,7 @@ import Tooltip from "../../../../components/Tooltip/Tooltip"
  * Component returns section with UI for a user's setting of account preferences
  * 
  * @todo component functionality implementation missing
+ * @todo consider enable/disable otp
  * 
  * @returns {React.ReactElement}
  * 

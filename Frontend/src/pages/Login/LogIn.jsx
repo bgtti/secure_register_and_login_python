@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../redux/loader/loaderSlice"
 import { loginUser } from "../../config/apiHandler/authMain/login"
-import { emailValidation, passwordValidationForLogin } from "../../utils/validation";
+import { emailValidation, passwordValidationSimplified } from "../../utils/validation";
 import { INPUT_LENGTH } from "../../utils/constants";
 import Honeypot from "../../components/Honeypot/Honeypot";
 import "./login.css"
@@ -75,7 +75,7 @@ function LogIn() {
             if (name === "password") {
                 setFormData((prevData) => ({
                     ...prevData,
-                    passwordIsValid: passwordValidationForLogin(value),
+                    passwordIsValid: passwordValidationSimplified(value),
                 }));
             };
         };
@@ -199,10 +199,15 @@ function LogIn() {
             }
 
             <p className="MAIN-info-paragraph">
-                Don't have an account yet? <a href="/signup">Sign up</a> instead.
+                Prefer OTP? <a href="/resetPassword">Login with OTP</a>.
             </p>
+
             <p className="MAIN-info-paragraph">
                 Forgot your password? <a href="/resetPassword">Reset password</a>.
+            </p>
+
+            <p className="MAIN-info-paragraph">
+                Don't have an account yet? <a href="/signup">Sign up</a> instead.
             </p>
         </div>
     );

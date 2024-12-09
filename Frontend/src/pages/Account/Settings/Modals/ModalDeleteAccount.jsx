@@ -5,7 +5,7 @@ import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
 import { acctRequestVerifyEmail } from "../../../../config/apiHandler/authAccount/verifyEmail.js"
 import { INPUT_LENGTH } from "../../../../utils/constants";
-import { passwordValidationForLogin } from "../../../../utils/validation";
+import { passwordValidationSimplified } from "../../../../utils/validation";
 
 /**
  * This component is a modal used delete the user's account.
@@ -42,7 +42,7 @@ function ModalDeleteAccount(props) {
         setFormData((prevData) => ({
             ...prevData,
             password: value,
-            passwordIsValid: passwordValidationForLogin(value),
+            passwordIsValid: passwordValidationSimplified(value),
         }));
         //Ensures that, if an error message had appeared before, that it disappears as user corrects input
         if (!formData.passwordIsValid.response) {
