@@ -83,7 +83,7 @@ function Login() {
         if (formIsValid) {
             const requestData = {
                 email: email,
-                password: otpActive ? password : otp,
+                password: otpActive ? otp : password,
                 honeyPot: honeypotValue
             }
             dispatch(setLoader(true))
