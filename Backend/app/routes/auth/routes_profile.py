@@ -1,12 +1,11 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_account.py contains routes responsible for account management functionalities related to authentication.
+auth/routes_profile.py contains routes responsible for profile management functionalities related to authentication.
 Here you will find the following routes:
-- **acct_verification** route #TODO
-- **change_user_name** route
-- **request_auth_change** route #TODO: pw missing
-- **request_token_validation** route #TODO: pw missing
+- **change_user_name** route changes the user's name in the db
+- **request_auth_change** route is the first step necessary to change the account's email or password #TODO: pw missing
+- **request_token_validation** route is the second step necessary to change the account's email or password #TODO: pw missing
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -16,12 +15,26 @@ Reoutes receiving client data are decorated with `@validate_schema(name_of_schem
 
 Email verification relies on token management. For more information about how tokens are used, please refer to the Token db model at app/models/token.py
 """
+############# IMPORTS ##############
+
+# Python/Flask libraries
 import logging
 from flask import Blueprint, request, jsonify, session
-from flask_login import login_user as flask_login_user, current_user, logout_user as flask_logout_user, login_required
+from flask_login import (
+    current_user,
+    login_user as flask_login_user,
+    login_required,
+    logout_user as flask_logout_user,
+)
+
+# Extensions
 from app.extensions.extensions import db, limiter, login_manager
-from app.models.user import User
+
+# Database models
 from app.models.token import Token
+from app.models.user import User
+
+# Utilities
 from app.utils.constants.enum_class import TokenPurpose, modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
@@ -30,162 +43,36 @@ from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.token_utils.group_id_creation import get_group_id
 from app.utils.token_utils.sign_and_verify import verify_signed_token
 from app.utils.token_utils.verification_urls import create_verification_url
-from app.routes.auth.schemas import req_email_verification_schema, verify_acct_email_schema, change_name_schema, req_auth_change_schema, req_token_validation_schema
-from app.routes.auth.auth_helpers import reset_user_session, get_hashed_pw
-from app.routes.auth.email_helpers import send_acct_verification_req_email, send_acct_verification_sucess_email, send_pw_change_email, send_email_change_emails, send_email_change_sucess_emails, send_pw_change_sucess_email
+
+# Auth helpers
+from app.routes.auth.auth_helpers import get_hashed_pw, reset_user_session
+from app.routes.auth.email_helpers import (
+    send_acct_verification_req_email,
+    send_acct_verification_sucess_email,
+    send_email_change_emails,
+    send_email_change_sucess_emails,
+    send_pw_change_email,
+    send_pw_change_sucess_email,
+)
+from app.routes.auth.schemas import (
+    change_name_schema,
+    req_auth_change_schema,
+    req_email_verification_schema,
+    req_token_validation_schema,
+    verify_acct_email_schema,
+)
+
+# Blueprint
 from . import auth
 
-# REQUEST TO VERIFY EMAIL ACCT (STEP 1)
-@auth.route("/request_email_verification", methods=["POST"]) # TODO: TEST
-@login_required
-@validate_schema(req_email_verification_schema)
-@limiter.limit("5/day")
-def request_email_verification(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
-    """
-    **request_email_verification() -> JsonType**
 
-    ----------------------------------------------------------
-    Route receives the request to change a user's login credential (email or password)
-    and sends email(s) with verification url(s) to the user. 
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" boolean value only included if response is "success".
+############# ROUTES ###############
 
-    ----------------------------------------------------------
-    **Response example:**
 
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-            }
-    ``` 
-    """
-    # Standard error response
-    error_response = {"response": "There was an error changing the user's credentials."}
+####################################
+#         CHANGE USER'S NAME       #
+####################################
 
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    user_agent = json_data.get("user_agent", "")
-
-    client_ip = get_client_ip(request)
-
-    user = User.query.filter_by(email=current_user.email).first()
-
-    try:
-        token = Token(user_id=user.id, purpose=TokenPurpose.EMAIL_VERIFICATION, ip_address=client_ip, user_agent=user_agent) 
-        db.session.add(token)
-        db.session.commit()
-
-    except Exception as e:
-        logging.error(f"Token creation failed. Error: {e}")
-        return jsonify(error_response), 500
-
-    
-    link = create_verification_url(token.token, TokenPurpose.EMAIL_VERIFICATION)
-    mail_sent = send_acct_verification_req_email(user.name, link, user.email)
-    
-    response_data ={
-            "response":"success",
-            "mail_sent": mail_sent,
-        }
-    return jsonify(response_data)
-
-# REQUEST TO VERIFY EMAIL ACCT (STEP 2)
-@auth.route("/verify_acct_email", methods=["POST"]) # TODO: TEST
-@login_required
-@validate_schema(verify_acct_email_schema)
-@limiter.limit("5/day")
-def verify_acct_email(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
-    """
-    **verify_acct_email() -> JsonType**
-
-    ----------------------------------------------------------
-    Route receives the request to change a user's login credential (email or password)
-    and sends email(s) with verification url(s) to the user. 
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" boolean value indicates whether the user received a success email.
-    - "acct_verified" boolean value indicates whether the user's account email has been verified'.
-
-    ----------------------------------------------------------
-    **Response example:**
-
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-                "acct_verified": True,
-            }
-    ``` 
-    """
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    signed_token = json_data["signed_token"]
-
-    # Standard error response
-    error_response = {
-        "response": "Invalid or expired token.",
-        "mail_sent": False,
-        "acct_verified": False,
-        }
-
-    # Verify token signature and timestamp
-    token = verify_signed_token(signed_token, TokenPurpose.EMAIL_VERIFICATION)
-
-    if not token:
-        logging.info(f"Invalid or expired token could not be validated.")
-        return jsonify(error_response), 400 
-    
-    # Fetch the token from the database
-    try:
-        the_token =Token.query.filter_by(token=token).first()
-    except Exception as e:
-        logging.error(f"Database error while fetching token. Error: {e}")
-        return jsonify(error_response), 500
-
-    if not the_token:
-        logging.info(f"Verified token not found in the database.")
-        return jsonify(error_response), 400 
-    
-    # Validate token
-    try:
-        if the_token.validate_token():
-            db.session.commit()
-        else:
-            logging.info(f"Token validation failed.")
-            return jsonify(error_response), 400 
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"Database error while validating token. Error: {e}")
-        return jsonify(error_response), 500
-    
-    # Token validated, now verify the account     
-    
-    try: 
-        user = the_token.user
-        is_verified = user.verify_account()
-        db.session.delete(the_token)
-        db.session.commit()
-        if is_verified:
-            email_sent = send_acct_verification_sucess_email(user.name, user.email)
-        else:
-            email_sent = False
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"Failed to change password. Error: {e}")
-        return jsonify(error_response), 500
-        
-    response_data ={
-            "response":"success",
-            "mail_sent": email_sent,
-            "acct_verified": is_verified,
-        }
-    return jsonify(response_data)
-
-# CHAGE USER'S NAME
 @auth.route("/change_user_name", methods=["POST"])
 @login_required
 @validate_schema(change_name_schema)
@@ -263,7 +150,11 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
         }
     return jsonify(response_data)
 
-# REQUEST TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 1)
+
+####################################
+#      CHANGE EMAIL/PW (STEP 1)    #
+####################################
+
 @auth.route("/request_auth_change", methods=["POST"]) # TODO: TEST
 @login_required
 @validate_schema(req_auth_change_schema)
@@ -344,7 +235,10 @@ def request_auth_change(): # TODO --> Add to logs so user actions can show in hi
         }
     return jsonify(response_data)
 
-# VALIDATE TOKEN TO CHAGE USER'S  EMAIL OR PASSWORD (STEP 2)
+####################################
+#      CHANGE EMAIL/PW (STEP 2)    #
+####################################
+
 @auth.route('/request_token_validation', methods=['POST']) # TODO: improve + logging
 @limiter.limit("5/day")
 @validate_schema(req_token_validation_schema)

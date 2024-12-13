@@ -1,0 +1,394 @@
+"""
+**ABOUT THIS FILE**
+
+auth/routes_registration.py contains routes responsible for the user account's existence and verification.
+Here you will find the following routes:
+- **signup** route creates the user's account
+- **request_email_verification** route is the first step in the email verification process
+- **verify_acct_email** route is the second step in the email verification process
+- **delete_user_acct** route #=> TODO
+
+The format of data sent by the client is validated using Json Schema. 
+Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
+
+------------------------
+## More information
+
+This app relies on Flask-Login (see `app/extensions`) to handle authentication. It provides user session management, allowing us to track user logins, manage sessions, and protect routes.
+
+Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
+
+"""
+############# IMPORTS ##############
+
+# Python/Flask libraries
+import logging
+from datetime import datetime, timezone
+from flask import Blueprint, request, jsonify, session
+from flask_login import (
+    login_user as flask_login_user,
+    current_user,
+    logout_user as flask_logout_user,
+    login_required,
+)
+
+# Extensions
+from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
+
+# Database models
+from app.models.user import User
+from app.models.token import Token
+
+# Utilities
+from app.utils.bot_detection.bot_detection import bot_caught
+from app.utils.constants.enum_class import TokenPurpose, modelBool
+from app.utils.detect_html.detect_html import check_for_html
+from app.utils.ip_utils.ip_address_validation import get_client_ip
+from app.utils.ip_utils.ip_anonymization import anonymize_ip
+from app.utils.ip_utils.ip_geolocation import geolocate_ip
+from app.utils.log_event_utils.log import log_event
+from app.utils.profanity_check.profanity_check import has_profanity
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.token_utils.group_id_creation import get_group_id
+from app.utils.token_utils.sign_and_verify import verify_signed_token
+from app.utils.token_utils.verification_urls import create_verification_url
+from app.utils.custom_decorators.json_schema_validator import validate_schema
+
+# Auth helpers (this file)
+from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session
+from app.routes.auth.email_helpers import (
+    send_acct_verification_req_email,
+    send_acct_verification_sucess_email,
+    send_email_change_emails,
+    send_email_change_sucess_emails,
+    send_pw_change_email,
+    send_pw_change_sucess_email,
+)
+from app.routes.auth.schemas import (
+    change_name_schema,
+    login_schema,
+    req_auth_change_schema,
+    req_email_verification_schema,
+    req_token_validation_schema,
+    signup_schema,
+    verify_acct_email_schema,
+)
+
+# Blueprint
+from . import auth
+
+
+############# ROUTES ###############
+
+
+####################################
+#             SIGN UP              #
+####################################
+
+@auth.route("/signup", methods=["POST"])
+@limiter.limit("2/minute;5/day")
+@validate_schema(signup_schema)
+def signup_user():
+    """
+    signup_user() -> JsonType
+    ----------------------------------------------------------
+
+    Route registers a new user.
+    
+    Requires json data from the client. 
+    Sets a session cookie in response.
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "user" and "preferences" values only included if response is "success".
+
+    ----------------------------------------------------------
+    **Response example:**
+    ```python
+        response_data = {
+                "response":"success",
+                "user": {
+                    "access": "user"
+                    "name": "John", 
+                    "email": "john@email.com",
+                    "email_is_verified": False # will always be false after signup
+                    }, 
+                "preferences":{
+                    "mfa_enabled": False,
+                    "in_mailing_list": False,
+                    "night_mode_enabled": True,
+                }
+            } 
+    ```
+    ----------------------------------------------------------
+    **About errors:**
+
+    Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
+    The password validation and 'user exists' will both return the same error response.
+    The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
+    """
+    # Standard error response
+    error_response = {"response": "There was an error registering user."}
+
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+    name = json_data["name"]
+    email = json_data["email"]
+    password = json_data["password"]
+    honeypot = json_data["honeypot"]
+
+    if len(honeypot) > 0:
+        bot_caught(request, "signup")
+        return jsonify(error_response), 418
+
+    # Check if user already exists 
+    try:
+        user_exists = User.query.filter_by(email=email).first() is not None 
+    except Exception as e:
+        logging.error(f"Could not check if user exists in db: {e}")
+
+    if user_exists:
+        user = User.query.filter_by(email=email).first()
+        logging.info(f"User already in db (error 409 in reality): {user.email}")
+        try:
+            log_event("ACCOUNT_SIGNUP", "user exists", user.id)
+        except Exception as e:
+            logging.error(f"Could not log event in signup: {e}")
+    
+    # Check if password meets safe password criteria, salt and pepper password, then hash it
+    date = datetime.now(timezone.utc) # date is required to get apropriate Pepper value
+    salt = generate_salt()
+    hashed_password = get_hashed_pw(password, date, salt) # will be null if password does not meet criteria
+    
+    # Determine if the new user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
+    flag = False
+
+    html_in_name = check_for_html(name, "signup - name field", email)
+    html_in_email = check_for_html(email, "signup - email field", email)
+
+    if html_in_email or html_in_name:
+        flag = "YELLOW"
+    else:
+        profanity_in_name = has_profanity(name) 
+        profanity_in_email = has_profanity(email)
+        if profanity_in_name or profanity_in_email:
+            flag = "PURPLE"
+    
+    # Return if: user already exists or hashed_password is Null
+    # Note we ran most of the function before returning. The reason is to diminish the response time discrepancy between a successfully created user and a failed response. The difference in response time can be used by bad actors to deduce whether an account exists or not in the system.
+    
+    if user_exists or not hashed_password:
+        return jsonify({"response": "There was an error registering user."}), 400 
+
+    # Create user
+    try:
+        # hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode("utf-8")
+        new_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=date) # passing on the creation date to make sure it is the same used for pepper
+        db.session.add(new_user)
+        if flag:
+            new_user.flag_change(flag)
+        new_user.new_session() # an alternative id should be created to be used in session management
+        db.session.commit()
+
+    except Exception as e:
+        logging.error(f"User registration failed. Error: {e}")
+        try:
+            log_event("ACCOUNT_SIGNUP", "signup failed")
+        except Exception as e:
+            logging.error(f"Log event error. Error: {e}")
+        return jsonify(error_response), 500
+
+    # Log event to user and system logs
+    try:
+        logging.info(f"New user created.")
+        log_event("ACCOUNT_SIGNUP", "signup successful", new_user.id)
+
+        if flag:
+            if html_in_name or html_in_email:
+                log_event("ACCOUNT_SIGNUP", "html detected", new_user.id)
+            else:
+                log_event("ACCOUNT_SIGNUP", "profanity", new_user.id)
+    except Exception as e:
+        logging.error(f"Log event error. Error: {e}")
+
+    # Use Flask-Login to log in the user
+    flask_login_user(new_user)
+
+    # Note we are not encoding user input when sending to FE because the FE is built with React with JSX
+    # JSX auto-escapes the data before putting it into the page, so deemed escaping to be unecessary.
+
+    # POSSIBLE IMPLEMENTATION:
+    # - Consider 2-factor authentication mandatory for admins
+    # - Send an email to the user in case of 409 (user already exists).
+
+    response_data ={
+            "response":"success",
+            "user": {
+                "access": new_user.access_level.value, 
+                "name": new_user.name, 
+                "email": new_user.email,
+                "email_is_verified": False
+                },
+            "preferences":{
+                "mfa_enabled": False,
+                "in_mailing_list": False,
+                "night_mode_enabled": True,
+            }
+        }
+    return jsonify(response_data)
+
+
+####################################
+#    VERIFY EMAIL/ACCT (STEP 1)    #
+####################################
+
+@auth.route("/request_email_verification", methods=["POST"]) # TODO: TEST
+@login_required
+@validate_schema(req_email_verification_schema)
+@limiter.limit("5/day")
+def request_email_verification(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
+    """
+    **request_email_verification() -> JsonType**
+
+    ----------------------------------------------------------
+    Route receives the request to change a user's login credential (email or password)
+    and sends email(s) with verification url(s) to the user. 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "mail_sent" boolean value only included if response is "success".
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "mail_sent": True, 
+            }
+    ``` 
+    """
+    # Standard error response
+    error_response = {"response": "There was an error changing the user's credentials."}
+
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+    user_agent = json_data.get("user_agent", "")
+
+    client_ip = get_client_ip(request)
+
+    user = User.query.filter_by(email=current_user.email).first()
+
+    try:
+        token = Token(user_id=user.id, purpose=TokenPurpose.EMAIL_VERIFICATION, ip_address=client_ip, user_agent=user_agent) 
+        db.session.add(token)
+        db.session.commit()
+
+    except Exception as e:
+        logging.error(f"Token creation failed. Error: {e}")
+        return jsonify(error_response), 500
+
+    
+    link = create_verification_url(token.token, TokenPurpose.EMAIL_VERIFICATION)
+    mail_sent = send_acct_verification_req_email(user.name, link, user.email)
+    
+    response_data ={
+            "response":"success",
+            "mail_sent": mail_sent,
+        }
+    return jsonify(response_data)
+
+####################################
+#    VERIFY EMAIL/ACCT (STEP 2)    #
+####################################
+
+@auth.route("/verify_acct_email", methods=["POST"]) # TODO: TEST
+@login_required
+@validate_schema(verify_acct_email_schema)
+@limiter.limit("5/day")
+def verify_acct_email(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
+    """
+    **verify_acct_email() -> JsonType**
+
+    ----------------------------------------------------------
+    Route receives the request to change a user's login credential (email or password)
+    and sends email(s) with verification url(s) to the user. 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "mail_sent" boolean value indicates whether the user received a success email.
+    - "acct_verified" boolean value indicates whether the user's account email has been verified'.
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "mail_sent": True, 
+                "acct_verified": True,
+            }
+    ``` 
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+    signed_token = json_data["signed_token"]
+
+    # Standard error response
+    error_response = {
+        "response": "Invalid or expired token.",
+        "mail_sent": False,
+        "acct_verified": False,
+        }
+
+    # Verify token signature and timestamp
+    token = verify_signed_token(signed_token, TokenPurpose.EMAIL_VERIFICATION)
+
+    if not token:
+        logging.info(f"Invalid or expired token could not be validated.")
+        return jsonify(error_response), 400 
+    
+    # Fetch the token from the database
+    try:
+        the_token =Token.query.filter_by(token=token).first()
+    except Exception as e:
+        logging.error(f"Database error while fetching token. Error: {e}")
+        return jsonify(error_response), 500
+
+    if not the_token:
+        logging.info(f"Verified token not found in the database.")
+        return jsonify(error_response), 400 
+    
+    # Validate token
+    try:
+        if the_token.validate_token():
+            db.session.commit()
+        else:
+            logging.info(f"Token validation failed.")
+            return jsonify(error_response), 400 
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Database error while validating token. Error: {e}")
+        return jsonify(error_response), 500
+    
+    # Token validated, now verify the account     
+    
+    try: 
+        user = the_token.user
+        is_verified = user.verify_account()
+        db.session.delete(the_token)
+        db.session.commit()
+        if is_verified:
+            email_sent = send_acct_verification_sucess_email(user.name, user.email)
+        else:
+            email_sent = False
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Failed to change password. Error: {e}")
+        return jsonify(error_response), 500
+        
+    response_data ={
+            "response":"success",
+            "mail_sent": email_sent,
+            "acct_verified": is_verified,
+        }
+    return jsonify(response_data)

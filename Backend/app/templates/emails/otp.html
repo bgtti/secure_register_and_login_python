@@ -1,0 +1,56 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Successfully verified email
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .otp {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.7em;
+        font-weight: bold;
+        background-color: #B3B3B3;
+        padding: 10px;
+        border-radius: 5px;
+        display: inline-block;
+        user-select: text;
+        /* Ensures easy selection */
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>Here is the one time password (OTP) you requested:</p>
+</div>
+
+<div class="p_block">
+    <p class="otp">{{ otp }}</p>
+</div>
+
+<div class="p_block">
+    <p>This OTP will expire in 30 minutes.</p>
+
+    <p>You can copy and paste it into the appliclation.</p>
+
+    <p>In case you did not request this OTP, please contact us.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}
