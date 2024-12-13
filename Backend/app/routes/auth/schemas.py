@@ -49,6 +49,24 @@ signup_schema = {
     "required": ["name", "email", "password", "honeypot"]
 }
 
+get_otp_schema = {
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN},
+        "honeypot": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
+    },
+    "additionalProperties": False,
+    "required": ["email", "honeypot"]
+}
+
 login_schema = {
     "type": "object",
     "properties": {

@@ -465,7 +465,7 @@ def send_otp_email(user_name: str, otp: str, recipient_email: str) -> bool:
         otp=otp
     )
     new_email = EmailMessage(
-        subject = f"{APP_NAME} One time password.",
+        subject = f"{APP_NAME} One-Time Password",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [recipient_email]
     )

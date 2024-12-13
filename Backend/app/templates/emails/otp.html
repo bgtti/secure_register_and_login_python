@@ -13,10 +13,10 @@ Successfully verified email
 
     .otp {
         font-family: "Courier New", Courier, monospace;
-        font-size: 1.7em;
+        font-size: 1.8em;
         font-weight: bold;
-        background-color: #B3B3B3;
-        padding: 10px;
+        background-color: #EBEBEB;
+        padding: 10px 30px;
         border-radius: 5px;
         display: inline-block;
         user-select: text;
@@ -33,7 +33,7 @@ Successfully verified email
 <p>Dear {{ user_name }},</p>
 
 <div class="p_block">
-    <p>Here is the one time password (OTP) you requested:</p>
+    <p>Here is the one-time password (OTP) you requested:</p>
 </div>
 
 <div class="p_block">
@@ -43,9 +43,13 @@ Successfully verified email
 <div class="p_block">
     <p>This OTP will expire in 30 minutes.</p>
 
-    <p>You can copy and paste it into the appliclation.</p>
+    <p>You can copy and paste the OTP into the appropriate field in the application.</p>
 
     <p>In case you did not request this OTP, please contact us.</p>
+</div>
+
+<div class="p_block">
+    <p><b>Please do not share this OTP with anyone for security reasons.</b></p>
 </div>
 
 

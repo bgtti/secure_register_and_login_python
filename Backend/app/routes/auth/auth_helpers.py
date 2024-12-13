@@ -6,6 +6,7 @@ auth/auth_helpers.py contains the following helper function(s):
 - **reset_user_session**
 - **get_hashed_pw**
 - **is_good_password**
+- **get_user_or_none**
 
 ------------------------
 **Purpose**

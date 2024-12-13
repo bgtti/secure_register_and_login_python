@@ -118,40 +118,67 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User: {self.id} {self.name} {self.email}>"
 
-    def should_be_remembered(self):
+    def should_be_remembered(self) -> bool:
         """ TODO:
-        should_be_remembered()-> bool
-        -----------------------------
-        Returns a boolean indicated whether user wants to be remembered or whether the session should expire when browser closes.
+        This method checks the `remember_me` attribute to decide if the user's session should persist
+        beyond the current browser session or expire when the browser is closed.
+
+        Returns:
+            bool: True if the user wants to be remembered (persistent session), False otherwise.
         """
         return self.remember_me == modelBool.TRUE
     
     # used in routes to invalidate active sessions
-    def new_session(self):
+    def new_session(self) -> str:
         """
-        new_session() -> str
-        ----------------------------
-        Use this method as soon as the user is created to generate a new session id.
-        Every time a new session id is created, any open user session will be invalidated (a new log in will be required).
+        Generates a new session ID for the user.
+
+        This method should be called immediately after a user is created or when a session reset is required.
+        It generates a new session ID using the `get_session_id` function, associating it with the user's ID.
+        Any previously active user sessions will be invalidated, requiring the user to log in again.
+
+        Returns:
+            str: The newly generated session ID.
         """
         self.session = get_session_id(self.id)
         return self.session 
 
     # used by flask_login to get a session id
-    def get_id(self):
+    def get_id(self) -> str:
         """
-        get_id() -> str
-        ----------------------------
-        Used by the login manager from flask_login to create a session cookie.
+        Retrieves the user's unique identifier ("session").
+
+        This method is used by Flask-Login's `LoginManager` to associate a user with 
+        a session. The returned identifier is stored in the session cookie.
+
+        Returns:
+            str: The unique identifier for the user. This should typically be the 
         """
         return self.session
     
-    def increment_login_attempts(self):
+    def generate_otp(self) -> str:
         """
-        user.increment_login_attempts()-> void
-        ----------------------------
-        Should be called when user types an incorrect password.
-        This will keep the counter of failed log-in attempts and temporarily block the user if necessary.
+        Generates an OTP, saves it to the user's `otp_token` along with the current timestamp in UTC
+        (`otp_token_creation`), and returns the generated OTP.
+
+        Returns:
+            str: The generated OTP as a string.
+        
+        Example:
+            otp = user.generate_otp()
+            print(f"Generated OTP: {otp}")
+        """
+        new_otp = get_six_digit_code()
+        self.otp_token = new_otp
+        self.otp_token_creation = datetime.now(timezone.utc)
+        return new_otp
+    
+    def increment_login_attempts(self) -> None:
+        """
+        Increments the counter for failed login attempts.
+
+        This method should be called when the user enters an incorrect password.
+        If the failed attempts exceed the maximum allowed, the user is temporarily blocked.
         """
         self.login_attempts += 1
         self.last_login_attempt = datetime.now(timezone.utc)
@@ -163,79 +190,85 @@ class User(db.Model, UserMixin):
         elif self.login_attempts > 5:
             self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-    def reset_login_attempts(self):
+    def reset_login_attempts(self) -> None:
         """
-        user.reset_login_attempts()-> void
-        ----------------------------
-        Should be called when user types the correct password loging in.
-        This ensures the user failed login attempt count is set to 0.
+        Resets the user's failed login attempt count to 0.
+
+        This method should be called when the user successfully logs in with the correct password.
+        It ensures the failed login attempt count is cleared, preventing lockouts for successful logins.
         """
         self.login_attempts = 0
         self.last_login_attempt = datetime.now(timezone.utc)
         self.login_blocked_until = datetime.now(timezone.utc)
         self.login_blocked = modelBool.FALSE
 
-    def is_login_blocked(self):
+    def is_login_blocked(self) -> bool:
         """
-        user.is_login_blocked()-> bool
-        ----------------------------
-        Called to check if the user has been temporarily blocked for typing the wrong password.
+        Checks if the user is temporarily blocked due to exceeding failed login attempts.
+
+        Returns:
+            bool: True if the user is blocked, False otherwise.
         """
         return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.now(timezone.utc)
     
-    def has_access_blocked(self):
+    def has_access_blocked(self) -> bool:
         """
-        user.has_access_blocked()-> bool
-        ----------------------------
-        Called to check if the user has been blocked by an admin.
+        Checks if the user has been blocked by an admin.
+
+        Returns:
+            bool: True if the user has been blocked by an admin, False otherwise.
         """
         return self.is_blocked == modelBool.TRUE 
     
-    def block_access(self):
+    def block_access(self) -> None:
         """
-        user.block_access()-> void
-        ----------------------------
-        The user's access will be blocked.
-        Should be called by super admin or admins only.
-        The super admin cannot be blocked.
+        Blocks the user's access.
+
+        This method should be called by a super admin or admin only. 
+        It ensures that a super admin cannot be blocked.
+
+        Raises:
+            ValueError: If attempting to block a super admin.
         """
         if self.access_level == UserAccessLevel.SUPER_ADMIN:
             raise ValueError("Super admin cannot be blocked.")
         self.is_blocked = modelBool.TRUE 
     
-    def unblock_access(self):
+    def unblock_access(self) -> None:
         """
-        user.unblock_access()-> void
-        ----------------------------
-        The user's access will be unblocked.
-        Should be called by super admin or admins only.
+        Unblocks the user's access.
+
+        This method should be called by a super admin or admin only.
         """
         self.is_blocked = modelBool.FALSE 
 
-    def make_user_admin(self):
+    def make_user_admin(self) -> None:
         """
-        user.make_user_admin() -> void
-        -------------------------------
-        Method will change the user's access_level to 'admin'.
-        Make sure only the super admin calls this method on other users.
+        Promotes the user to an admin role.
+
+        This method changes the user's `access_level` to 'admin'. 
+        It should only be called by a super admin..
         """
         self.access_level = UserAccessLevel.ADMIN
     
-    def make_user_regular_user(self):
+    def make_user_regular_user(self) -> None:
         """
-        user.make_user_regular_user() -> void
-        -------------------------------
-        Method will change the user's access_level to 'user'.
-        This should be used to take away a user's admin rights.
-        Make sure this method is not called on super_admin.
+        Demotes the user to a regular user role.
+
+        This method changes the user's `access_level` to 'user', effectively removing admin rights. 
+        Ensure that the method is not called on a super admin!
+
+        Raises:
+            ValueError: If the user is already a regular user or a super admin.
         """
-        self.access_level = UserAccessLevel.USER
+        if self.access_level == UserAccessLevel.SUPER_ADMIN.value:
+            raise ValueError("Super admin cannot be demoted to a regular user.")
+        else:
+            self.access_level = UserAccessLevel.USER
     
-    def make_user_super_admin(self, admin_password):
+    def make_user_super_admin(self, admin_password: str) -> None:
         """
-        user.make_user_super_admin(admin_password: str) -> void
-        ----------------------------------------------------------
-        Method makes user a super admin. There should only be one super admin in the table.
+        Promotes the user to super admin. There should only be one super admin in the system.
         Since the idea is to call it only once (as the super admin is the first user created),
         it required the admin password defined in the app's config.
         """
@@ -243,16 +276,24 @@ class User(db.Model, UserMixin):
             existing_super_admins = User.query.filter_by(access_level=UserAccessLevel.SUPER_ADMIN).count()
             if existing_super_admins == 0 and admin_password == ADMIN_PW:
                 self.access_level = UserAccessLevel.SUPER_ADMIN
-
     
-    def serialize_user_table(self):
+    def serialize_user_table(self) -> dict:
         """
-        Returns a dictionary with  base user information.
-        Call when a list of user dictionaries is needed.
-        Should be called in admin routes only.
-        ------------------------------------------------
+        Serializes the user information into a dictionary.
+
+        This method returns a dictionary with basic user information, 
+        suitable for use in admin routes or API responses where a list 
+        of user data is required.
+
         Example usage:
-        "users": [user.serialize_user_table() for user in users.items if user.access_level != 1]
+            "users": [
+                user.serialize_user_table()
+                for user in users.items
+                if user.access_level != UserAccessLevel.SUPER_ADMIN.value
+            ]
+
+        Returns:
+            dict: A dictionary containing user information.
         """
         return {
             "id": self.id,
@@ -265,14 +306,18 @@ class User(db.Model, UserMixin):
             "is_blocked": self.is_blocked.value,
         }
     
-    def flag_change(self, flag_colour):
+    def flag_change(self, flag_colour: str) -> None:
         """
-        Changes the user flag to the appropriate colour.
-        Accepts the colour as an argument: choices accepted are those in UserFlag Enum: red, yellow, purple, and blue.
-        The argument flag_colour must be a string - upper or lower case.
-        ------------------------------------------------
+        hanges the user's flag to the specified color.
+
+        Accepts a flag color as an argument. Valid choices are those defined in the UserFlag Enum:
+        'red', 'yellow', 'purple', and 'blue'. The argument `flag_colour` is case-insensitive.
+
+        Args:
+            flag_colour (str): The desired flag color (case-insensitive).
+
         Example usage:
-        user.flag_change("blue")
+            `user.flag_change("blue")`
         """
         the_colour = flag_colour.lower()
         flag = map_string_to_enum(the_colour, UserFlag)
@@ -282,17 +327,19 @@ class User(db.Model, UserMixin):
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
             print_to_terminal("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")
     
-    def verify_account(self):
+    def verify_account(self) -> bool:
         """
-        verify_account()-> bool
-        
-        ------------------------------------------------
-        Verifies user account email by registering user.email_is_verified as modelBool.TRUE.
-        Make sure a VerificationToken was validated before making this change.
+        Verifies the user's account email.
 
-        ------------------------------------------------
+        This method sets the user's `email_is_verified` attribute to `modelBool.TRUE`, indicating that
+        the email verification process is complete. It is important to ensure that a valid 
+        `VerificationToken` was successfully validated before calling this method!
+
+        Returns:
+            bool: True if the account was successfully verified, False otherwise.
+
         Example usage:
-        user.verify_account()
+            `user.verify_account()`
         """
         if self.email_is_verified == modelBool.FALSE:
             self.email_is_verified = modelBool.TRUE
@@ -301,17 +348,19 @@ class User(db.Model, UserMixin):
             logging.error(f"User account could not be verified. It is possible the account has been verified before. email_is_verified = {self.email_is_verified}. Check User model.")
             return False
 
-    def change_email(self):
+    def change_email(self) -> bool:
         """
-        change_email()-> bool
-        
-        ------------------------------------------------
-        Changes the user's account email to a new email address stored at user.new_email.
-        Make sure a VerificationToken was validated before making this change.
+        Changes the user's account email.
 
-        ------------------------------------------------
+        This method updates the user's email to the value stored in `user.new_email`. 
+        It is crucial to ensure that a `VerificationToken` was successfully validated before 
+        calling this method to confirm ownership of the new email address.
+
+        Returns:
+            bool: True if the email was successfully changed, False otherwise.
+
         Example usage:
-        user.change_email()
+            `user.change_email()`
         """
         if self.new_email is None:
             logging.error("Attempted email change but no new_email stored.")

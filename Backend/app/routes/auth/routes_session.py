@@ -18,6 +18,15 @@ This app relies on Flask-Login (see `app/extensions`) to handle authentication. 
 
 Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
 
+------------------------
+## Route testing
+
+Status:
+- **login** last test ran on XX December 2024 TODO: testing
+- **login_mfa** last test ran on XX December 2024 TODO: testing
+- **logout** last test ran on XX December 2024 TODO: testing
+- **@me** last test ran on XX December 2024 TODO: testing
+
 """
 ############# IMPORTS ##############
 
@@ -25,14 +34,15 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 import logging
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, session
+from typing import Dict, Any
+
+# Extensions
 from flask_login import (
     current_user,
     login_user as flask_login_user,
     login_required,
     logout_user as flask_logout_user,
 )
-
-# Extensions
 from app.extensions.extensions import db, flask_bcrypt, limiter, login_manager
 
 # Database models
@@ -52,7 +62,7 @@ from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 # Auth helpers
 from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session, get_user_or_none
 from app.routes.auth.email_helpers import send_otp_email
-from app.routes.auth.schemas import login_schema, signup_schema
+from app.routes.auth.schemas import login_schema, signup_schema, get_otp_schema
 
 # Blueprint
 from . import auth
@@ -66,10 +76,37 @@ from . import auth
 
 @auth.route("/get_otp", methods=["POST"])
 @limiter.limit("30/minute;50/day")
-@validate_schema(login_schema)#==>TODO
-def get_otp():
+@validate_schema(get_otp_schema)
+def get_otp(): 
+    """
+    get_otp() -> JsonType
+    ----------------------------------------------------------
+
+    Generates and sends a One-Time Password (OTP) for a user.
+
+    The OTP will be sent to the registered user via email.
+    Requires json data from the client (the user's email and honeypot). 
+    
+    Returns Json object containing strings:
+    - "response" value is always included. 
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+            }
+    ``` 
+    ----------------------------------------------------------
+    **About errors:**
+
+    Error messages sent to the front-end are ambiguous by design. Check the logs to understand the error.
+    The reason for this is to pass ambiguity to the front end so as not to give a malicious actor information about whether a certain email address is or not registered with the website.
+    """
     # Standard error response
     error_response = {"response": "There was an error generating OTP."} 
+    success_response = {"response": "success"}
 
     # Get the JSON data from the request body 
     json_data = request.get_json()
@@ -82,20 +119,31 @@ def get_otp():
         return jsonify(error_response), 418
 
     # Check if user exists
-    # TODO: Check existence = test
-    user = get_user_or_none(email)
-    # TODO: DB errors should return error_response + 500 
+    user = get_user_or_none(email, "get_otp")
 
-    # Case 1: user does not exist
-    # TODO: If user does not exist, return 200 (bad actors must not know if users exist or not)
+    # Return success even if user does not exist (to avoid information leakage)
+    if user is None:
+        return jsonify(success_response)
 
-    # Case 2: user exists
     # Create OTP
-    # TODO: Create OTP in the DB with a timestamp.
+    try:
+        otp = user.generate_otp()
+    except Exception as e:
+        logging.warning(f"Failed to generate OTP. Error: {e}") 
+        return jsonify(error_response), 500
+
     # Send email
-    # TODO: send the user an email with the OTP
-    # TODO: if error, return error_response + 500
-    # TODO: return 200
+    email_sent = False
+    try:
+        email_sent = send_otp_email(user.name, otp, user.email)
+    except Exception as e:
+        logging.warning(f"Failed to send email with otp. Error: {e}") 
+
+    if email_sent is False:
+        return jsonify(error_response), 500
+    
+    # Return success response
+    return jsonify(error_response)
 
 
 
