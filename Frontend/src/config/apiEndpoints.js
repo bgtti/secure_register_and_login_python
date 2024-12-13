@@ -17,6 +17,8 @@ export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
+    //authentication -- session
+    getOTP: `${urlPrefix.auth}/get_otp`, //--test
     //authentication -- main
     userSignUp: `${urlPrefix.auth}/signup`, //OK
     userLogIn: `${urlPrefix.auth}/login`, //OK

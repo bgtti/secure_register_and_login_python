@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice"
 import { loginUser } from "../../../config/apiHandler/authMain/login"
+import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import Honeypot from "../../../components/Honeypot/Honeypot";
 import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
@@ -62,22 +63,40 @@ function Login() {
 
     const sendOtp = (e) => {
         e.preventDefault();
+        // get rid of previous error messages
+        if (errorMessage !== "") {
+            setErrorMessage("")
+        }
         if (!emailIsValid) {
             setErrorMessage("Please check email input.");
             return
         }
-        setOtpWasSent(true)
-        // dispatch(setLoader(true));
-        // const requestData = {
-        //     email: email,
-        //     honeyPot: honeypotValue
-        // }
-        // sendOtpToUser(requestData) //==> MISSING
-        //     .then(res => { if (isComponentMounted() && !res.success) { setErrorMessage(res.message); } })
-        //     .catch(error => { console.error("Error in login component.", error); })
-        //     .finally(() => { setOtpWasSent(true); dispatch(setLoader(false)); })
+        const requestData = {
+            email: email,
+            honeyPot: honeypotValue
+        }
+
+        dispatch(setLoader(true))
+        getOTP(requestData)
+            .then(res => {
+                if (isComponentMounted()) {
+                    if (res.response) {
+                        setOtpWasSent(true);
+                    } else {
+                        setLoginFailed(res.response);
+                        setErrorMessage(res.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error in otp function.", error);
+            })
+            .finally(() => {
+                dispatch(setLoader(false));
+            })
     };
 
+    // TODO review this function after adapting login function in BE
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formIsValid) {
@@ -86,6 +105,7 @@ function Login() {
                 password: otpActive ? otp : password,
                 honeyPot: honeypotValue
             }
+
             dispatch(setLoader(true))
             loginUser(requestData)
                 .then(res => {
