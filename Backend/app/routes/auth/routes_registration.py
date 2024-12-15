@@ -24,16 +24,16 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, session
+# from flask import Blueprint, request, jsonify, session
+from flask import request, jsonify
 from flask_login import (
     login_user as flask_login_user,
     current_user,
-    logout_user as flask_logout_user,
     login_required,
 )
 
 # Extensions
-from app.extensions.extensions import flask_bcrypt, db, limiter, login_manager
+from app.extensions.extensions import db, limiter
 
 # Database models
 from app.models.user import User
@@ -44,33 +44,23 @@ from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import TokenPurpose, modelBool
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.ip_utils.ip_anonymization import anonymize_ip
-from app.utils.ip_utils.ip_geolocation import geolocate_ip
 from app.utils.log_event_utils.log import log_event
 from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-from app.utils.token_utils.group_id_creation import get_group_id
+from app.utils.salt_and_pepper.helpers import generate_salt
 from app.utils.token_utils.sign_and_verify import verify_signed_token
 from app.utils.token_utils.verification_urls import create_verification_url
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session
+from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none
 from app.routes.auth.email_helpers import (
     send_acct_verification_req_email,
     send_acct_verification_sucess_email,
-    send_email_change_emails,
-    send_email_change_sucess_emails,
-    send_pw_change_email,
-    send_pw_change_sucess_email,
+    send_email_acct_exists
 )
 from app.routes.auth.schemas import (
-    change_name_schema,
-    login_schema,
-    req_auth_change_schema,
-    req_email_verification_schema,
-    req_token_validation_schema,
     signup_schema,
+    req_email_verification_schema,
     verify_acct_email_schema,
 )
 
@@ -142,15 +132,16 @@ def signup_user():
 
     # Check if user already exists 
     try:
-        user_exists = User.query.filter_by(email=email).first() is not None 
+        user_if_exists = get_user_or_none(email, "signup")
+        user_exists = user_if_exists is not None 
     except Exception as e:
         logging.error(f"Could not check if user exists in db: {e}")
 
     if user_exists:
-        user = User.query.filter_by(email=email).first()
-        logging.info(f"User already in db (error 409 in reality): {user.email}")
         try:
-            log_event("ACCOUNT_SIGNUP", "user exists", user.id)
+            send_email_acct_exists(user_if_exists.name, user_if_exists.email)
+            logging.info(f"User already in db (error 409 in reality): {email}")
+            log_event("ACCOUNT_SIGNUP", "user exists", user_if_exists.id)
         except Exception as e:
             logging.error(f"Could not log event in signup: {e}")
     
@@ -181,7 +172,6 @@ def signup_user():
 
     # Create user
     try:
-        # hashed_password = flask_bcrypt.generate_password_hash(salted_password).decode("utf-8")
         new_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=date) # passing on the creation date to make sure it is the same used for pepper
         db.session.add(new_user)
         if flag:
@@ -215,10 +205,6 @@ def signup_user():
 
     # Note we are not encoding user input when sending to FE because the FE is built with React with JSX
     # JSX auto-escapes the data before putting it into the page, so deemed escaping to be unecessary.
-
-    # POSSIBLE IMPLEMENTATION:
-    # - Consider 2-factor authentication mandatory for admins
-    # - Send an email to the user in case of 409 (user already exists).
 
     response_data ={
             "response":"success",

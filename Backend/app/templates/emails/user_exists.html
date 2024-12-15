@@ -1,0 +1,49 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Account already registered: reminder
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>We noticed an attempt to signup to our app with this email address.</p>
+    <p>A signup is not possible because we already have this email registered in our system.</p>
+</div>
+
+<div class="p_block">
+    <p><b>What to do if you forgot your password?</b></p>
+
+    <p>If multi-factor authentication is not enabled, you can log in requesting a one-time password (OTP) to be sent to
+        your email.</p>
+    <p>Then, you can proceed to change your password in the account settings.</p>
+
+    <p>If multi-factor authentication is enabled, go to the login page and click on "reset password". You will need
+        access to the recovery email address you defined in your account settings.</p>
+</div>
+
+<div class="p_block">
+    <p><b>What to do if you believe you never registered?</b></p>
+    <p>Contact us immediately to inform about this matter.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}

@@ -1,26 +1,20 @@
 """
 **ABOUT THIS FILE**
 
-auth/auth_helpers.py contains the following helper function(s):
-
-- **reset_user_session**
-- **get_hashed_pw**
-- **is_good_password**
-- **get_user_or_none**
-
-------------------------
-**Purpose**
-
-Helper functions to auth routes
+auth/auth_helpers.py contains the helper functions used by auth routes.
 
 """
+# Python/Flask libraries
 import re
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-from flask_login import current_user
+# Extensions
+# from flask_login import current_user
 from app.extensions.extensions import db, flask_bcrypt
+# Database models
 from app.models.user import User
+# Utilities
 from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
@@ -178,6 +172,7 @@ def check_if_user_blocked(user: User, client_ip: str | None) -> dict:
 
     Returns:
         dict: A dictionary with the following keys:
+        
             - "blocked" (bool): True if the user is blocked, otherwise False.
             - "temporary_block" (bool): True if the block is temporary, otherwise False.
             - "message" (str): A human-readable message explaining the block status.

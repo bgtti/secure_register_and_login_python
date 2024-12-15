@@ -1,0 +1,42 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Blocked by admin: reminder
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>Your account has been blocked by an admin.</p>
+</div>
+
+<div class="p_block">
+    <p>This usually happens after a careful review of a user's activity.</p>
+
+    <p>Common reasons include the use of profanity or unintended use of the app.</p>
+</div>
+
+<div class="p_block">
+    <p><b>Please contact us in case you do not agree with the ban.</b></p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}

@@ -1,10 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/schemas.py contains the following schemas to validate request data:
-
-- **signup_schema** 
-- **login_schema** 
+auth/schemas.py contains the json schemas to validate request data in the auth routes.
 
 ------------------------
 ## More information
@@ -12,14 +9,19 @@ auth/schemas.py contains the following schemas to validate request data:
 These schemas are passed in to `validate_schema` (see `app/utils/custom_decorators/json_schema_validator.py`) through the route's decorator to validate client data received in json format by comparing it to the schema rules.
 
 """
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN, OTP_PATTERN
+from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
 from app.utils.constants.enum_class import TokenPurpose, LoginMethods
 
+# Enum to list
 token_purpose_values = [purpose.value for purpose in TokenPurpose]
 """purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
 
 login_method_values = [method.value for method in LoginMethods]
 """method can be: 'otp', 'password'"""
+
+####################################
+#      REGISTRATION SCHEMAS        #
+####################################
 
 signup_schema = {
     "type": "object",
@@ -51,6 +53,39 @@ signup_schema = {
     "additionalProperties": False,
     "required": ["name", "email", "password", "honeypot"]
 }
+
+req_email_verification_schema = {
+    "type": "object",
+    "title": "Request a token be sent per email to verify account.", 
+    "properties": {
+        "user_agent": {
+            "type": "string", 
+            "minLength": 0, 
+            "maxLength": 255 #TODO get regex pattern
+            }
+    },
+    "additionalProperties": False,
+    "required": ["user_agent"]
+}
+
+verify_acct_email_schema = {
+    "type": "object",
+    "title": "Validates token that leads to account/email verification.", 
+    "properties": {
+        "signed_token": {
+            "description": "The signed token",
+            "type": "string",
+            "minLength": INPUT_LENGTH['signed_token']['minValue'],
+            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
+            },
+    },
+    "additionalProperties": False,
+    "required": ["signed_token"]
+}
+
+####################################
+#         SESSION SCHEMAS          #
+####################################
 
 get_otp_schema = {
     "type": "object",
@@ -102,34 +137,9 @@ login_schema = {
     "required": ["email", "password","method", "honeypot"]
 }
 
-req_email_verification_schema = {
-    "type": "object",
-    "title": "Request a token be sent per email to verify account.", 
-    "properties": {
-        "user_agent": {
-            "type": "string", 
-            "minLength": 0, 
-            "maxLength": 255 #TODO get regex pattern
-            }
-    },
-    "additionalProperties": False,
-    "required": ["user_agent"]
-}
-
-verify_acct_email_schema = {
-    "type": "object",
-    "title": "Validates token that leads to account/email verification.", 
-    "properties": {
-        "signed_token": {
-            "description": "The signed token",
-            "type": "string",
-            "minLength": INPUT_LENGTH['signed_token']['minValue'],
-            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
-            },
-    },
-    "additionalProperties": False,
-    "required": ["signed_token"]
-}
+####################################
+#         PROFILE SCHEMAS          #
+####################################
 
 change_name_schema = {
     "type": "object",
@@ -209,32 +219,3 @@ req_token_validation_schema = {
     "additionalProperties": False,
     "required": ["signed_token", "purpose"]
 }
-
-
-
-
-#when verifying token use:
-# name_of_schema = {
-#     "properties": {
-#         "token": {
-#             "description": "Token ",
-#             "type": "string",
-#             "minLength": 20,
-#         "maxLength": 100,
-#         "pattern": "^[a-zA-Z0-9_-]+$"
-#             },
-#     },
-# }
-
-#when verifying token use if token is signed:
-# name_of_schema = {
-#     "properties": {
-#         "token": {
-#             "description": "Token ",
-#             "type": "string",
-#             "minLength": 20,
-#         "maxLength": 200,
-#         "pattern":  "^[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+$"
-#             },
-#     },
-# }

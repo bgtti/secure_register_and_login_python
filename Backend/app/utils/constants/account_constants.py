@@ -1,4 +1,4 @@
-# Choice of password length: bcrypt has a maximum length input of 72-bytes.
+# MPTE: Choice of password length: bcrypt has a maximum length input of 72-bytes.
 # Pepper (4chars) and Salt (8chars) are added to password before hashing.
 # If 72 bytes is aprox the same amount in characters, 72 - 4 - 8 = 60.
 
@@ -12,7 +12,7 @@ INPUT_LENGTH = {
         "maxValue": 320
     },
     "password": {
-        "minValue": 8, #if this value is change, otp must be changed
+        "minValue": 8, #if this value is changed, otp must be changed
         "maxValue": 60
     },
     "otp": {
@@ -71,7 +71,6 @@ EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
 """`PASSWORD_PATTERN` is a regex to define the password format of a user (and specifies size constraints)."""
 
-# TODO: otp pattern not being used.
 # Explanation of the PASSWORD_PATTERN:
 # ^: Asserts the start of the string.
 # \d: Matches a digit (equivalent to [0-9]).

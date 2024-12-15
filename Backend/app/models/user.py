@@ -1,25 +1,43 @@
+"""
+**ABOUT THIS FILE**
+
+models/user.py contains:
+
+- Constants required for the db model or methods to function
+- Helper functions used only in the db model or methods 
+- **User** class (the db model)
+"""
 # from enum import Enum
-import ast
-import enum
+# import ast
+# import enum
+# from random import randint
+############# IMPORTS ##############
+
+# Python/Flask libraries
 import re
 import logging
 from datetime import datetime, timedelta, timezone
+
+# Extensions and configurations
 from flask_login import UserMixin
-from uuid import uuid4
 import secrets
-from random import randint
 from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
 from app.extensions.extensions import db
-from app.utils.constants.account_constants import INPUT_LENGTH
-from app.utils.constants.account_constants import OTP_PATTERN
+from app.extensions.sqlalchemy_config import UTCDateTime
+
+# Utilities
+from app.utils.constants.account_constants import INPUT_LENGTH, OTP_PATTERN
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, LoginMethods
 from app.utils.constants.enum_helpers import map_string_to_enum
 
+############ CONSTANTS #############
 ADMIN_PW = SUPER_USER["password"]
 OTP_VALIDITY_MINUTES = 30 #define here the length the OTP should be valid for
 MFA_VALIDITY_MINUTES = 30 #define here the length between authenticating the two methods required in mfa
+
+############# HELPERS ##############
 
 def get_eight_digits_number() -> int: 
     """
@@ -52,8 +70,7 @@ def get_session_id(user_id: int = 0) -> str:
         - The database is being seeded with test users, or the session ID step was skipped.
 
     Args:
-        user_id (int): The ID of the user for whom the session ID is being generated. 
-                       Defaults to `0` if not provided.
+        user_id (int): The ID of the user for whom the session ID is being generated. Defaults to `0` if not provided.
 
     Returns:
         str: A session ID string in the specified format.
@@ -65,16 +82,13 @@ def get_session_id(user_id: int = 0) -> str:
     
     return f"{user_id}-{random_number}"
 
-
+############## MODEL ###############
 
 # Notes:
 # - Bcrypt should output a 60-character string, so this was used as maximum password length
-# - User blockage: the user can be blocked from accessing the account by an admin by setting is_blocked to true.
-# - The user can also be temporarily blocked for failing to log in too many times, where login_blocked will be set to true. 
 # - booleans ("true"/"false") should not be strings or booleans, but Enums of modelBool
-# - is_blocked and login_blocked should not be set directly (user.is_blocked = ...) but rather a method should be used. Do not attempt to set login_blocked directly, as this is done by keeping a counter of wrong login attempts. 
-# - access_level should be either "user" or "admin". Change access_level using make_user_admin. The access_level "super admin" exists, but there should be only 1 user with this access.
-# - access_level should be defined as Enums in UserAccessLevel. There is no need to change access_level directly (user.access_level = ...), rather a method should be called.
+# - it is best to set values using defined methods rather than directly
+# - access_level should be either "user" or "admin". Change access_level using make_user_admin. The access_level "super admin" exists, but there should be only 1 user with this access. TODO: acees level defined in separate db model
 
 class User(db.Model, UserMixin):
     """
@@ -121,20 +135,20 @@ class User(db.Model, UserMixin):
     recovery_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)#consider encrypting
     # one time password (otp):
     otp_token = db.Column(db.String(8), nullable=True)
-    otp_token_creation = db.Column(db.DateTime, nullable=True)
+    otp_token_creation = db.Column(UTCDateTime, nullable=True)
     # acct:
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     # access:
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     # activity:
     flagged = db.Column(db.Enum(UserFlag), default=UserFlag.BLUE, nullable=False)
-    last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    last_seen = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     login_attempts = db.Column(db.Integer, default=0)
-    last_login_attempt = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    last_login_attempt = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    login_blocked_until = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    login_blocked_until = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     # auth credential change or verification:
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
@@ -144,7 +158,7 @@ class User(db.Model, UserMixin):
     night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
     # multi-factor authentication (mfa)
     first_factor_used = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    first_factor_used_date = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    first_factor_used_date = db.Column(UTCDateTime, default=datetime.now(timezone.utc), nullable=True)
     first_factor_type = db.Column(db.Enum(LoginMethods), nullable=True)
     
     # METHODS
@@ -251,18 +265,19 @@ class User(db.Model, UserMixin):
         # Check if OTP matches expected pattern
         if not re.match(OTP_PATTERN, otp):
             return False
-        else:
-            otp_int = int(otp)
         # Check if otp matches the one in the DB
-        if otp_int != self.otp_token:
+        if otp != self.otp_token:
             return False
-        # Reset fields in the DB
-        self.otp_reset()
         # Check if otp is still valid
         now = datetime.now(timezone.utc)
         otp_age = (now - self.otp_token_creation).total_seconds() / 60  # Calculate age in minutes
+
         if otp_age > 30:  # OTP is older than 30 minutes
+            # Reset fields in the DB
+            self.otp_reset()
             return False
+        # Reset fields in the DB
+        self.otp_reset()
         # Return otp is valid
         return True
 
@@ -320,7 +335,7 @@ class User(db.Model, UserMixin):
             return False
         return True
     
-    # Other methods
+    # Failed login methods
     def increment_login_attempts(self) -> None:
         """
         Increments the counter for failed login attempts.
@@ -365,6 +380,7 @@ class User(db.Model, UserMixin):
         """
         return self.login_blocked == modelBool.TRUE and self.login_blocked_until > datetime.now(timezone.utc)
     
+    # Admin blocked user methods
     def has_access_blocked(self) -> bool:
         """
         Checks if the user has been blocked by an admin.
@@ -396,6 +412,7 @@ class User(db.Model, UserMixin):
         """
         self.is_blocked = modelBool.FALSE 
 
+    # Access level methods
     def make_user_admin(self) -> None:
         """
         Promotes the user to an admin role.
@@ -431,6 +448,7 @@ class User(db.Model, UserMixin):
             if existing_super_admins == 0 and admin_password == ADMIN_PW:
                 self.access_level = UserAccessLevel.SUPER_ADMIN
     
+    # Retrive users methods
     def serialize_user_table(self) -> dict:
         """
         Serializes the user information into a dictionary.
@@ -460,9 +478,10 @@ class User(db.Model, UserMixin):
             "is_blocked": self.is_blocked.value,
         }
     
+    # Flag methods
     def flag_change(self, flag_colour: str) -> None:
         """
-        hanges the user's flag to the specified color.
+        Changes the user's flag to the specified color.
 
         Accepts a flag color as an argument. Valid choices are those defined in the UserFlag Enum:
         'red', 'yellow', 'purple', and 'blue'. The argument `flag_colour` is case-insensitive.
@@ -481,6 +500,7 @@ class User(db.Model, UserMixin):
             logging.error(f"User flag could not be changed: wrong input for flag_change: {flag_colour}. Check UserFlag Enum for options.")
             print_to_terminal("Error (user method flag_change): flag color not found. User's flagged status not changed.", "YELLOW")
     
+    # Auth credential change or verification methods
     def verify_account(self) -> bool:
         """
         Verifies the user's account email.
@@ -491,9 +511,6 @@ class User(db.Model, UserMixin):
 
         Returns:
             bool: True if the account was successfully verified, False otherwise.
-
-        Example usage:
-            `user.verify_account()`
         """
         if self.email_is_verified == modelBool.FALSE:
             self.email_is_verified = modelBool.TRUE
@@ -512,9 +529,6 @@ class User(db.Model, UserMixin):
 
         Returns:
             bool: True if the email was successfully changed, False otherwise.
-
-        Example usage:
-            `user.change_email()`
         """
         if self.new_email is None:
             logging.error("Attempted email change but no new_email stored.")

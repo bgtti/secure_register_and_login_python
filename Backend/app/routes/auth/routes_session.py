@@ -3,10 +3,10 @@
 
 auth/routes_session.py contains routes responsible for core authentication and authorization functionalities.
 Here you will find the following routes:
-- **login** route starts the session when mfa is not enabled or sends an otp as the first login step #TODO: otp part
-- **login_mfa** route starts the session (when mfa enabled) as the second step of the mfa login process #TODO
+- **get_otp** sends an otp to the registered user's email to enable login (in some cases: not required)
+- **login** route starts the session
 - **logout** route ends a session
-- **@me** route delivers user information given a session cookie
+- **@me** route delivers user information given a valid session cookie
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -22,8 +22,8 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 ## Route testing
 
 Status:
+- **get_otp** last test ran on XX December 2024 TODO: testing
 - **login** last test ran on XX December 2024 TODO: testing
-- **login_mfa** last test ran on XX December 2024 TODO: testing
 - **logout** last test ran on XX December 2024 TODO: testing
 - **@me** last test ran on XX December 2024 TODO: testing
 
@@ -33,9 +33,7 @@ Status:
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, session
-import re
-from typing import Dict, Any
+from flask import request, jsonify
 
 # Extensions
 from flask_login import (
@@ -47,25 +45,20 @@ from flask_login import (
 from app.extensions.extensions import db, flask_bcrypt, limiter, login_manager
 
 # Database models
-from app.models.user import User
+# from app.models.user import User
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.account_constants import OTP_PATTERN
 from app.utils.constants.enum_class import LoginMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.ip_utils.ip_anonymization import anonymize_ip
-from app.utils.ip_utils.ip_geolocation import geolocate_ip
 from app.utils.log_event_utils.log import log_event
-from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session, get_user_or_none,check_if_user_blocked
-from app.routes.auth.email_helpers import send_otp_email
-from app.routes.auth.schemas import login_schema, signup_schema, get_otp_schema
+from app.routes.auth.auth_helpers import check_if_user_blocked, get_user_or_none, reset_user_session
+from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
+from app.routes.auth.schemas import login_schema, get_otp_schema
 
 # Blueprint
 from . import auth
@@ -131,18 +124,9 @@ def get_otp():
     # Create OTP
     try:
         otp = user.generate_otp()
+        send_otp_email(user.name, otp, user.email)
     except Exception as e:
-        logging.warning(f"Failed to generate OTP. Error: {e}") 
-        return jsonify(error_response), 500
-
-    # Send email
-    email_sent = False
-    try:
-        email_sent = send_otp_email(user.name, otp, user.email)
-    except Exception as e:
-        logging.warning(f"Failed to send email with otp. Error: {e}") 
-
-    if email_sent is False:
+        logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
         return jsonify(error_response), 500
     
     # Return success response
@@ -211,16 +195,12 @@ def login_user():
         bot_caught(request, "login")
         return jsonify(error_response), 418
     
-    # TODO: 2) if both email and password are correct, but the user is blocked:
-    #           a) if mfa enabled, send user an email saying the user is blocked
-    #           b) if mfa is not enabled, send to FE the information that the user is blocked
-
     # Check if user exists
     invalid_email = False
     invalid_pw = False
     user_is_blocked = False
 
-    user = get_user_or_none(email)
+    user = get_user_or_none(email, "login")
 
     if user is None:
         invalid_email = True
@@ -233,6 +213,7 @@ def login_user():
                 invalid_pw = True
         elif method == LoginMethods.OTP.value:
             if user.check_otp(password) is False:
+                print("HHHHERE")
                 invalid_pw = True
     
         if invalid_pw:
@@ -247,13 +228,15 @@ def login_user():
         user_is_blocked = blocked_status["blocked"]
 
     if user_is_blocked:
+        if blocked_status["temporary_block"] is False:
+            send_email_admin_blocked(user.name, user.email)
         return jsonify(blocked_status["message"]), 403
 
     # If either email and pw/otp are invalid, return
     if invalid_pw or invalid_email:
         return jsonify(error_response), 401
     
-    # TODO If user DOES NOT have mfa enabled, then reset counter here. If not, reset counter at mfa route
+    # MFA: if enabled, handle the step the user is in now
     mfa_enabled = user.mfa_enabled == modelBool.TRUE
 
     if mfa_enabled:
@@ -322,55 +305,6 @@ def login_user():
             } 
         }
     return jsonify(response_data)
-
-
-####################################
-#           LOG IN: MFA            #
-####################################
-@auth.route("/login_mfa", methods=["POST"])
-@limiter.limit("30/minute;50/day")
-@validate_schema(login_schema) # TODO: schema
-def login_user_mfa():
-    """
-    TODO: docstring
-    """
-    # Standard error response
-    error_response = {"response": "There was an error logging in user."} 
-
-    # Get the JSON data from the request body 
-    # TODO: get json: email, pw/otp, honeypot necessary
-
-    # Check if user exists/ get user
-    # TODO: check if user in the db, if not, return error
-
-    # If user exists, check whether the is a missing verification step
-    # TODO: get the missing verification step:
-    #       - if no verification step missing, return error
-    #       - if verification step missing, but step one was too far in the past ( 30 mins?), return error
-
-    # Check the set 2 credential
-    # TODO: if now an otp was sent, validate otp
-    # TODO: if now a password was sent, validate pw
-
-    # TODO: If second validation step fails, return
-
-    # if second validation step suceeds
-    # Reset login attempts counter, set last seen, erase mfa first step on user DB
-    # TODO: reset login attempts counter
-    # TODO: set last seen 
-    # TODO: erase mfa first step and timestamp
-
-    # Use Flask-Login to log in the user
-    # TODO: create session
-
-    # Log 
-    # TODO: log event
-    # TODO: log to system
-
-    # Return
-    # TODO: return 200
-    print("mfa")
-
 
 
 ####################################

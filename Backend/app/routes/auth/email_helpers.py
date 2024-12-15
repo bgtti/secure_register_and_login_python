@@ -1,15 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/email_helpers.py contains the following helper function(s):
-
-- **send_pw_change_email**: 
-- **send_email_change_emails** 
-
-------------------------
-**Purpose**
-
-These functions send auth-related email to users.
+auth/email_helpers.py contains helper functions that send auth-related email to users.
 """
 import logging
 from flask import render_template
@@ -22,11 +14,80 @@ from config.values import EMAIL_CREDENTIALS
 APP_NAME = "[SafeDev]"
 
 # Templates for emails
-VERIFY_EMAIL = "emails/verify_email.html"
-VERIFY_EMAIL_SUCCESS = "emails/verify_email_success.html"
+BLOCKED_BY_ADMIN_REMINDER = "emails/blocked_by_admin_reminder.html"
 CHANGE_AUTH_CRED = "emails/change_auth_creds.html"
 CHANGE_AUTH_CRED_SUCCESS = "emails/change_auth_creds_success.html"
 OTP = "emails/otp.html"
+USER_EXISTS = "emails/user_exists.html"
+VERIFY_EMAIL = "emails/verify_email.html"
+VERIFY_EMAIL_SUCCESS = "emails/verify_email_success.html"
+
+####################################
+#      ONE-TIME PASSWORD / OTP     #
+####################################
+
+def send_otp_email(user_name: str, otp: str, recipient_email: str) -> bool:
+    """
+    Sends a one-time password (OTP) email to the specified recipient.
+
+    This function generates and sends an email containing the provided OTP to the recipient's 
+    email address. It uses an HTML template to format the email body. Proper email credentials 
+    must be configured in the application's settings for this to work.
+
+    -----------------------------------------------------------------------------
+    **Parameters:**
+        user_name (str): The name of the user to be addressed in the email.
+        otp (str): The one-time password to include in the email.
+        recipient_email (str): The email address of the recipient.
+
+    **Returns:**
+        - `True` if the email was sent successfully.
+        - `False` if the email sending failed.
+    
+    -----------------------------------------------------------------------------
+    **Example usage:**
+    ```python
+        user_name = "John Doe"
+        otp = "123456"
+        recipient_email = "john.doe@example.com"
+
+        success = send_otp_email(user_name, otp, recipient_email)
+
+        if success:
+            print("OTP email sent successfully!")
+        else:
+            print("Failed to send OTP email.")
+    ```
+    """
+    if EMAIL_CREDENTIALS["email_set"] == False:
+        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
+        return False
+    
+    email_body = render_template(
+        OTP,  # email template name
+        user_name=user_name,
+        otp=otp
+    )
+    new_email = EmailMessage(
+        subject = f"{APP_NAME} One-Time Password",
+        sender = EMAIL_CREDENTIALS["email_address"],
+        recipients = [recipient_email]
+    )
+    new_email.html = email_body
+
+    try:
+        mail.send(new_email)
+    except Exception as e:
+        logging.error(f"Could not send email. Error: {e}")
+        return False
+
+    logging.info(f"Message sent to email.")
+
+    return True
+
+####################################
+#      ACCT EMAIL VERIFICATION     #
+####################################
 
 def send_acct_verification_req_email(user_name: str, verification_url: str, recipient_email: str) -> bool:
     """
@@ -141,6 +202,10 @@ def send_acct_verification_sucess_email(user_name: str, user_email: str) -> bool
 
     return True
 
+####################################
+#      CHANGE OF ACCT PASSWORD     #
+####################################
+
 def send_pw_change_email(user_name: str, verification_url: str, recipient_email: str) -> bool:
     """
     Sends a password reset email to the specified recipient.
@@ -202,13 +267,74 @@ def send_pw_change_email(user_name: str, verification_url: str, recipient_email:
 
     return True
 
+def send_pw_change_sucess_email(user_name: str, user_email: str) -> bool:
+    """
+    Sends an email to inform the user about a successful password change.
+
+    This function notifies the user via email that their password has been successfully changed.
+    Proper email credentials must be configured in the `.env` file or application settings for the email to be sent successfully.
+
+    -----------------------------------------------------------------------------
+    **Parameters:**
+        user_name (str): The name of the user to be addressed in the email.
+        user_email (str): The email address of the user to send the notification to.
+
+    **Returns:**
+        - `True` if the email was sent successfully.
+        - `False` if the email sending failed.
+    
+    -----------------------------------------------------------------------------
+    **Example usage:**
+    ```python
+        user_name = "John Doe"
+        user_email = "john.doe@example.com"
+
+        success = send_pw_change_sucess_email(user_name, user_email)
+
+        if success:
+            print("Password change success email sent successfully!")
+        else:
+            print("Failed to send password change success email.")
+    """
+    if EMAIL_CREDENTIALS["email_set"] == False:
+        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
+        return False
+
+
+    email_body = render_template(
+        CHANGE_AUTH_CRED_SUCCESS, # email template name
+        user_name=user_name,
+        auth_type="email",
+        more_info = "You can now log in using your new password.",
+    )
+    new_email = EmailMessage(
+        subject = f"{APP_NAME} Password changed successfully.",
+        sender = EMAIL_CREDENTIALS["email_address"],
+        recipients = [user_email]
+    )
+    new_email.html = email_body
+
+    try:
+        mail.send(new_email)
+    except Exception as e:
+        logging.error(f"Could not send email. Error: {e}")
+        return False
+
+    logging.info(f"Message sent to email.")
+
+    return True
+
+####################################
+#        CHANGE OF ACCT EMAIL      #
+####################################
+
 def send_email_change_emails(
     user_name: str,
     verification_url_old_email: str,
     verification_url_new_email: str,
     old_email: str,
     new_email: str,
-) -> bool:
+    ) -> bool:
     """
     Sends email change confirmation links to both the old and new email addresses.
 
@@ -294,63 +420,6 @@ def send_email_change_emails(
 
     return False
 
-def send_pw_change_sucess_email(user_name: str, user_email: str) -> bool:
-    """
-    Sends an email to inform the user about a successful password change.
-
-    This function notifies the user via email that their password has been successfully changed.
-    Proper email credentials must be configured in the `.env` file or application settings for the email to be sent successfully.
-
-    -----------------------------------------------------------------------------
-    **Parameters:**
-        user_name (str): The name of the user to be addressed in the email.
-        user_email (str): The email address of the user to send the notification to.
-
-    **Returns:**
-        - `True` if the email was sent successfully.
-        - `False` if the email sending failed.
-    
-    -----------------------------------------------------------------------------
-    **Example usage:**
-    ```python
-        user_name = "John Doe"
-        user_email = "john.doe@example.com"
-
-        success = send_pw_change_sucess_email(user_name, user_email)
-
-        if success:
-            print("Password change success email sent successfully!")
-        else:
-            print("Failed to send password change success email.")
-    """
-    if EMAIL_CREDENTIALS["email_set"] == False:
-        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
-        return False
-
-
-    email_body = render_template(
-        CHANGE_AUTH_CRED_SUCCESS, # email template name
-        user_name=user_name,
-        auth_type="email",
-        more_info = "You can now log in using your new password.",
-    )
-    new_email = EmailMessage(
-        subject = f"{APP_NAME} Password changed successfully.",
-        sender = EMAIL_CREDENTIALS["email_address"],
-        recipients = [user_email]
-    )
-    new_email.html = email_body
-
-    try:
-        mail.send(new_email)
-    except Exception as e:
-        logging.error(f"Could not send email. Error: {e}")
-        return False
-
-    logging.info(f"Message sent to email.")
-
-    return True
-
 def send_email_change_sucess_emails(user_name: str, old_email: str, new_email: str) -> bool:
     """
     Sends emails to inform the user about a successful email address change.
@@ -422,50 +491,31 @@ def send_email_change_sucess_emails(user_name: str, old_email: str, new_email: s
 
     return False
 
-def send_otp_email(user_name: str, otp: str, recipient_email: str) -> bool:
-    """
-    Sends a one-time password (OTP) email to the specified recipient.
+####################################
+#  CANNOT LOGIN: BLOCKED BY ADMIN  #
+####################################
 
-    This function generates and sends an email containing the provided OTP to the recipient's 
-    email address. It uses an HTML template to format the email body. Proper email credentials 
-    must be configured in the application's settings for this to work.
+def send_email_admin_blocked(user_name: str, recipient_email: str) -> None:
+    """
+    Sends the user a reminder that his account has been blocked by an admin.
+
+    This function generates and sends an email containing this information.
 
     -----------------------------------------------------------------------------
     **Parameters:**
         user_name (str): The name of the user to be addressed in the email.
-        otp (str): The one-time password to include in the email.
         recipient_email (str): The email address of the recipient.
-
-    **Returns:**
-        - `True` if the email was sent successfully.
-        - `False` if the email sending failed.
-    
-    -----------------------------------------------------------------------------
-    **Example usage:**
-    ```python
-        user_name = "John Doe"
-        otp = "123456"
-        recipient_email = "john.doe@example.com"
-
-        success = send_otp_email(user_name, otp, recipient_email)
-
-        if success:
-            print("OTP email sent successfully!")
-        else:
-            print("Failed to send OTP email.")
     ```
     """
     if EMAIL_CREDENTIALS["email_set"] == False:
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
-        return False
     
     email_body = render_template(
-        OTP,  # email template name
+        BLOCKED_BY_ADMIN_REMINDER,  # email template name
         user_name=user_name,
-        otp=otp
     )
     new_email = EmailMessage(
-        subject = f"{APP_NAME} One-Time Password",
+        subject = f"{APP_NAME} Account blocked by site admin",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [recipient_email]
     )
@@ -475,8 +525,41 @@ def send_otp_email(user_name: str, otp: str, recipient_email: str) -> bool:
         mail.send(new_email)
     except Exception as e:
         logging.error(f"Could not send email. Error: {e}")
-        return False
 
     logging.info(f"Message sent to email.")
 
-    return True
+####################################
+#    CANNOT SIGNUP: ACCT EXISTS    #
+####################################
+def send_email_acct_exists(user_name: str, recipient_email: str) -> None:
+    """
+    Sends the user a reminder that his account is already registered in the system: reason signup not possible.
+
+    This function generates and sends an email containing this information.
+
+    -----------------------------------------------------------------------------
+    **Parameters:**
+        user_name (str): The name of the user to be addressed in the email.
+        recipient_email (str): The email address of the recipient.
+    ```
+    """
+    if EMAIL_CREDENTIALS["email_set"] == False:
+        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
+    
+    email_body = render_template(
+        USER_EXISTS,  # email template name
+        user_name=user_name,
+    )
+    new_email = EmailMessage(
+        subject = f"{APP_NAME} Attempted signup failed: account already registered",
+        sender = EMAIL_CREDENTIALS["email_address"],
+        recipients = [recipient_email]
+    )
+    new_email.html = email_body
+
+    try:
+        mail.send(new_email)
+    except Exception as e:
+        logging.error(f"Could not send email. Error: {e}")
+
+    logging.info(f"Message sent to email.")
