@@ -97,7 +97,7 @@ function Login() {
             })
     };
 
-    // TODO review this function after adapting login function in BE
+    // TODO test this component with mfa
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formIsValid) {

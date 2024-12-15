@@ -25,7 +25,7 @@ from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
 from app.extensions.extensions import db
-from app.extensions.sqlalchemy_config import UTCDateTime
+from app.extensions.sqlalchemy_config import EncryptedType, UTCDateTime
 
 # Utilities
 from app.utils.constants.account_constants import INPUT_LENGTH, OTP_PATTERN
@@ -132,7 +132,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
-    recovery_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)#consider encrypting
+    recovery_email = db.Column(EncryptedType, nullable=True)
     # one time password (otp):
     otp_token = db.Column(db.String(8), nullable=True)
     otp_token_creation = db.Column(UTCDateTime, nullable=True)

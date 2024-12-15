@@ -195,10 +195,12 @@ def login_user():
         bot_caught(request, "login")
         return jsonify(error_response), 418
     
-    # Check if user exists
+    # Set control variables
     invalid_email = False
     invalid_pw = False
     user_is_blocked = False
+
+    # Check if user exists
 
     user = get_user_or_none(email, "login")
 
@@ -213,16 +215,15 @@ def login_user():
                 invalid_pw = True
         elif method == LoginMethods.OTP.value:
             if user.check_otp(password) is False:
-                print("HHHHERE")
                 invalid_pw = True
     
         if invalid_pw:
             # Increment login attempts and block if necessary
-                try:
-                    user.increment_login_attempts()
-                    db.session.commit()
-                except Exception as e:
-                    logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+            try:
+                user.increment_login_attempts()
+                db.session.commit()
+            except Exception as e:
+                logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
 
         blocked_status = check_if_user_blocked(user, get_client_ip(request))
         user_is_blocked = blocked_status["blocked"]
@@ -337,7 +338,7 @@ def logout_user():
     return jsonify({"response":"success"})
 
 ####################################
-#  GET CURRENT USER FROM COOKIE    #
+#   GET CURRENT USER FROM COOKIE   #
 ####################################
 
 @auth.route("/@me")

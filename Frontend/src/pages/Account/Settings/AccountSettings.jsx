@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import AccountDeletion from "./SubComponents/AccountDeletion";
 import AccountDetails from "./SubComponents/AccountDetails";
 import AccountPreferences from "./SubComponents/AccountPreferences";
+import AccountRecovery from "./SubComponents/AccountRecovery";
 import "./accountSettings.css"
 
 /**
@@ -19,7 +20,7 @@ function AccountSettings() {
     return (
         <div className="AccountSettings">
 
-            <h3>Account Settings</h3>
+            <h3>Account Settingsssss</h3>
 
             <AccountDetails
                 user={user} />
@@ -29,6 +30,9 @@ function AccountSettings() {
             <AccountPreferences
                 user={user}
                 preferences={preferences} />
+
+            <hr className="AccountSettings-hr" />
+            <AccountRecovery />
 
             <hr className="AccountSettings-hr" />
             <AccountDeletion />

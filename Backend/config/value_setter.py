@@ -309,3 +309,53 @@ assert BASE_URLS["frontend"].startswith("http"), \
     f"frontend URL should start with 'http': {BASE_URLS['frontend']}, check url format!"
 assert BASE_URLS["backend"].startswith("http"), \
     f"backend URL should start with 'http': {BASE_URLS['backend']}, check url format!"
+
+# Generate a cryptographic key
+def generate_cripto_key():
+    """
+    Generate or retrieve a cryptographic key to be used with Fernet.
+    If the ENCRYPTION_KEY environment variable is invalid or not set,
+    check for or create a 'secret.key' file in the parent directory. 
+    """
+    encryption_key = os.getenv("ENCRYPTION_KEY", None) 
+
+    from cryptography.fernet import Fernet
+
+    # Step 1: Check if ENCRYPTION_KEY is provided via environment
+    if encryption_key:
+        try:
+            # Verify that the key from the environment is valid for Fernet
+            Fernet(encryption_key.encode())
+            return encryption_key.encode()
+        except Exception as e:
+            print_to_terminal(
+                "Invalid ENCRYPTION_KEY in environment. Falling back to file-based key.", "YELLOW"
+            )
+    # Step 2: Check if 'secret.key' exists in the parent directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    key_file_path = os.path.join(os.path.dirname(script_dir), "secret.key")
+    if os.path.exists(key_file_path):
+        try:
+            print_to_terminal("Reading encryption key from existing file...", "CYAN")
+            with open(key_file_path, "rb") as key_file:
+                key = key_file.read()
+                # Validate the key from the file
+                Fernet(key)
+                return key
+        except Exception:
+            print_to_terminal(
+                "Error with existing secret.key. Recreating a new one...", "YELLOW"
+            )
+    # Step 3: Create a new key and save it in 'secret.key'
+    try:
+        print_to_terminal("Creating a new encryption key file...", "CYAN")
+        key = Fernet.generate_key()
+        with open(key_file_path, "wb") as key_file:
+            key_file.write(key)
+        print_to_terminal("...secret.key file created. Do not use this in production!", "CYAN")
+        return key
+    except Exception as e:
+        print_to_terminal(f"Error creating secret.key: {e}", "RED")
+        raise RuntimeError("Failed to generate an encryption key")
+    
+CRYPTO_KEY = generate_cripto_key()

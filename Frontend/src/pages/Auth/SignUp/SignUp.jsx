@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice"
@@ -66,8 +66,6 @@ function SignUp() {
     }, [name, email, password, confirmPassword]);
 
 
-
-
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!checkIfPasswordsMatch(password, confirmPassword)) {
@@ -83,11 +81,13 @@ function SignUp() {
             dispatch(setLoader(true))
             signupUser(requestData)
                 .then(res => {
-                    if (res.response) {
-                        navigate("/userAccount");
-                    } else {
-                        setSignupFailed(res.response);
-                        setErrorMessage(res.message);
+                    if (isComponentMounted) {
+                        if (res.response) {
+                            navigate("/userAccount");
+                        } else {
+                            setSignupFailed(res.response);
+                            setErrorMessage(res.message);
+                        }
                     }
                 })
                 .catch(error => {

@@ -38,6 +38,10 @@ INPUT_LENGTH = {
     "signed_token":{
         "minValue": 40, # consider 100. Test first though.
         "maxValue": 300, # consider 200. Test first though.
+    },
+    "encrypted_email":{
+        "minValue": 10, # consider 100. Test first though.
+        "maxValue": 390, 
     }
 }
 """`INPUT_LENGTH` is a dictionary containing the minimum and maximum input length for a number of variables that can be received in json or stored in the database.
