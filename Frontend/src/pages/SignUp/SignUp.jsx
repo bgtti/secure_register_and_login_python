@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Honeypot from "../../components/Honeypot/Honeypot";
 import { setLoader } from "../../redux/loader/loaderSlice"
-import { signupUser } from "../../config/apiHandler/signup"
+import { signupUser } from "../../config/apiHandler/authMain/signup"
 import { nameValidation, emailValidation, passwordValidation } from "../../utils/validation";
 import { INPUT_LENGTH } from "../../utils/constants";
 import "./signup.css"

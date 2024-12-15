@@ -197,8 +197,8 @@ textarea {
 }
 
 /* P-tag classes 
-    - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well.
-    - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page.
+    - MAIN-error-message: used in p-tag. Messages have been wrapped in i-tags as well. ==> DELETE after all components use the error component
+    - MAIN-information-text: used in p-tags. Text is darker as meant to be used as a 'ps' at bottom os page. =>Consider deletion
     => Usage example: SignUp component
 */
 .MAIN-error-message {
@@ -225,6 +225,7 @@ textarea {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+
 }
 
 .MAIN-form>* {
@@ -238,7 +239,7 @@ textarea {
 }
 
 .MAIN-form-star {
-    /* Used on the star denoting a required field, example: 
+    /* Used on the star denoting a required field, example: ==>DELETE after all components use the star component
     <span className="MAIN-form-star">*</span>
      */
 
@@ -250,6 +251,16 @@ textarea {
     /* grid-template-columns => adapt in component's own css as needed */
     grid-template-columns: 2fr 3fr;
     grid-gap: 10px;
+}
+
+.MAIN-form-display-table>input {
+    /* Include padding in total width */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.MAIN-form-display-table>label {
+    align-self: center
 }
 
 

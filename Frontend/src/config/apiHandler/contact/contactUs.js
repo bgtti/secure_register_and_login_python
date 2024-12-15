@@ -1,8 +1,8 @@
-import { api } from "../axios";
-import apiEndpoints from "../apiEndpoints.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../utils/validation"
-import { setReduxLogOutUser } from "../../redux/utilsRedux/setReduxUserState.js";
-import { INPUT_LENGTH } from "../../utils/constants.js"
+import { api } from "../../axios.js";
+import apiEndpoints from "../../apiEndpoints.js";
+import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
+import { setReduxLogOutUser } from "../../../redux/utilsRedux/setReduxUserState.js";
+import { INPUT_LENGTH } from "../../../utils/constants.js"
 
 /**
  * Function makes api call to send a contact form message.

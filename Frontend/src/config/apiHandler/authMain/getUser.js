@@ -1,6 +1,7 @@
-import { api } from "../axios.js";
-import apiEndpoints from "../apiEndpoints.js";
-import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
+import { api } from "../../axios.js";
+import apiEndpoints from "../../apiEndpoints.js";
+import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
+import { setReduxPreferences } from "../../../redux/utilsRedux/setReduxPreferenceState.js";;
 
 /**
  * Function makes api call to make sure the user is authorized to access the resource. 
@@ -57,6 +58,12 @@ export function getUserData() {
                     response.data.user.email,
                     response.data.user.access,
                     response.data.user.email_is_verified
+                )
+                //Saving user preferences in Redux store
+                setReduxPreferences(
+                    response.data.preferences.mfa_enabled,
+                    response.data.preferences.in_mailing_list,
+                    response.data.preferences.night_mode_enabled
                 )
             }
             return res;

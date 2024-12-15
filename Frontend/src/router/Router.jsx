@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AxiosApiInterceptor from "../config/AxiosApiInterceptor";
 import Loader from "../components/Loader";
@@ -7,7 +7,7 @@ import NavBar from "../layout/NavBar";
 import Footer from "../layout/Footer";
 //Pages: open website pages
 import Home from '../pages/Home/Home';
-import LogIn from "../pages/Login/LogIn";
+import Login from "../pages/Auth/Login/Login";
 import SignUp from "../pages/SignUp/SignUp";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
@@ -61,7 +61,7 @@ const Router = () => {
             <Routes>
                 <Route index element={<Home />} />
                 <Route exact path="/" element={<Home />} />
-                <Route exact path="login" element={<LogIn />} />
+                <Route exact path="login" element={<Login />} />
                 <Route exact path="signup" element={<SignUp />} />
                 <Route exact path="resetPassword" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
@@ -73,15 +73,15 @@ const Router = () => {
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />
                 <Route element={<ProtectedUserRoute />}>
                     <Route path="userAccount" element={<UserAccount />}>
-                        <Route index element={<UserDashboard />} />
+                        <Route index element={<Navigate to="userdashboard" replace />} />
                         <Route path="userdashboard" element={<UserDashboard />} />
                         <Route path="acctSettings" element={<AcctSettings />} />
                     </Route>
                 </Route>
                 <Route element={<ProtectedAdminRoute />}>
                     <Route path="adminArea" element={<AdminArea />}>
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="admindashboard" element={<AdminDashboard />} />
+                        <Route index element={<Navigate to="adminDashboard" replace />} />
+                        <Route path="adminDashboard" element={<AdminDashboard />} />
                         <Route path="users" element={<Users />}>
                             <Route index element={<UsersTable />} />
                             <Route path="usersTable" element={<UsersTable />} />

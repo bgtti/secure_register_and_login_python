@@ -39,13 +39,21 @@ export function nameValidation(name) {
  * emailValidation("hello") => { response: false, message: "Email format is not valid." }
  */
 export function emailValidation(email) {
+    // Validate type
     if (typeof email !== "string") {
         return { response: false, message: "Email must be a string." }
-    } else if (email.trim().length < INPUT_LENGTH.email.minValue || email.trim().length > INPUT_LENGTH.email.maxValue || !email.includes("@")) {
-        return { response: false, message: "Email format is not valid." }
-    } else {
-        return { response: true, message: "" }
     }
+    // Validate length
+    const trimmedEmail = email.trim();
+    if (trimmedEmail.length < INPUT_LENGTH.email.minValue || trimmedEmail.length > INPUT_LENGTH.email.maxValue) {
+        return { response: false, message: `An email should be between ${INPUT_LENGTH.email.minValue} and ${INPUT_LENGTH.email.maxValue} characters.` }
+    }
+    // Validate format with regex
+    const emailRegex = /^[^@]+@[^@]+$/; // Ensures at least one character before and after @
+    if (!emailRegex.test(trimmedEmail)) {
+        return { response: false, message: "Email format is not valid." };
+    }
+    return { response: true, message: "" }
 }
 
 /**
@@ -97,14 +105,40 @@ export function passwordValidation(password) {
  * obj.message {string} will document the problem in case password is invalid
  * @example
  * passwordValidation("hiMyNameIsJohnAndImFromAlaska55") => { response: true, message: "" }
- * passwordValidationForLogin("password!") => { response: true, message: "" }
- * passwordValidationForLogin(123) => { response: false, message: "Password must be a string." }
+ * passwordValidationSimplified("password!") => { response: true, message: "" }
+ * passwordValidationSimplified(123) => { response: false, message: "Password must be a string." }
  */
-export function passwordValidationForLogin(password) {
+export function passwordValidationSimplified(password) {
     if (typeof password !== "string") {
         return { response: false, message: "Password must be a string." }
     } else if (password.trim().length < INPUT_LENGTH.password.minValue || password.trim().length > INPUT_LENGTH.password.maxValue) {
-        return { response: false, message: `Passwords should have between ${INPUT_LENGTH.password.minValue} and ${INPUT_LENGTH.password.maxValue} characters. Please check your input.` }
+        return { response: false, message: `Passwords should have between ${INPUT_LENGTH.password.minValue} and ${INPUT_LENGTH.password.maxValue} characters.` }
+    } else {
+        return { response: true, message: "" }
+    }
+}
+
+/**
+ * Function that validates a user's otp input for login
+ * 
+ * @param {string} otp
+ * @returns {object}
+ * Returns an object:
+ * obj.response {bool} will be false if otp is invalid and true otherwise
+ * obj.message {string} will document the problem in case otp is invalid
+ * @example
+ * otpValidation("523694") => { response: true, message: "" }
+ * otpValidation(123) => { response: false, message: "Check OTP format." }
+ */
+export function otpValidation(otp) {
+    if (typeof otp !== "string") {
+        return { response: false, message: "Check OTP format." }
+    } else if (/\s/.test(otp)) {
+        return { response: false, message: "OTP should not contain spaces." };
+    } else if (otp.length < INPUT_LENGTH.otp.minValue || otp.length > INPUT_LENGTH.otp.maxValue) {
+        return { response: false, message: `OTP does not meet length standards.` }
+    } else if (!/^[a-zA-Z0-9]+$/.test(otp)) {
+        return { response: false, message: `OTP contains invalid characters` }
     } else {
         return { response: true, message: "" }
     }

@@ -2,22 +2,44 @@ from bs4 import BeautifulSoup
 from app.utils.constants.account_constants import COMMON_XSS_VECTORS
 import logging
 
-def check_for_html(data, route, user_email="none"):
+def check_for_html(data: str, route: str, user_email: str = "none") -> bool:
     """
-    check_for_html(data: str, route: str, opts: user_email=str) -> bool
-    ----------------------------------------------------------------------------------------------------------------------
-    Function checks data for html input and common XSS vectors, will log it to system_log if it is found, and will return true or false.
-    Requires the data input and the route which received it. 
-    If user_email is known, it can be provided - and this will be included in the log.
-    DO NOT use this function on password input!
-    Passwords - especially raw and unhashed - would be logged, becomming a big security risk!
-    ----------------------------------------------------------------------------------------------------------------------
-    Example usage 1: 
-    check_for_html("<base href='http://example.com/'>", "signup: name field input")
-    -> True
+    Checks for HTML content or common XSS vectors in the provided data.
 
-    Example usage 2: 
-    check_for_html("John", "signup: name field input") -> False
+    This function examines user-provided data for potential HTML input or malicious XSS patterns. 
+    If such content is detected, it logs the event to the system log. The function requires the
+    data input and the route from which the input was received. Optionally, the user's email
+    can be included in the log for traceability.
+
+    --------------------------------------------------------------------
+
+    **Note:** 
+    - This function should NOT be used on password input. 
+    - Logging raw or unhashed passwords can create severe security risks.
+
+    **Parameters:**
+        data (str): The data to be checked for html content.
+        route (str): The route through which the user data was received.
+        [opt] email (str): Optionally, the email of the user in question, if known.
+
+    **Returns:**
+        - `False` if data does not contain html or if an error with the parser occurred.
+        - `True` if data contains html.
+
+    --------------------------------------------------------------------
+    **Example usage:**
+    
+    Example usage 1: 
+    ```python
+    check_for_html("<base href='http://example.com/'>", "signup: name field input")
+    # Returns -> True
+    ```
+
+    Example usage 2:
+    ```python
+    check_for_html("John", "signup: name field input")
+    # Returns -> False
+    ``` 
     """
     try:
         soup = BeautifulSoup(data, "html.parser")
@@ -35,3 +57,4 @@ def check_for_html(data, route, user_email="none"):
 
     except Exception as e:
         logging.error(f'Error while parsing HTML: {e}')
+        return False

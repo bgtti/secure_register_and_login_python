@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "../Modals/ModalAccountDetailChange";
-import ModalVerifyEmail from "../Modals/modalVerifyEmail";
+import ModalVerifyEmail from "../Modals/ModalVerifyEmail";
 
 /** 
  * @constant
@@ -61,6 +61,7 @@ function AccountDetails(props) {
 
     //Css class to hide/show modal
     modalChangeCreds ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
+    // TODO: css class for other model..?
 
     //Modal content
     const modalChangeCredsContent = modalChangeCreds && accountAction !== "" && (
@@ -133,7 +134,7 @@ function AccountDetails(props) {
 
             <p><b>Status:</b> {acctVerificationStatus}</p>
             <div>
-                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }}>
+                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }} title={acctCanBeVerified ? "Your account has already been verified" : ""}>
                     Verify account
                 </button>
             </div>

@@ -1,7 +1,7 @@
-import { apiCredentials } from "../axios";
-import apiEndpoints from "../apiEndpoints.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../utils/validation"
-import { setReduxLogInUser } from "../../redux/utilsRedux/setReduxUserState.js";
+import { apiCredentials } from "../../axios.js";
+import apiEndpoints from "../../apiEndpoints.js";
+import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
+import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
 
 /**
  * Function makes api call to register a user, and if successfull logs the user information in the appropriate redux store. Returns a boolean indicating the response status and a message to be displayed to the user in case of failure.

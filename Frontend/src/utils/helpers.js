@@ -21,7 +21,7 @@ export function stringToBool(input) {
     if (typeof input === "boolean") { return input }
     if (input === "true") { return true }
     if (input === "false") { return false }
-    console.error("Input cannot be transformed into boolean. Check stringToBool.")
+    console.error("Input cannot be transformed into boolean. Check utils > helpers > stringToBool input: ", input)
     return null;
 }
 

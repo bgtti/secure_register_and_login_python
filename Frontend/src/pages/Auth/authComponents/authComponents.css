@@ -1,0 +1,7 @@
+.AuthErrorHint>* {
+    color: var(--FontColorSecondary);
+}
+
+.AuthErrorHint>p {
+    margin: 5px 0;
+}

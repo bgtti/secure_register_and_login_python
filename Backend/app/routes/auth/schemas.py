@@ -1,10 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/schemas.py contains the following schemas to validate request data:
-
-- **signup_schema** 
-- **login_schema** 
+auth/schemas.py contains the json schemas to validate request data in the auth routes.
 
 ------------------------
 ## More information
@@ -13,10 +10,18 @@ These schemas are passed in to `validate_schema` (see `app/utils/custom_decorato
 
 """
 from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
-from app.utils.constants.enum_class import TokenPurpose
+from app.utils.constants.enum_class import TokenPurpose, LoginMethods
 
+# Enum to list
 token_purpose_values = [purpose.value for purpose in TokenPurpose]
 """purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
+
+login_method_values = [method.value for method in LoginMethods]
+"""method can be: 'otp', 'password'"""
+
+####################################
+#      REGISTRATION SCHEMAS        #
+####################################
 
 signup_schema = {
     "type": "object",
@@ -49,29 +54,6 @@ signup_schema = {
     "required": ["name", "email", "password", "honeypot"]
 }
 
-login_schema = {
-    "type": "object",
-    "properties": {
-        "email": {
-            "type": "string", 
-            "minLength": INPUT_LENGTH['email']['minValue'], 
-            "maxLength": INPUT_LENGTH['email']['maxValue'], 
-            "pattern": EMAIL_PATTERN},
-        "password": {
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['password']['minValue'], 
-            "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN},
-        "honeypot": {
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
-            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
-            },
-    },
-    "additionalProperties": False,
-    "required": ["email", "password", "honeypot"]
-}
-
 req_email_verification_schema = {
     "type": "object",
     "title": "Request a token be sent per email to verify account.", 
@@ -100,6 +82,64 @@ verify_acct_email_schema = {
     "additionalProperties": False,
     "required": ["signed_token"]
 }
+
+####################################
+#         SESSION SCHEMAS          #
+####################################
+
+get_otp_schema = {
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN},
+        "honeypot": {
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
+    },
+    "additionalProperties": False,
+    "required": ["email", "honeypot"]
+}
+
+login_schema = {
+    "type": "object",
+    "title": "Will log a user in.",
+    "properties": {
+        "email": {
+            "description": "Email of user logging in.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN},
+        "password": {
+            "description": "Can accept passwords and otp.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'], # should be the same as OTP length
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN},
+        "method": {
+            "description": "Whether user wants to log in with otp or password",
+            "type": "string", 
+            "enum": login_method_values
+        },
+        "honeypot": {
+            "description": "Designed for catching bots.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
+    },
+    "additionalProperties": False,
+    "required": ["email", "password","method", "honeypot"]
+}
+
+####################################
+#         PROFILE SCHEMAS          #
+####################################
 
 change_name_schema = {
     "type": "object",
@@ -179,32 +219,3 @@ req_token_validation_schema = {
     "additionalProperties": False,
     "required": ["signed_token", "purpose"]
 }
-
-
-
-
-#when verifying token use:
-# name_of_schema = {
-#     "properties": {
-#         "token": {
-#             "description": "Token ",
-#             "type": "string",
-#             "minLength": 20,
-#         "maxLength": 100,
-#         "pattern": "^[a-zA-Z0-9_-]+$"
-#             },
-#     },
-# }
-
-#when verifying token use if token is signed:
-# name_of_schema = {
-#     "properties": {
-#         "token": {
-#             "description": "Token ",
-#             "type": "string",
-#             "minLength": 20,
-#         "maxLength": 200,
-#         "pattern":  "^[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+$"
-#             },
-#     },
-# }

@@ -1,4 +1,4 @@
-# Choice of password length: bcrypt has a maximum length input of 72-bytes.
+# MPTE: Choice of password length: bcrypt has a maximum length input of 72-bytes.
 # Pepper (4chars) and Salt (8chars) are added to password before hashing.
 # If 72 bytes is aprox the same amount in characters, 72 - 4 - 8 = 60.
 
@@ -12,8 +12,12 @@ INPUT_LENGTH = {
         "maxValue": 320
     },
     "password": {
-        "minValue": 8,
+        "minValue": 8, #if this value is changed, otp must be changed
         "maxValue": 60
+    },
+    "otp": {
+        "minValue": 8,
+        "maxValue": 8
     },
     "contact_message":{
         "minValue": 1,
@@ -66,6 +70,14 @@ EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 # $: Asserts the end of the string.
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
 """`PASSWORD_PATTERN` is a regex to define the password format of a user (and specifies size constraints)."""
+
+# Explanation of the PASSWORD_PATTERN:
+# ^: Asserts the start of the string.
+# \d: Matches a digit (equivalent to [0-9]).
+# {8}: Ensures exactly 8 digits.
+# $: Asserts the end of the string.
+OTP_PATTERN = r'^\d{8}$' 
+"""`OTP_PATTERN` is a regex to define the otp format (and specifies size constraints). Otp would be a string."""
 
 # DATE_PATTERN for YYYY-MM-DD
 DATE_PATTERN =r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'

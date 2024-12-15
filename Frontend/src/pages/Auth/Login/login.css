@@ -1,0 +1,40 @@
+.Login-opt-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.LogIn-Opts {
+    display: flex;
+}
+
+.LogIn-Opts>button {
+    background-color: var(--BackgroundDisabled);
+    flex: 1;
+    margin: 0;
+    padding: 5px;
+}
+
+.LogIn-Opts>button:first-child {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.LogIn-Opts>button:last-child {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.Login-Opt-Active {
+    background-color: var(--BlueColour) !important;
+    color: var(--BackgroudPrimary) !important;
+}
+
+.LogIn-ExtraOpts {
+    margin: 15px 0;
+    color: var(--FontColorSecondary);
+}
+
+.LogIn-Btns-Container {
+    display: flex;
+    gap: 10px;
+}

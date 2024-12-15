@@ -1,0 +1,70 @@
+/* Tooltip wrapper: Ensures proper alignment and spacing */
+.Tooltip-wrapper {
+    display: inline-flex;
+    align-items: flex-start;
+    /* Align the icon with the top of the text */
+    gap: 0.15rem;
+    /* Adds space between text and superscript icon */
+    font-size: 16px;
+    position: relative;
+    /* Required for positioning the tooltip message */
+}
+
+/* Main text preceding the tooltip icon */
+.Tooltip-text {
+    font-weight: normal;
+}
+
+/* Info icon styled as a circle */
+.Tooltip-info-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    /* Circle diameter */
+    width: 16px;
+    height: 16px;
+    /* Smaller font size for the "i" */
+    font-size: 10px;
+    line-height: 1;
+    /* White border around the circle */
+    border: 1px solid var(--BackgroudTertiary);
+    border-radius: 50%;
+    /* Circle background */
+    background-color: var(--BackgroudTertiary);
+    font-weight: bold;
+    /* Font color for the "i" */
+    color: var(--FontColorSecondary);
+    position: relative;
+    /* Adjusts vertical alignment for superscript */
+    top: -0.4em;
+    cursor: pointer;
+}
+
+/* Tooltip message (hidden by default) */
+.Tooltip-message {
+    visibility: hidden;
+    background-color: var(--BackgroudTertiary);
+    color: var(--FontColorInput);
+    text-align: center;
+    padding: 5px;
+    border-radius: 4px;
+    position: absolute;
+    /* Position the message above the icon */
+    bottom: 125%;
+    left: 150%;
+    transform: translateX(-50%);
+    z-index: 1;
+    /* Prevents wrapping of tooltip text */
+    white-space: nowrap;
+    font-size: 12px;
+    /* Hidden by default */
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Tooltip message visibility on hover */
+.Tooltip-wrapper:hover .Tooltip-message {
+    visibility: visible;
+    /* Smooth fade-in effect */
+    opacity: 1;
+}

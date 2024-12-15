@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice"
-import { emailValidation, passwordValidationForLogin } from "../../../utils/validation";
+import { emailValidation } from "../../../utils/validation";
 import { INPUT_LENGTH } from "../../../utils/constants";
 import Honeypot from "../../../components/Honeypot/Honeypot";
 
