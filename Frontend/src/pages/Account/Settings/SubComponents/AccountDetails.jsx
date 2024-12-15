@@ -132,6 +132,15 @@ function AccountDetails(props) {
 
             <br />
 
+            <p><b>Recovery:</b> no recovery email set</p>
+            <div>
+                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }} title={acctCanBeVerified ? "Your account has already been verified" : ""}>
+                    Change
+                </button>
+            </div>
+
+            <br />
+
             <p><b>Status:</b> {acctVerificationStatus}</p>
             <div>
                 <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }} title={acctCanBeVerified ? "Your account has already been verified" : ""}>

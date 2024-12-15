@@ -8,7 +8,7 @@ import Footer from "../layout/Footer";
 //Pages: open website pages
 import Home from '../pages/Home/Home';
 import Login from "../pages/Auth/Login/Login";
-import SignUp from "../pages/SignUp/SignUp";
+import SignUp from "../pages/Auth//SignUp/SignUp";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow

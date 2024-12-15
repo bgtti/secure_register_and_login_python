@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { PropTypes } from "prop-types";
-import { emailValidation } from "../../../utils/validation";
-import { INPUT_LENGTH } from "../../../utils/constants";
-import RequiredFieldStar from "../../../components/RequiredFieldStar/RequiredFieldStar";
-import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
+import { emailValidation } from "../../utils/validation";
+import { INPUT_LENGTH } from "../../utils/constants";
+import RequiredFieldStar from "../RequiredFieldStar/RequiredFieldStar";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 /**
  * Component returns InputEmail that should be the child component of a form
@@ -20,6 +20,7 @@ import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
  * 
  * @param {object} props
  * @param {string} props.autocomplete // optional, defaults to "email"
+ * @param {string} props.labelText // defaults to "Email"
  * @param {string} props.email
  * @param {func} props.setEmail 
  * @param {func} props.setEmailIsValid 
@@ -27,7 +28,7 @@ import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
  * 
  */
 function InputEmail(props) {
-    const { email, setEmail, setEmailIsValid, autocomplete = "email" } = props;
+    const { email, setEmail, setEmailIsValid, autocomplete = "email", labelText = "Email" } = props;
 
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -45,7 +46,7 @@ function InputEmail(props) {
     return (
         <>
             <div className="MAIN-form-display-table">
-                <label htmlFor="email">Email:<RequiredFieldStar /></label>
+                <label htmlFor="email">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}
                     aria-describedby="email-error"
@@ -71,6 +72,7 @@ function InputEmail(props) {
 };
 InputEmail.propTypes = {
     autocomplete: PropTypes.string,
+    labelText: PropTypes.string,
     email: PropTypes.string.isRequired,
     setEmail: PropTypes.func.isRequired,
     setEmailIsValid: PropTypes.func.isRequired,

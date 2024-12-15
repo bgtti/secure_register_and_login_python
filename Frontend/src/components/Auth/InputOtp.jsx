@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
-import { otpValidation } from "../../../utils/validation";
-import { INPUT_LENGTH } from "../../../utils/constants";
-import RequiredFieldStar from "../../../components/RequiredFieldStar/RequiredFieldStar";
-import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
+import { otpValidation } from "../../utils/validation";
+import { INPUT_LENGTH } from "../../utils/constants";
+import RequiredFieldStar from "../RequiredFieldStar/RequiredFieldStar";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 /**
  * Component returns InputOtp that should be the child component of a form
@@ -14,7 +14,7 @@ import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
  * @visibleName Input OTP
  * 
  * @param {object} props
- * @param {string} props.email
+ * @param {string} props.otp
  * @param {func} props.setOtp
  * @param {func} props.setOtpIsValid 
  * @returns {React.ReactElement}

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
-import { passwordValidation, passwordValidationSimplified } from "../../../utils/validation";
-import { INPUT_LENGTH } from "../../../utils/constants";
-import RequiredFieldStar from "../../../components/RequiredFieldStar/RequiredFieldStar";
-import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
+import { passwordValidation, passwordValidationSimplified } from "../../utils/validation";
+import { INPUT_LENGTH } from "../../utils/constants";
+import RequiredFieldStar from "../RequiredFieldStar/RequiredFieldStar";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 /**
  * Component returns InputPassword that should be the child component of a form
@@ -23,6 +23,7 @@ import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
  * 
  * @param {object} props
  * @param {string} props.autocomplete // optional, defaults to "new-password"
+ * @param {string} props.labelText // defaults to "Password"
  * @param {string} props.password
  * @param {func} props.setPassword 
  * @param {func} props.setPasswordIsValid 
@@ -31,7 +32,7 @@ import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
  * 
  */
 function InputPassword(props) {
-    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password" } = props;
+    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password", labelText = "Password" } = props;
 
     const validationFunc = (pw) => {
         if (simpleValidation) { return passwordValidationSimplified(pw) }
@@ -62,15 +63,15 @@ function InputPassword(props) {
     return (
         <>
             <div className="MAIN-form-display-table">
-                <label htmlFor="password">Password:<RequiredFieldStar /></label>
+                <label htmlFor="password">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}
-                    aria-describedby="password-error"
+                    aria-describedby={`${autocomplete}-error`}
                     autoComplete={autocomplete}
-                    id="password"
+                    id={autocomplete}
                     maxLength={`${INPUT_LENGTH.password.maxValue}`}
                     minLength={`${INPUT_LENGTH.password.minValue}`}
-                    name="password"
+                    name={autocomplete}
                     onBlur={handleBlur}
                     onChange={handleChange}
                     required
@@ -80,7 +81,7 @@ function InputPassword(props) {
             </div>
             {
                 errorMessage !== "" && (
-                    <ErrorMessage message={errorMessage} ariaDescribedby="password-error" />
+                    <ErrorMessage message={errorMessage} ariaDescribedby={`${autocomplete}-error`} />
                 )
             }
         </>
@@ -88,6 +89,7 @@ function InputPassword(props) {
 };
 InputPassword.propTypes = {
     autocomplete: PropTypes.string,
+    labelText: PropTypes.string,
     password: PropTypes.string.isRequired,
     setPassword: PropTypes.func.isRequired,
     setPasswordIsValid: PropTypes.func.isRequired,

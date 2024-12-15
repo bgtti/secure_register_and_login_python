@@ -8,10 +8,10 @@ import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import Honeypot from "../../../components/Honeypot/Honeypot";
 import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
-import AuthErrorHint from "../authComponents/AuthErrorHint.jsx";
-import InputEmail from "../authComponents/InputEmail";
-import InputOtp from "../authComponents/InputOtp.jsx";
-import InputPassword from "../authComponents/InputPassword";
+import AuthErrorHint from "../../../components/Auth/AuthErrorHint.jsx";
+import InputEmail from "../../../components/Auth/InputEmail.jsx";
+import InputPassword from "../../../components/Auth/InputPassword";
+import InputOtp from "../../../components/Auth/InputOtp.jsx";
 import "./login.css"
 
 /**
