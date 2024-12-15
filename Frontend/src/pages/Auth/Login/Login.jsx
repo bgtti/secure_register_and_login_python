@@ -51,6 +51,10 @@ function Login() {
     const [errorMessage, setErrorMessage] = useState("");
     const [loginFailed, setLoginFailed] = useState(false);
 
+    // If mfa enabled: State set by api call
+    const [mfaStep2, setMfaStep2] = useState(false);
+    const [mfaMessage, setMfaMessage] = useState("");
+
     // Form is valid when all fields are valid and api call did not return error
     const formIsValid = otpActive ? (emailIsValid && otpIsValid && errorMessage === "") : (emailIsValid && passwordIsValid && errorMessage === "")
 
@@ -64,9 +68,7 @@ function Login() {
     const sendOtp = (e) => {
         e.preventDefault();
         // get rid of previous error messages
-        if (errorMessage !== "") {
-            setErrorMessage("")
-        }
+        if (errorMessage !== "") { setErrorMessage("") }
         if (!emailIsValid) {
             setErrorMessage("Please check email input.");
             return
@@ -80,9 +82,8 @@ function Login() {
         getOTP(requestData)
             .then(res => {
                 if (isComponentMounted()) {
-                    if (res.response) {
-                        setOtpWasSent(true);
-                    } else {
+                    if (res.response) { setOtpWasSent(true); }
+                    else {
                         setLoginFailed(res.response);
                         setErrorMessage(res.message);
                     }
@@ -100,18 +101,27 @@ function Login() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formIsValid) {
+            //When MFA is enabled, this function should be called twice: one for each auth method
+            let method;
+            if (mfaStep2) { if (otpActive) { method = "password" } else { method = "otp" } }
+            else { if (otpActive) { method = "otp" } else { method = "password" } }
             const requestData = {
                 email: email,
                 password: otpActive ? otp : password,
+                method: method,
                 honeyPot: honeypotValue
             }
-
             dispatch(setLoader(true))
             loginUser(requestData)
                 .then(res => {
                     if (isComponentMounted()) {
                         if (res.response) {
-                            navigate("/userAccount");
+                            if (res.response.status === 202) {
+                                setMfaStep2(true)
+                                setMfaMessage(res.response.message)
+                            } else {
+                                navigate("/userAccount");
+                            }
                         } else {
                             setLoginFailed(res.response);
                             setErrorMessage(res.message);
@@ -126,6 +136,24 @@ function Login() {
                 })
         }
     };
+
+    // Auth components
+    const passwordComponent = (
+        <InputPassword
+            autocomplete="current-password"
+            password={password}
+            setPassword={setPassword}
+            setPasswordIsValid={setPasswordIsValid}
+        />
+    )
+
+    const otpComponent = (
+        <InputOtp
+            otp={otp}
+            setOtp={setOtp}
+            setOtpIsValid={setOtpIsValid}
+        />
+    )
 
     return (
         <div className="LogIn">
@@ -163,29 +191,35 @@ function Login() {
                     setEmailIsValid={setEmailIsValid}
                 />
 
-                {!otpActive && (
-                    <InputPassword
-                        autocomplete="current-password"
-                        password={password}
-                        setPassword={setPassword}
-                        setPasswordIsValid={setPasswordIsValid}
-                    />
-                )}
+                {!otpActive && passwordComponent}
+                {otpActive && otpWasSent && otpComponent}
 
-                {otpActive && otpWasSent && (
-                    <InputOtp
-                        otp={otp}
-                        setOtp={setOtp}
-                        setOtpIsValid={setOtpIsValid}
-                    />
-                )}
+                {
+                    mfaStep2 && (
+                        <div className="LogIn-ExtraOpts">
+                            <p>{mfaMessage}</p>
+                        </div>
+                    )
+                }
+
+                {otpActive && mfaStep2 && passwordComponent}
+                {!otpActive && mfaStep2 && otpComponent}
 
                 <Honeypot setHoneypotValue={setHoneypotValue} />
 
-                <div>
-                    <button className={(otpActive && !otpWasSent) ? "MAIN-display-none" : ""} disabled={!formIsValid} type="submit">Log in</button>
+                <div className="LogIn-Btns-Container">
+                    <button
+                        className={(otpActive && !otpWasSent) ? "MAIN-display-none" : ""} disabled={!formIsValid}
+                        type="submit">
+                        Log in
+                    </button>
+
                     {otpActive && (
-                        <button onClick={(e) => { e.preventDefault(); sendOtp(e) }}>{otpWasSent ? "Resend OTP" : "Send OTP"}</button>
+                        <button
+                            disabled={formIsValid}
+                            onClick={(e) => { sendOtp(e) }}>
+                            {otpWasSent ? "Resend OTP" : "Send OTP"}
+                        </button>
                     )}
                 </div>
 
@@ -206,8 +240,8 @@ function Login() {
             {
                 otpActive ? (
                     <div className="LogIn-ExtraOpts">
-                        <p><i>OTP log-in is only available for verified accounts.</i></p>
-                        <p><i>The server will reject non-verified and non-registered emails attempting to log in.</i></p>
+                        <p><i>You will only receive an OTP per email if the account is registered.</i></p>
+                        <p><i>The server will reject invalid OTPs and non-registered emails attempting alike.</i></p>
                         <p><i>PS: If you have MFA enabled, a password will still be required.</i></p>
                     </div>
                 ) : (

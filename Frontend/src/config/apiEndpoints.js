@@ -18,10 +18,10 @@ export const apiEndpoints = {
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
     //authentication -- session
-    getOTP: `${urlPrefix.auth}/get_otp`, //--test
+    getOTP: `${urlPrefix.auth}/get_otp`, //OK
     //authentication -- main
     userSignUp: `${urlPrefix.auth}/signup`, //OK
-    userLogIn: `${urlPrefix.auth}/login`, //OK
+    userLogIn: `${urlPrefix.auth}/login`, //OK (test mfa)
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
     //authentication -- account

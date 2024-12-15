@@ -29,8 +29,12 @@
     color: var(--BackgroudPrimary) !important;
 }
 
-
 .LogIn-ExtraOpts {
     margin: 15px 0;
     color: var(--FontColorSecondary);
+}
+
+.LogIn-Btns-Container {
+    display: flex;
+    gap: 10px;
 }

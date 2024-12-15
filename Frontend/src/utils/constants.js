@@ -63,8 +63,8 @@ export const INPUT_LENGTH = Object.freeze({
         maxValue: 60
     },
     otp: {
-        minValue: 6,
-        maxValue: 6
+        minValue: 8,
+        maxValue: 8
     },
     contactMessageSubject: {
         minValue: 1,
