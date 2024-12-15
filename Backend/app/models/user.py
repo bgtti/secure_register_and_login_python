@@ -1,6 +1,7 @@
 # from enum import Enum
 import ast
 import enum
+import re
 import logging
 from datetime import datetime, timedelta, timezone
 from flask_login import UserMixin
@@ -12,25 +13,59 @@ from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
 from app.extensions.extensions import db
 from app.utils.constants.account_constants import INPUT_LENGTH
-from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
+from app.utils.constants.account_constants import OTP_PATTERN
+from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, LoginMethods
 from app.utils.constants.enum_helpers import map_string_to_enum
 
 ADMIN_PW = SUPER_USER["password"]
+OTP_VALIDITY_MINUTES = 30 #define here the length the OTP should be valid for
+MFA_VALIDITY_MINUTES = 30 #define here the length between authenticating the two methods required in mfa
 
-def get_session_id(user_id=0):
-    random_number = secrets.randbelow(90000000) + 10000000  # 8-digit number
+def get_eight_digits_number() -> int: 
+    """
+    Generates a random 8-digit number.
 
-    # as a user is created, a session id should be generated using the model's method
-    # however, in the case this step is forgotten ( or in the case the database is being seeded with some fake test users), a random number will be assigned
+    The function uses `secrets.randbelow` to generate a secure random number between
+    10,000,000 (inclusive) and 99,999,999 (inclusive). This ensures the number is
+    always exactly 8 digits long.
+
+    Returns:
+        int: A secure random 8-digit number.
+    
+    More info:
+        https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/11-Testing_Multi-Factor_Authentication
+    """
+    return secrets.randbelow(90000000) + 10000000  # Ensures a 6-digit number
+
+def get_session_id(user_id: int = 0) -> str:
+    """
+    Generates a session ID based on the provided user ID and a random 8-digit number.
+
+    This function creates a session ID in the format `"{user_id}-{random_number}"`. If the `user_id` 
+    is not provided or is set to `0`, the session ID will default to the format 
+    `"0{use_random}-{random_number}"`, where `use_random` is another randomly generated 8-digit number.
+
+    The user_id may be 0 when seeding the database, for instance.
+
+    It is designed to handle scenarios where:
+        - A session ID needs to be generated for a user using the model's method.
+        - The database is being seeded with test users, or the session ID step was skipped.
+
+    Args:
+        user_id (int): The ID of the user for whom the session ID is being generated. 
+                       Defaults to `0` if not provided.
+
+    Returns:
+        str: A session ID string in the specified format.
+    """
+    random_number = get_eight_digits_number()  # 8-digit number
     if user_id == 0:
-        use_random = secrets.randbelow(90000000) + 10000000  # another 8-digit number
+        use_random = get_eight_digits_number()  # another 8-digit number
         return f"0{use_random}-{random_number}"
     
     return f"{user_id}-{random_number}"
 
-def get_six_digit_code(): # TODO: check owasp oppinion on one-time passwords: https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html#email
-    # Generate a secure random integer between 100000 and 999999
-    return secrets.randbelow(900000) + 100000  # Ensures a 6-digit number
+
 
 # Notes:
 # - Bcrypt should output a 60-character string, so this was used as maximum password length
@@ -83,8 +118,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
+    recovery_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)#consider encrypting
     # one time password (otp):
-    otp_token = db.Column(db.String(6), nullable=True)
+    otp_token = db.Column(db.String(8), nullable=True)
     otp_token_creation = db.Column(db.DateTime, nullable=True)
     # acct:
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
@@ -103,9 +139,13 @@ class User(db.Model, UserMixin):
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     # preferences
-    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) # multi-factor authentication
+    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     in_mailing_list = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
+    # multi-factor authentication (mfa)
+    first_factor_used = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    first_factor_used_date = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    first_factor_type = db.Column(db.Enum(LoginMethods), nullable=True)
     
     # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):
@@ -156,6 +196,7 @@ class User(db.Model, UserMixin):
         """
         return self.session
     
+    # One-time password (OTP) methods
     def generate_otp(self) -> str:
         """
         Generates an OTP, saves it to the user's `otp_token` along with the current timestamp in UTC
@@ -168,11 +209,118 @@ class User(db.Model, UserMixin):
             otp = user.generate_otp()
             print(f"Generated OTP: {otp}")
         """
-        new_otp = get_six_digit_code()
-        self.otp_token = new_otp
-        self.otp_token_creation = datetime.now(timezone.utc)
-        return new_otp
+        try:
+            new_otp = get_eight_digits_number()
+            self.otp_token = new_otp
+            self.otp_token_creation = datetime.now(timezone.utc)
+            db.session.commit()  # Save changes to the database
+            return new_otp
+        except Exception as e:
+            logging.error(f"Failed to generate OTP for user {self.id}: {e}")
+            raise
+
+    def otp_reset(self) -> None:
+        """
+        Resets the fields associated with OTP.
+        """
+        try:
+            self.otp_token = None
+            self.otp_token_creation = None
+            db.session.commit()
+        except Exception as e:
+            logging.error(f"Failed to reset OTP for user {self.id}: {e}")
+            raise
+
+    def check_otp(self, otp: str) -> bool:
+        """
+        Validates a given OTP against the expected format, the stored OTP token, 
+        and its validity period.
+
+        This method checks the following:
+        1. Whether the provided OTP matches the expected format defined by `OTP_PATTERN`.
+        2. Whether the OTP matches the stored OTP token in the database (`self.otp_token`).
+        3. Whether the OTP was created within the allowed validity period (e.g., 30 minutes).
+
+        Args:
+            otp (str): The OTP provided for validation, expected to be a string.
+
+        Returns:
+            bool: True if the OTP is valid, matches the stored token, and is within the allowed time frame.
+                False otherwise.
+        """
+        # Check if OTP matches expected pattern
+        if not re.match(OTP_PATTERN, otp):
+            return False
+        else:
+            otp_int = int(otp)
+        # Check if otp matches the one in the DB
+        if otp_int != self.otp_token:
+            return False
+        # Reset fields in the DB
+        self.otp_reset()
+        # Check if otp is still valid
+        now = datetime.now(timezone.utc)
+        otp_age = (now - self.otp_token_creation).total_seconds() / 60  # Calculate age in minutes
+        if otp_age > 30:  # OTP is older than 30 minutes
+            return False
+        # Return otp is valid
+        return True
+
+    # MFA methods
+    def mfa_first_factor_used(self, method: LoginMethods) -> None:
+        """
+        Logs the successfull first factor of a multi-factor authentication process.
+
+        Args:
+            method (LoginMethods): Method belonging to enum LoginMethods.
+        
+        user.first_factor_used will be set to true
+        user.first_factor_type will be set to the method authenticated
+        user.first_factor_used_date will bet set to the current datestring
+        """
+        self.first_factor_used = modelBool.TRUE
+        self.first_factor_type = method
+        self.first_factor_used_date =  datetime.now(timezone.utc)
+        db.session.commit()  # Save changes to the database
+
+    def mfa_first_factor_reset(self) -> None:
+        """
+        Resets the fields associated with the first step of the MFA process.
+        """
+        try:
+            self.first_factor_used = modelBool.FALSE
+            self.first_factor_type = None
+            self.first_factor_used_date = None
+            db.session.commit()  # Save changes to the database
+        except Exception as e:
+            logging.error(f"Failed to reset MFA for user {self.id}: {e}")
+            raise
+
+    def mfa_second_factor_check(self, method: LoginMethods) -> bool:
+        """
+        Checks if the second authentication step in mfa is valid.
+        If second method is valid or time constraint overlapsed, first step data will be reset.
+        
+        Args:
+            method (LoginMethods): Method belonging to enum LoginMethods.
+        Returns:
+            bool: True if the second factor is valid, False otherwise.
+        """
+        # Check the second method is different than the first
+        if method == self.first_factor_used:
+            return False
+        
+        # Reset the first mfa step because it is either too old or the second step is approved
+        self.mfa_first_factor_reset()
+
+        # Check if time for MFA elapsed
+        now = datetime.now(timezone.utc)
+        time_difference = (now - self.first_factor_used_date).total_seconds() / 60  # Calculate time in minutes
+        if time_difference > 30:  
+            return False
+        return True
     
+    # Other methods
     def increment_login_attempts(self) -> None:
         """
         Increments the counter for failed login attempts.
@@ -184,11 +332,17 @@ class User(db.Model, UserMixin):
         self.last_login_attempt = datetime.now(timezone.utc)
         if self.login_attempts == 3:
             self.login_blocked = modelBool.TRUE
-            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=1)
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=2)
+            logging.info(f"Successive failed log-in attempts lead user to be temporarily blocked: {self.email} .")
         elif self.login_attempts == 5:
-            self.login_blocked_until = datetime.now(timezone.utc) +timedelta(minutes=2)
-        elif self.login_attempts > 5:
+            self.login_blocked_until = datetime.now(timezone.utc) +timedelta(minutes=3)
+        elif 5 < self.login_attempts < 7:
             self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=5)
+        elif 7 < self.login_attempts < 10:
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=10)
+        elif self.login_attempts > 10:
+            self.login_blocked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+            logging.critical(f"More than 10 failed login attempts detected for user {self.email}. Potential intrusion / system abuse / brute-force attack.")
 
     def reset_login_attempts(self) -> None:
         """

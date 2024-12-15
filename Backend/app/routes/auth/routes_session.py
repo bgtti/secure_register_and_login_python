@@ -34,6 +34,7 @@ Status:
 import logging
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, session
+import re
 from typing import Dict, Any
 
 # Extensions
@@ -50,6 +51,8 @@ from app.models.user import User
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
+from app.utils.constants.account_constants import OTP_PATTERN
+from app.utils.constants.enum_class import LoginMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip
@@ -60,7 +63,7 @@ from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session, get_user_or_none
+from app.routes.auth.auth_helpers import get_hashed_pw, is_good_password, reset_user_session, get_user_or_none,check_if_user_blocked
 from app.routes.auth.email_helpers import send_otp_email
 from app.routes.auth.schemas import login_schema, signup_schema, get_otp_schema
 
@@ -75,7 +78,7 @@ from . import auth
 ####################################
 
 @auth.route("/get_otp", methods=["POST"])
-@limiter.limit("30/minute;50/day")
+@limiter.limit("20/minute;50/day")
 @validate_schema(get_otp_schema)
 def get_otp(): 
     """
@@ -152,7 +155,7 @@ def get_otp():
 ####################################
 
 @auth.route("/login", methods=["POST"])
-@limiter.limit("30/minute;50/day")
+@limiter.limit("20/minute;50/day")
 @validate_schema(login_schema)
 def login_user():
     """
@@ -200,95 +203,85 @@ def login_user():
     json_data = request.get_json()
     email = json_data["email"]
     password = json_data["password"]
+    method =json_data["method"] # login method can be "otp" or "password"
     honeypot = json_data["honeypot"]
-    #TODO: check whether login is via pw or otp (get json)
 
     # Filter out bots
     if len(honeypot) > 0:
         bot_caught(request, "login")
         return jsonify(error_response), 418
     
-    # TODO: 1) separate the credentials check between email and password validation
     # TODO: 2) if both email and password are correct, but the user is blocked:
     #           a) if mfa enabled, send user an email saying the user is blocked
     #           b) if mfa is not enabled, send to FE the information that the user is blocked
 
     # Check if user exists
-    invalid_credentials = False
+    invalid_email = False
+    invalid_pw = False
+    user_is_blocked = False
 
-    try:
-        user = User.query.filter_by(email=email).first()
-    except Exception as e:
-        logging.error(f"Failed to access db. Error: {e}")
+    user = get_user_or_none(email)
 
     if user is None:
-        invalid_credentials = True
-        logging.info(f"User not in DB. Input email: {email}.")
-        try:
-            log_event("ACCOUNT_LOGIN", "user not found")
-        except Exception as e:
-            logging.error(f"Failed to log event. Error: {e}")
+        invalid_email = True
 
-    # Check if the user was blocked by an admin
-    if not invalid_credentials and user.has_access_blocked():
-        logging.info(f"User blocked. Input email: {email}. (typically error code: 403)")
-        try:
-            log_event("ACCOUNT_LOGIN", "user blocked", user.id)
-        except Exception as e:
-            logging.error(f"Failed to log event. Error: {e}")
-        invalid_credentials = True
-
-    # Check if the user is temporarily blocked from logging in due to mistyping password > 3x
-    if not invalid_credentials and user.is_login_blocked():
-        if user.login_attempts < 6:
-            logging.info(f"User temporarily blocked. Input email: {email}. Failed login attemps: {user.login_attempts}")
-            try:
-                log_event("ACCOUNT_LOGIN", "wrong credentials 3x", user.id)
-            except Exception as e:
-                logging.error(f"Failed to log event. Error: {e}")
-        else:
-            client_ip = get_client_ip(request)
-            if client_ip:
-                geolocation = geolocate_ip(client_ip) 
-                anonymized_ip = anonymize_ip(client_ip)
-                logging.warning(f"{user.login_attempts} wrong login attempts for email: {email}. From IP {anonymized_ip}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}. (typically error code: 403)")
-            try:
-                log_event("ACCOUNT_LOGIN", "wrong credentials 5x", user.id, f"Login attempt from IP {anonymized_ip}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}.")
-            except Exception as e:
-                logging.error(f"Failed to log event. Error: {e}")
-        
-        invalid_credentials = True
-
-    # Check if the user is trying to sign in with PW or OTP
-    # TODO: if pw, check pw credentials (adapt bellow code)
-
-    if not invalid_credentials:
-        # Add salt and pepper to password and check if matches with db
-        pepper = get_pepper(user.created_at) 
-        salted_password = user.salt + password + pepper
-
-        if not flask_bcrypt.check_password_hash(user.password, salted_password):
-            # Increment login attempts and block if necessary
-            try:
-                user.increment_login_attempts()
-                db.session.commit()
-            except Exception as e:
-                logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
-            # Check if the user is now blocked
-            if user.is_login_blocked():
-                logging.info(f"Successive failed log-in attempts lead user to be temporarily blocked. {user.email}")
-            invalid_credentials = True
-
+    # Check password or otp accordingly
+    if not invalid_email:
+        if method == LoginMethods.PASSWORD.value:
+            salted_password = user.salt + password + get_pepper(user.created_at)
+            if not flask_bcrypt.check_password_hash(user.password, salted_password):
+                invalid_pw = True
+        elif method == LoginMethods.OTP.value:
+            if user.check_otp(password) is False:
+                invalid_pw = True
     
-    # TODO: if otp, check if otp is valid
+        if invalid_pw:
+            # Increment login attempts and block if necessary
+                try:
+                    user.increment_login_attempts()
+                    db.session.commit()
+                except Exception as e:
+                    logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
 
+        blocked_status = check_if_user_blocked(user, get_client_ip(request))
+        user_is_blocked = blocked_status["blocked"]
+
+    if user_is_blocked:
+        return jsonify(blocked_status["message"]), 403
 
     # If either email and pw/otp are invalid, return
-    if invalid_credentials:
+    if invalid_pw or invalid_email:
         return jsonify(error_response), 401
     
     # TODO If user DOES NOT have mfa enabled, then reset counter here. If not, reset counter at mfa route
+    mfa_enabled = user.mfa_enabled == modelBool.TRUE
 
+    if mfa_enabled:
+        is_first_factor = user.first_factor_used == modelBool.FALSE
+        if is_first_factor:
+            user.mfa_first_factor_used(LoginMethods(method).name)
+            if method == LoginMethods.PASSWORD.value:
+                msg = "Please confirm the OTP sent to your email address."
+                try:
+                    otp = user.generate_otp()
+                    send_otp_email(user.name, otp, user.email)
+                except Exception as e:
+                    logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
+                    return jsonify(error_response), 500
+            else: 
+                msg = "Please confirm your password."
+            res = {
+                "message": f"First authentication factor accepted. {msg}",
+                "response": "pending"
+                }
+            return jsonify(res), 202
+        else:
+            second_factor_success = user.mfa_second_factor_check(LoginMethods(method).name)
+            if second_factor_success is False:
+                # Likely the user failed to submit the second factor within a specific time frame
+                res = {"response": "Request Timeout (process abandoned) . Please re-start login process."}
+                return jsonify(error_response), 408
+            
     # Reset login attempts counter upon successful login, set last seen, & create session
     try:
         user.reset_login_attempts()
@@ -298,24 +291,10 @@ def login_user():
     except Exception as e:
         logging.error(f"Login attempt counter could not be reset, function will continue. Error: {e}")
 
-    # Check for html in user input TODO: why html detection here? only makes sense if accnt doesnt exist...delete or modify!
-    html_in_email = check_for_html(email, "login - email field")
     try:
         log_event("ACCOUNT_LOGIN", "login successful", user.id)
-        if html_in_email:
-            log_event("ACCOUNT_LOGIN", "html detected", user.id, f"Email provided: {email}")
     except Exception as e:
         logging.error(f"Failed to create event log. Error: {e}")
-
-    #TODO: if mfa enabled:
-    #      1) check the missing step. 
-    #      2) save to the DB the fact that step 1 of verification was completed (inform the db which step was used now otp/pw)
-    #      3) save the date/time of step 1 verification to the db
-    #      4) action if...
-    #         otp was used now, then simply return 200 informing PW is missing
-    #         pw was used now, a) send otp to user email, b) return 200 to FE informing OTP is missing
-
-    # MFA not enabled: log user in
 
     # TODO: consider the bellow if user does not want to be remembered:
     # user.new_session() 
@@ -327,9 +306,6 @@ def login_user():
     # event and system logs
     logging.info("A user logged in.")
     # logging.debug(f"Session after login: {session}") # Uncomment to debug session
-
-    # TODO POSSIBLE IMPLEMENTATION:
-    # - Send an email to the user in case of user being blocked.
     
     response_data ={
             "response":"success",

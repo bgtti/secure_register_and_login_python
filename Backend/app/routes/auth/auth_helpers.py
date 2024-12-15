@@ -16,13 +16,15 @@ Helper functions to auth routes
 """
 import re
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from flask_login import current_user
 from app.extensions.extensions import db, flask_bcrypt
 from app.models.user import User
 from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
 from app.utils.detect_html.detect_html import check_for_html
+from app.utils.ip_utils.ip_anonymization import anonymize_ip
+from app.utils.ip_utils.ip_geolocation import geolocate_ip
 from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
@@ -164,3 +166,65 @@ def get_user_or_none(email: str, route: str) -> Optional[User]:
         logging.error(f"Failed to access db. Error: {e}")
         return None
     
+def check_if_user_blocked(user: User, client_ip: str | None) -> dict:
+    """
+    Checks if a user is blocked from logging in, either temporarily due to failed login attempts 
+    or permanently by an admin. Returns a dictionary with the block status and an appropriate message.
+
+    Args:
+        user (User): The user object being checked.
+        client_ip (str | None): The IP address of the client attempting to log in. 
+                                Can be `None` if the IP is unavailable.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - "blocked" (bool): True if the user is blocked, otherwise False.
+            - "temporary_block" (bool): True if the block is temporary, otherwise False.
+            - "message" (str): A human-readable message explaining the block status.
+    """
+    status = {
+    "blocked": False,
+    "temporary_block": False,
+    "message": ""
+    }
+    user_is_admin_blocked = user.has_access_blocked()
+
+    if user_is_admin_blocked:
+        status["blocked"] = True
+        status["message"] = "Account blocked, contact us for more information."
+        logging.info(f"User blocked. Input email: {user.email}. (typically error code: 403)")
+        try:
+            log_event("ACCOUNT_LOGIN", "user blocked", user.id)
+        except Exception as e:
+            logging.error(f"Failed to log event. Error: {e}")
+        return status
+
+    user_is_login_blocked = user.is_login_blocked()
+
+    if user_is_login_blocked:
+        # Define blocked time
+        now = datetime.now(timezone.utc)
+        time_difference = (user.login_blocked_until - now).total_seconds() / 60
+        status["blocked"] = True
+        status["temporary_block"] = True
+        status["message"]  = f"Too many failed login attempts, wait {time_difference:.2f} minutes and try again."
+        # Info for the logs
+        geolocation = geolocate_ip(client_ip) 
+        # Full IP in case 10 or more failed attempts to login, else anonymized version
+        ip_address = client_ip if user.login_attempts >= 10 else anonymize_ip(client_ip)
+        geo_info = f"Login attempt from IP {ip_address}. Geolocation: country = {geolocation["country"]}, city = {geolocation["city"]}."
+        info = f"User account temporarily blocked from login. User: {user.email}, number of login attempts: {user.login_attempts}. {geo_info} (typically error code: 403)"
+        # Log levels according to nr of failed attempts
+        log_level = logging.warning if user.login_attempts >= 6 else logging.info
+        log_level(info)
+        try:
+            event_message = (
+                "wrong credentials 5x" if user.login_attempts >= 6 else "wrong credentials 3x"
+            )
+            log_event("ACCOUNT_LOGIN", event_message, user.id, geo_info)
+        except Exception as e:
+            logging.error(f"Failed to log event for login-blocked user. Error: {e}")
+    return status
+
+
+            

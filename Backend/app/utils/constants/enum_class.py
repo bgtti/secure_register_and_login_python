@@ -70,3 +70,21 @@ class TokenPurpose(enum.Enum):
     EMAIL_CHANGE_OLD_EMAIL = "email_change_old_email" 
     EMAIL_CHANGE_NEW_EMAIL = "email_change_new_email"
     EMAIL_VERIFICATION = "email_verification" 
+
+class LoginMethods(enum.Enum):
+    """
+    `LoginMethods` is an Enum to indicate the method a user chooses for logging in.
+
+    ------------------------------------------------------------
+    **Options:**
+    
+    - `LoginMethods.PASSWORD = "password"` 
+    - `LoginMethods.OTP = "otp"` .
+
+    ------------------------------------------------------------
+    **Purpose:**
+
+    A user can choose to log in with an otp or with a one-time password.
+    """
+    PASSWORD = "password" 
+    OTP = "otp"  

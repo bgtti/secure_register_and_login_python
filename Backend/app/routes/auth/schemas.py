@@ -12,11 +12,14 @@ auth/schemas.py contains the following schemas to validate request data:
 These schemas are passed in to `validate_schema` (see `app/utils/custom_decorators/json_schema_validator.py`) through the route's decorator to validate client data received in json format by comparing it to the schema rules.
 
 """
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
-from app.utils.constants.enum_class import TokenPurpose
+from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN, OTP_PATTERN
+from app.utils.constants.enum_class import TokenPurpose, LoginMethods
 
 token_purpose_values = [purpose.value for purpose in TokenPurpose]
 """purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
+
+login_method_values = [method.value for method in LoginMethods]
+"""method can be: 'otp', 'password'"""
 
 signup_schema = {
     "type": "object",
@@ -69,25 +72,34 @@ get_otp_schema = {
 
 login_schema = {
     "type": "object",
+    "title": "Will log a user in.",
     "properties": {
         "email": {
+            "description": "Email of user logging in.",
             "type": "string", 
             "minLength": INPUT_LENGTH['email']['minValue'], 
             "maxLength": INPUT_LENGTH['email']['maxValue'], 
             "pattern": EMAIL_PATTERN},
         "password": {
+            "description": "Can accept passwords and otp.",
             "type": "string", 
-            "minLength":  INPUT_LENGTH['password']['minValue'], 
+            "minLength":  INPUT_LENGTH['password']['minValue'], # should be the same as OTP length
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
             "pattern": PASSWORD_PATTERN},
+        "method": {
+            "description": "Whether user wants to log in with otp or password",
+            "type": "string", 
+            "enum": login_method_values
+        },
         "honeypot": {
+            "description": "Designed for catching bots.",
             "type": "string", 
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
             "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
             },
     },
     "additionalProperties": False,
-    "required": ["email", "password", "honeypot"]
+    "required": ["email", "password","method", "honeypot"]
 }
 
 req_email_verification_schema = {
