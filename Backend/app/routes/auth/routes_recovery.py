@@ -54,8 +54,8 @@ from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
 from app.routes.auth.auth_helpers import check_if_user_blocked, get_user_or_none, reset_user_session
-from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
-from app.routes.auth.schemas import login_schema, get_otp_schema
+from app.routes.auth.email_helpers import send_email_recovery_set
+from app.routes.auth.schemas import set_recovery_email_schema
 
 # Blueprint
 from . import auth
@@ -70,7 +70,7 @@ from . import auth
 @auth.route("/set_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;6/day")
-# @validate_schema(set_recovery_email_schema) #TODO
+@validate_schema(set_recovery_email_schema) 
 def set_recovery_email(): 
     """
     get_otp() -> JsonType
@@ -87,7 +87,7 @@ def set_recovery_email():
     ```python
         response_data = {
                 "response":"success",
-                "reccovery_email": "john@doe.com"
+                "recovery_email": "john@doe.com"
             }
     ``` 
     """
@@ -108,7 +108,7 @@ def set_recovery_email():
         return jsonify(error_response), 500
 
     # Check password and OTP
-    if user.check_otp(password) is False:
+    if user.check_otp(otp) is False:
         return jsonify({"response": "Provided OTP is wrong or expired."} ), 401
     
     salted_password = user.salt + password + get_pepper(user.created_at)
@@ -133,10 +133,16 @@ def set_recovery_email():
         return jsonify(error_response), 500
     
     # TODO: confirmation email that recovery email has been added
+    try:
+        mail_sent = send_email_recovery_set(user.email, email)
+        if not mail_sent:
+            logging.error(f"Failed to send confirmation emails of set account recovery email.")
+    except Exception as e:
+        logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
 
     success_response = {
         "response": "success",
-        "reccovery_email": email
+        "recovery_email": email
         }
 
     return jsonify(success_response)

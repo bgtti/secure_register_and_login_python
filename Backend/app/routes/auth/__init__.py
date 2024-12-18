@@ -17,4 +17,4 @@ from flask import Blueprint
 auth = Blueprint("auth", __name__) 
 
 # Import routes
-from . import routes_profile, routes_session, routes_registration
+from . import routes_profile, routes_session, routes_registration, routes_recovery

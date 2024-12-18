@@ -9,7 +9,7 @@ auth/schemas.py contains the json schemas to validate request data in the auth r
 These schemas are passed in to `validate_schema` (see `app/utils/custom_decorators/json_schema_validator.py`) through the route's decorator to validate client data received in json format by comparing it to the schema rules.
 
 """
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN
+from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN, OTP_PATTERN
 from app.utils.constants.enum_class import TokenPurpose, LoginMethods
 
 # Enum to list
@@ -120,7 +120,8 @@ login_schema = {
             "type": "string", 
             "minLength":  INPUT_LENGTH['password']['minValue'], # should be the same as OTP length
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN},
+            "pattern": PASSWORD_PATTERN
+            },
         "method": {
             "description": "Whether user wants to log in with otp or password",
             "type": "string", 
@@ -218,4 +219,39 @@ req_token_validation_schema = {
     },
     "additionalProperties": False,
     "required": ["signed_token", "purpose"]
+}
+
+####################################
+#         RECOVERY SCHEMAS         #
+####################################
+
+set_recovery_email_schema = {
+    "type": "object",
+    "title": "Will set user's recovery email.",
+    "properties": {
+        "email": {
+            "description": "User's recovery email.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN
+            },
+        "password": {
+            "description": "Can only accept password.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'],
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN
+            },
+        "otp": {
+            "description": "Can only accept otp.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['otp']['minValue'], 
+            "maxLength": INPUT_LENGTH['otp']['maxValue'], 
+            "pattern": OTP_PATTERN
+            },
+    },
+
+    "additionalProperties": False,
+    "required": ["email", "password","otp"]
 }
