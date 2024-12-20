@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { acctRequestVerifyEmail } from "../../../../config/apiHandler/authAccount/verifyEmail.js"
+import { acctRequestVerifyEmail } from "../../../../config/apiHandler/authRegistration/verifyEmail.js"
 import { INPUT_LENGTH } from "../../../../utils/constants";
 import { passwordValidationSimplified } from "../../../../utils/validation";
 

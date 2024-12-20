@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../redux/loader/loaderSlice"
 import { setUser } from "../../redux/user/userSlice";
-import { loginUser } from "../../config/apiHandler/authMain/login"
+import { loginUser } from "../../config/apiHandler/authSession/login"
 import { emailValidation, nameValidation } from "../../utils/validation";
 import { sendContactMessage } from "../../config/apiHandler/contact/contactUs"
 import { INPUT_LENGTH } from "../../utils/constants";

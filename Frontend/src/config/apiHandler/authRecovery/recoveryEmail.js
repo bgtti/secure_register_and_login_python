@@ -61,7 +61,7 @@ export function setRecoveryEmail(data) {
     }
 
     let requestData = {
-        "email": email,
+        "recovery_email": email,
         "password": password,
         "otp": otp,
     }
@@ -75,7 +75,7 @@ export function setRecoveryEmail(data) {
     // making the request
     const saveRecoveryEmail = async () => {
         try {
-            const response = await apiCredentials.post(apiEndpoints.userLogIn, requestData);
+            const response = await apiCredentials.post(apiEndpoints.setRecoveryEmail, requestData);
 
             let responseStatus = response.request.status;
 

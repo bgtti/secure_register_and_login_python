@@ -17,6 +17,12 @@ export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
+    //authentication -- profile
+    //...
+    //authentication -- recovery
+    setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
+    // authentication -- registration
+    // ...
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
     //authentication -- main

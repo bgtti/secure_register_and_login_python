@@ -4,8 +4,8 @@ import { PropTypes } from "prop-types";
 import { INPUT_LENGTH } from "../../../../utils/constants";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { acctNameChange } from "../../../../config/apiHandler/authAccount/changeName.js"
-import { acctEmailChange } from "../../../../config/apiHandler/authAccount/changeEmail.js";
+import { acctNameChange } from "../../../../config/apiHandler/authProfile/changeName.js"
+import { acctEmailChange } from "../../../../config/apiHandler/authProfile/changeEmail.js";
 import { nameValidation, emailValidation, passwordValidation } from "../../../../utils/validation.js"
 import "./modalAccountDetailChange.css"
 

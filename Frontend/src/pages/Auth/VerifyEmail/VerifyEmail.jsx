@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice.js"
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js"
 import { tokenFormatIsValid } from "../../../utils/validation"
-import { confirmEmailVerification } from "../../../config/apiHandler/authAccount/verifyEmail.js"
+import { confirmEmailVerification } from "../../../config/apiHandler/authRegistration/verifyEmail.js"
 import VerifyEmailFailed from "./SubComponents/VerifyEmailFailed.jsx"
 import VerifyEmailSucceeded from "./SubComponents/VerifyEmailSucceeded.jsx"
 

@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { PropTypes } from "prop-types";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { setRecoveryEmail } from "../../../../config/apiHandler/authProfile/recoveryEmail.js"
+import { setRecoveryEmail } from "../../../../config/apiHandler/authRecovery/recoveryEmail.js"
 import { getOTP } from "../../../../config/apiHandler/authSession/otp.js";
 import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage";
 import InputEmail from "../../../../components/Auth/InputEmail.jsx";
@@ -165,7 +165,7 @@ function ModalRecoveryEmail(props) {
                         className={!formSubmitted ? "MAIN-display-none" : ""}
                         disabled={formIsValid}
                         onClick={modalToggler}>
-                        "Close"
+                        Close
                     </button>
                 </div>
 
