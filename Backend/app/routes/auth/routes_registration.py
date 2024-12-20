@@ -52,7 +52,7 @@ from app.utils.token_utils.verification_urls import create_verification_url
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none
+from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid
 from app.routes.auth.email_helpers import (
     send_acct_verification_req_email,
     send_acct_verification_sucess_email,
@@ -153,6 +153,8 @@ def signup_user():
     # Determine if the new user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
     flag = False
 
+    name_is_valid = user_name_is_valid(name)
+
     html_in_name = check_for_html(name, "signup - name field", email)
     html_in_email = check_for_html(email, "signup - email field", email)
 
@@ -167,7 +169,7 @@ def signup_user():
     # Return if: user already exists or hashed_password is Null
     # Note we ran most of the function before returning. The reason is to diminish the response time discrepancy between a successfully created user and a failed response. The difference in response time can be used by bad actors to deduce whether an account exists or not in the system.
     
-    if user_exists or not hashed_password:
+    if user_exists or not hashed_password or name_is_valid is False:
         return jsonify({"response": "There was an error registering user."}), 400 
 
     # Create user

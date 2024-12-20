@@ -15,7 +15,7 @@ from app.extensions.extensions import db, flask_bcrypt
 # Database models
 from app.models.user import User
 # Utilities
-from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS
+from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS, RESERVED_NAMES
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip
@@ -221,5 +221,31 @@ def check_if_user_blocked(user: User, client_ip: str | None) -> dict:
             logging.error(f"Failed to log event for login-blocked user. Error: {e}")
     return status
 
+def user_name_is_valid(name):
+    """
+    Validates the given username by checking if it contains any reserved words.
 
-            
+    Args:
+        name (str): The name to validate.
+
+    Returns:
+        bool: False if the name contains a reserved word, True otherwise.
+
+    Example usage:
+    ```python
+        print(user_name_is_valid("AdminUser"))  # Should return False
+        print(user_name_is_valid("ValidName"))  # Should return True
+    ```
+
+    """
+    if not isinstance(name, str):
+        raise ValueError("The provided name must be a string.")
+
+    lower_case_name = name.lower()
+
+    for reserved in RESERVED_NAMES:
+        if reserved.lower() in lower_case_name:
+            return False
+
+    return True
+

@@ -229,7 +229,7 @@ set_recovery_email_schema = {
     "type": "object",
     "title": "Will set user's recovery email.",
     "properties": {
-        "email": {
+        "recovery_email": {
             "description": "User's recovery email.",
             "type": "string", 
             "minLength": INPUT_LENGTH['email']['minValue'], 

@@ -96,7 +96,7 @@ def set_recovery_email():
 
     # Get the JSON data from the request body 
     json_data = request.get_json()
-    email = json_data["email"]
+    recovery_email = json_data["email"]
     password = json_data["password"]
     otp = json_data["otp"]
 
@@ -121,12 +121,12 @@ def set_recovery_email():
         return jsonify({"response": "Password incorrect."} ), 401
 
     try:
-        if check_for_html(email, "set recovery email", email):
+        if check_for_html(recovery_email, "set recovery email", recovery_email):
             user.flag = "YELLOW"
-        elif has_profanity(email):
+        elif has_profanity(recovery_email):
                 user.flag = "PURPLE"
 
-        user.recovery_email = email
+        user.recovery_email = recovery_email
         db.session.commit()
     except Exception as e:
         logging.error(f"Failed to get user. Error: {e}")
@@ -134,7 +134,7 @@ def set_recovery_email():
     
     # TODO: confirmation email that recovery email has been added
     try:
-        mail_sent = send_email_recovery_set(user.email, email)
+        mail_sent = send_email_recovery_set(user.email, recovery_email)
         if not mail_sent:
             logging.error(f"Failed to send confirmation emails of set account recovery email.")
     except Exception as e:
@@ -142,7 +142,7 @@ def set_recovery_email():
 
     success_response = {
         "response": "success",
-        "recovery_email": email
+        "recovery_email": recovery_email
         }
 
     return jsonify(success_response)

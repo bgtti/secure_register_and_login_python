@@ -115,7 +115,10 @@ def get_otp():
         return jsonify(error_response), 418
 
     # Check if user exists
-    user = get_user_or_none(email, "get_otp")
+    if current_user is None:
+        user = get_user_or_none(email, "get_otp")
+    else:
+        user = current_user
 
     # Return success even if user does not exist (to avoid information leakage)
     if user is None:

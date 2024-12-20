@@ -168,12 +168,11 @@ COMMON_XSS_VECTORS = [
 # staff impersonation can be an issue. Do not allow users to register with a name that may indicate authority with the site.
 # the list bellow should be adapted according the context your app operated. Eg: a blog may include "author" or "reviewer" to this list.
 # NOTE OWASP recommendation: https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account
-# TODO include in account signup and name change
+# TODO if you are using this template: change the first string with the apps' name
 RESERVED_NAMES = [
+    "safedev",
     "admin",
     "administrator",
     "moderator",
-    "superadmin",
-    "super_admin",
 ]
 """`RESERVED_NAMES` is a list of reserved names that should not be used when users attempt to create an account or change their names."""
