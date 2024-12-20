@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../../components/Modal/Modal";
-import ModalRecoveryEmail from "../Modals/ModalRecoveryEmail";
+import ModalRecoveryEmail from "./ModalRecoveryEmail";
 /**
  * Component returns section with UI for a user's account deletion
  * 

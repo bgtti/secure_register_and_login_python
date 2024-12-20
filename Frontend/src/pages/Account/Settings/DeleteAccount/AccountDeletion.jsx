@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../../components/Modal/Modal";
-import ModalDeleteAccount from "../Modals/ModalDeleteAccount";
+import ModalDeleteAccount from "./ModalDeleteAccount";
 /**
  * Component returns section with UI for a user's account deletion
  * 

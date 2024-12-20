@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
-import AccountDeletion from "./SubComponents/AccountDeletion";
-import AccountDetails from "./SubComponents/AccountDetails";
-import AccountPreferences from "./SubComponents/AccountPreferences";
-import AccountRecovery from "./SubComponents/AccountRecovery";
+import AccountDeletion from "./DeleteAccount/AccountDeletion";
+import AccountDetails from "./AccountDetails/AccountDetails";
+import AccountPreferences from "./AccountPreferences/AccountPreferences";
+import AccountRecovery from "./AccountRecovery/AccountRecovery";
 import "./accountSettings.css"
 
 /**

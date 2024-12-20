@@ -9,7 +9,7 @@ import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage";
 import InputEmail from "../../../../components/Auth/InputEmail.jsx";
 import InputPassword from "../../../../components/Auth/InputPassword.jsx";
 import InputOtp from "../../../../components/Auth/InputOtp.jsx";
-import "./modalAccountDetailChange.css"
+// import "./modalAccountDetailChange.css"
 
 /**
  * This component is a modal used to change sensitive account information.

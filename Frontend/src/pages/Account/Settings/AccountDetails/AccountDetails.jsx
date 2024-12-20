@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
-import ModalAccountDetailChange from "../Modals/ModalAccountDetailChange";
-import ModalVerifyEmail from "../Modals/ModalVerifyEmail";
+import ModalAccountDetailChange from "./ModalAccountDetailChange";
+import ModalVerifyEmail from "./ModalVerifyEmail";
 
 /** 
  * @constant
