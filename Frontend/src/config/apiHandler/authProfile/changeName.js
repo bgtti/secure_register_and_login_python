@@ -1,54 +1,40 @@
 import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
+import { nameValidation, sanitizedUserAgent } from "../../../utils/validation.js"
 import { setReduxUserName } from "../../../redux/utilsRedux/setReduxUserState.js";
 
 
 /**
  * Function makes api call to change a user's name, and if successfull logs the updated user information in the appropriate redux store. Returns a boolean indicating the response status and a message to be displayed to the user in case of failure.
  * 
- * Requires argument: a data object with the new name as string value.
- * 
- * 
- * @param {string} name
+ * @param {string} name // the new desired name
+ * @param {string} userAgent // browser being used
  * @returns {object}
  * 
  * @example
  * //Input example:
- * const data = {
- *     name: "Josy",
- * }
- * 
- * //Original API response:
- * {
- *  "response": "success"
- *  "user": {
- *        access: "user",
- *        name: "Josy",
- *        email: "josy@example.com",
- *  }
- * }
+ * acctNameChange("Josy", navigator.userAgent)
+            .then(response => handleResponse(response))
+            .catch(error => handleError(error))
+            .finally(handleFinally);
  * 
  * // Response from acctNameChange:
- * acctNameChange(requestData)
- *      .then(response => {
- *          console.log (response)
- * })
  * // a successfull response will yield:
  * { success: true }
  * // an error response might yield:
  * { success: false }
  */
-export function acctNameChange(newName) {
+export function acctNameChange(newName, userAgent = "") {
     // checking if argument was received correctly
     const name = newName ? newName : false;
+    const agent = userAgent !== "" ? sanitizedUserAgent(userAgent) : userAgent;
 
     if (!newName) {
         console.error("Error: no input to change.")
         return { success: false }
     }
 
-    // double-checking the data
+    // double-checking the input
     const nameIsValid = nameValidation(name);
 
     if (!nameIsValid.response) {
@@ -58,6 +44,7 @@ export function acctNameChange(newName) {
 
     let requestData = {
         "new_name": name,
+        "user_agent": agent
     }
 
     // making the request

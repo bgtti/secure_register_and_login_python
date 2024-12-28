@@ -218,7 +218,7 @@ export function sanitizedUserAgent(userAgent = "") {
     if (sanitizedUA.length > maxLength) {
         sanitizedUA = sanitizedUA.substring(0, maxLength);
     }
-    return { sanitizedUA }
+    return sanitizedUA
 }
 
 /**

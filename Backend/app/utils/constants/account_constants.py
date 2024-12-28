@@ -42,11 +42,15 @@ INPUT_LENGTH = {
     "encrypted_email":{
         "minValue": 10, # consider 100. Test first though.
         "maxValue": 390, 
+    },
+    "user_agent": {
+        "minValue": 0, 
+        "maxValue": 255 #TODO get regex pattern
     }
 }
 """`INPUT_LENGTH` is a dictionary containing the minimum and maximum input length for a number of variables that can be received in json or stored in the database.
 
-The keys: "name", "email", "password", "contact_message", "contact_message_subject", "contact_message_answer_subject", "honeypot"
+The keys: "name", "email", "password", "contact_message", "contact_message_subject", "contact_message_answer_subject", "honeypot", "signed_token", "encrypted_email", "user_agent"
 """
 
 # Explanation of the NAME_PATTERN:
@@ -54,7 +58,6 @@ The keys: "name", "email", "password", "contact_message", "contact_message_subje
 # [A-Za-zÀ-ÖØ-öø-ÿ .\'-] defines a character class that allows letters, spaces, accented characters, dots, apostrophes, and hyphens.
 # + means one or more of the preceding characters.
 # $ asserts the end of the string.
-
 NAME_PATTERN = r'^[A-Za-zÀ-ÖØ-öø-ÿ .\'-]+$'
 """`NAME_PATTERN` is a regex to define the name of a user."""
 
@@ -67,23 +70,12 @@ NAME_PATTERN = r'^[A-Za-zÀ-ÖØ-öø-ÿ .\'-]+$'
 EMAIL_PATTERN = r'^[^@\s]+@[^@\s]+$'
 """`EMAIL_PATTERN` is a regex to define the email format of a user."""
 
-# Explanation of the PASSWORD_PATTERN:
-# ^: Asserts the start of the string.
-# [\s\S]: Matches any character, including whitespace (ASCII and Unicode).
-# {%d,%d}: Specifies the minimum and maximum length based on your constants.
-# $: Asserts the end of the string.
 PASSWORD_PATTERN = r'^[\s\S]{%d,%d}$' % (INPUT_LENGTH['password']['minValue'], INPUT_LENGTH['password']['maxValue'])
 """`PASSWORD_PATTERN` is a regex to define the password format of a user (and specifies size constraints)."""
 
-# Explanation of the PASSWORD_PATTERN:
-# ^: Asserts the start of the string.
-# \d: Matches a digit (equivalent to [0-9]).
-# {8}: Ensures exactly 8 digits.
-# $: Asserts the end of the string.
 OTP_PATTERN = r'^\d{8}$' 
-"""`OTP_PATTERN` is a regex to define the otp format (and specifies size constraints). Otp would be a string."""
+"""`OTP_PATTERN` is a regex to define the otp format (and specifies size constraint of 8 digits). Otp would be a string."""
 
-# DATE_PATTERN for YYYY-MM-DD
 DATE_PATTERN =r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
 """`DATE_PATTERN` is a regex to define the accepted format of YYYY-MM-DD dates."""
 

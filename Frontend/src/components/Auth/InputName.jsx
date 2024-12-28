@@ -47,7 +47,7 @@ function InputName(props) {
 
     return (
         <>
-            <div className="MAIN-form-display-table">
+            <div className="MAIN-form-display-table Auth-displayTable">
                 <label htmlFor="name">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}

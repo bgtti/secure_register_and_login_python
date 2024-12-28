@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "./ModalAccountDetailChange";
 import ModalVerifyEmail from "./ModalVerifyEmail";
+import ModalChangeName from "./ModalChangeName";
 
 /** 
  * @constant
@@ -37,6 +38,9 @@ function AccountDetails(props) {
     //State of modal that verifies account
     const [modalVerifyEmail, setModalVerifyEmail] = useState(false)
 
+    //State of modal that changes user's name
+    const [modalChangeName, setModalChangeName] = useState(false)
+
     //Desired modal action of modalChangeCreds (ie: what credential to be changed)
     const [accountAction, setAccountAction] = useState("")
 
@@ -67,6 +71,9 @@ function AccountDetails(props) {
     const modalChangeCredsContent = modalChangeCreds && accountAction !== "" && (
         <ModalAccountDetailChange action={accountAction} modalToggler={toggleModalCred} />
     );
+    const modalChangeNameContent = modalChangeName && (
+        <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
+    );
     const modalVerifyEmailContent = modalVerifyEmail && (
         <ModalVerifyEmail modalToggler={toggleModalVerify} />
     );
@@ -83,6 +90,9 @@ function AccountDetails(props) {
     function toggleModalVerify() {
         setModalVerifyEmail(!modalVerifyEmail);
     }
+    function toggleModalChangeName() {
+        setModalChangeName(!modalChangeName);
+    }
 
     return (
         <section className="AccountSettings-Section1">
@@ -96,6 +106,15 @@ function AccountDetails(props) {
                 )
             }
             {
+                modalChangeName && (
+                    <Modal
+                        title={`Change Name`}
+                        content={modalChangeNameContent}
+                        modalStatus={modalChangeName}
+                        setModalStatus={setModalChangeName} />
+                )
+            }
+            {
                 modalVerifyEmail && (
                     <Modal
                         title={`Verify Account`}
@@ -106,8 +125,9 @@ function AccountDetails(props) {
             }
             <h4>Account Details</h4>
             <p><b>Name:</b> {user.name}</p>
+
             <div>
-                <button onClick={() => { selectAccountAction("name"); toggleModalCred() }}>
+                <button onClick={() => { toggleModalChangeName() }}>
                     Change name
                 </button>
             </div>

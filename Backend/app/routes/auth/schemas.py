@@ -153,6 +153,12 @@ change_name_schema = {
             "maxLength": INPUT_LENGTH['name']['maxValue'],
             "pattern": NAME_PATTERN
             },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            }
     },
     "additionalProperties": False,
     "required": ["new_name"]

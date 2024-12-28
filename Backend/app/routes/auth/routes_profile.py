@@ -45,7 +45,7 @@ from app.utils.token_utils.sign_and_verify import verify_signed_token
 from app.utils.token_utils.verification_urls import create_verification_url
 
 # Auth helpers
-from app.routes.auth.auth_helpers import get_hashed_pw, reset_user_session
+from app.routes.auth.auth_helpers import get_hashed_pw, reset_user_session, user_name_is_valid
 from app.routes.auth.email_helpers import (
     send_acct_verification_req_email,
     send_acct_verification_sucess_email,
@@ -109,6 +109,12 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
     # Get the JSON data from the request body
     json_data = request.get_json()
     new_name = json_data["new_name"]
+    #TODO: get the user_agent from json to log
+
+    new_name_is_valid = user_name_is_valid(new_name)
+
+    if not new_name_is_valid:
+        return jsonify(error_response), 400
 
     the_user = User.query.filter_by(email=current_user.email).first()
     old_name = the_user.name

@@ -72,10 +72,7 @@ export function setReduxLogOutUser() {
 export function setReduxUserName(name) {
     let dataIsValid = name !== ""
     if (dataIsValid) {
-        const userData = {
-            name: name,
-        };
-        store.dispatch(setUserName(userData));
+        store.dispatch(setUserName(name));
         return true;
     } else {
         console.error("Redux encountered an error: user's name invalid")
