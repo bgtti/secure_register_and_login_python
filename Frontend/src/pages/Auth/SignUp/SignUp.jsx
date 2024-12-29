@@ -112,6 +112,7 @@ function SignUp() {
                     name={name}
                     setName={setName}
                     setNameIsValid={setNameIsValid}
+                    cssClass={"MAIN-form-display-table"}
                 />
 
                 <InputEmail

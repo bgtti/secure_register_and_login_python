@@ -54,33 +54,26 @@ signup_schema = {
     "required": ["name", "email", "password", "honeypot"]
 }
 
-req_email_verification_schema = {
+verify_account_schema = {
     "type": "object",
-    "title": "Request a token be sent per email to verify account.", 
+    "title": "Verifies user's account email address.", 
     "properties": {
-        "user_agent": {
+        "otp": {
+            "description": "Can accept otp.",
             "type": "string", 
-            "minLength": 0, 
-            "maxLength": 255 #TODO get regex pattern
+            "minLength":  INPUT_LENGTH['otp']['minValue'], 
+            "maxLength": INPUT_LENGTH['otp']['maxValue'], 
+            "pattern": OTP_PATTERN
+            },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
             }
     },
     "additionalProperties": False,
-    "required": ["user_agent"]
-}
-
-verify_acct_email_schema = {
-    "type": "object",
-    "title": "Validates token that leads to account/email verification.", 
-    "properties": {
-        "signed_token": {
-            "description": "The signed token",
-            "type": "string",
-            "minLength": INPUT_LENGTH['signed_token']['minValue'],
-            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
-            },
-    },
-    "additionalProperties": False,
-    "required": ["signed_token"]
+    "required": ["otp"]
 }
 
 ####################################

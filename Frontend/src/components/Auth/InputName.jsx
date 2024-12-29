@@ -14,15 +14,20 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * @visibleName Input Name
  * 
  * @param {object} props
- * @param {string} props.labelText // defaults to "Name"
- * @param {string} props.name
+ * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable"
+ * @param {string} [props.labelText] //=> optional: defaults to "Name"
+ * @param {string} props.name 
  * @param {func} props.setName
  * @param {func} props.setNameIsValid 
  * @returns {React.ReactElement}
  * 
  */
 function InputName(props) {
-    const { name, setName, setNameIsValid, labelText = "Name" } = props;
+    const { name, setName, setNameIsValid, labelText = "Name", cssClass = "" } = props;
+
+    // If this component is part of a form with many label/input pairs, it is recommended that only 
+    // "MAIN-form-display-table" is passed as the argument to cssClass. Example: Signup form.
+    const styleClass = cssClass === "" ? "MAIN-form-display-table Auth-displayTable" : cssClass;
 
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -47,7 +52,7 @@ function InputName(props) {
 
     return (
         <>
-            <div className="MAIN-form-display-table Auth-displayTable">
+            <div className={`${styleClass}`}>
                 <label htmlFor="name">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}

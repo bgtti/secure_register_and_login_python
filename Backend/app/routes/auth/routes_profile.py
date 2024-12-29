@@ -47,8 +47,6 @@ from app.utils.token_utils.verification_urls import create_verification_url
 # Auth helpers
 from app.routes.auth.auth_helpers import get_hashed_pw, reset_user_session, user_name_is_valid
 from app.routes.auth.email_helpers import (
-    send_acct_verification_req_email,
-    send_acct_verification_sucess_email,
     send_email_change_emails,
     send_email_change_sucess_emails,
     send_pw_change_email,
@@ -57,9 +55,7 @@ from app.routes.auth.email_helpers import (
 from app.routes.auth.schemas import (
     change_name_schema,
     req_auth_change_schema,
-    req_email_verification_schema,
     req_token_validation_schema,
-    verify_acct_email_schema,
 )
 
 # Blueprint

@@ -99,7 +99,11 @@ function ModalChangeName(props) {
                         < ErrorMessage message={infoMessage} ariaDescribedby="api-response-error" />
                     )
                 }
-                <br />
+                {
+                    infoMessage === "" && (
+                        <br />
+                    )
+                }
 
                 <div className="Modal-BtnContainer">
                     <button disabled={formSubmitted || !nameIsValid} type="submit" className="Modal-ActionBtn">Save</button>

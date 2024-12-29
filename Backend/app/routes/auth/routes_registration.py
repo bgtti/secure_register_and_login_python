@@ -54,14 +54,13 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 # Auth helpers (this file)
 from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid
 from app.routes.auth.email_helpers import (
-    send_acct_verification_req_email,
+    send_acct_verification_req_email, # ==> delete
     send_acct_verification_sucess_email,
     send_email_acct_exists
 )
 from app.routes.auth.schemas import (
     signup_schema,
-    req_email_verification_schema,
-    verify_acct_email_schema,
+    verify_account_schema
 )
 
 # Blueprint
@@ -226,80 +225,20 @@ def signup_user():
 
 
 ####################################
-#    VERIFY EMAIL/ACCT (STEP 1)    #
+#            VERIFY ACCT           #
 ####################################
 
-@auth.route("/request_email_verification", methods=["POST"]) # TODO: TEST
+@auth.route("/verify_account", methods=["POST"]) # TODO: TEST
 @login_required
-@validate_schema(req_email_verification_schema)
+@validate_schema(verify_account_schema)
 @limiter.limit("5/day")
-def request_email_verification(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
+def verify_account(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
     """
-    **request_email_verification() -> JsonType**
+    **verify_account() -> JsonType**
 
     ----------------------------------------------------------
-    Route receives the request to change a user's login credential (email or password)
-    and sends email(s) with verification url(s) to the user. 
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" boolean value only included if response is "success".
-
-    ----------------------------------------------------------
-    **Response example:**
-
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-            }
-    ``` 
-    """
-    # Standard error response
-    error_response = {"response": "There was an error changing the user's credentials."}
-
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    user_agent = json_data.get("user_agent", "")
-
-    client_ip = get_client_ip(request)
-
-    user = User.query.filter_by(email=current_user.email).first()
-
-    try:
-        token = Token(user_id=user.id, purpose=TokenPurpose.EMAIL_VERIFICATION, ip_address=client_ip, user_agent=user_agent) 
-        db.session.add(token)
-        db.session.commit()
-
-    except Exception as e:
-        logging.error(f"Token creation failed. Error: {e}")
-        return jsonify(error_response), 500
-
-    
-    link = create_verification_url(token.token, TokenPurpose.EMAIL_VERIFICATION)
-    mail_sent = send_acct_verification_req_email(user.name, link, user.email)
-    
-    response_data ={
-            "response":"success",
-            "mail_sent": mail_sent,
-        }
-    return jsonify(response_data)
-
-####################################
-#    VERIFY EMAIL/ACCT (STEP 2)    #
-####################################
-
-@auth.route("/verify_acct_email", methods=["POST"]) # TODO: TEST
-@login_required
-@validate_schema(verify_acct_email_schema)
-@limiter.limit("5/day")
-def verify_acct_email(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
-    """
-    **verify_acct_email() -> JsonType**
-
-    ----------------------------------------------------------
-    Route receives the request to change a user's login credential (email or password)
-    and sends email(s) with verification url(s) to the user. 
+    Route receives the request to verify the user's email address
+    and sends email with confirmation of verification if successfull. 
     
     Returns Json object containing strings:
     - "response" value is always included.  
@@ -319,7 +258,9 @@ def verify_acct_email(): # TODO --> Add to logs so user actions can show in hist
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
-    signed_token = json_data["signed_token"]
+    otp = json_data["otp"]
+
+    #TODO: get user_agent and log it
 
     # Standard error response
     error_response = {
@@ -327,52 +268,28 @@ def verify_acct_email(): # TODO --> Add to logs so user actions can show in hist
         "mail_sent": False,
         "acct_verified": False,
         }
-
-    # Verify token signature and timestamp
-    token = verify_signed_token(signed_token, TokenPurpose.EMAIL_VERIFICATION)
-
-    if not token:
-        logging.info(f"Invalid or expired token could not be validated.")
-        return jsonify(error_response), 400 
     
-    # Fetch the token from the database
+    user = current_user
+    
     try:
-        the_token =Token.query.filter_by(token=token).first()
-    except Exception as e:
-        logging.error(f"Database error while fetching token. Error: {e}")
-        return jsonify(error_response), 500
-
-    if not the_token:
-        logging.info(f"Verified token not found in the database.")
-        return jsonify(error_response), 400 
-    
-    # Validate token
-    try:
-        if the_token.validate_token():
-            db.session.commit()
-        else:
-            logging.info(f"Token validation failed.")
-            return jsonify(error_response), 400 
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"Database error while validating token. Error: {e}")
-        return jsonify(error_response), 500
-    
-    # Token validated, now verify the account     
-    
-    try: 
-        user = the_token.user
+        # Check OTP
+        if user.check_otp(otp) is False:
+            logging.info(f"Invalid or expired token could not be validated. Account validation failed for {user.email}.")
+            return jsonify(error_response), 400
+        
+        # Verify account
         is_verified = user.verify_account()
-        db.session.delete(the_token)
         db.session.commit()
         if is_verified:
             email_sent = send_acct_verification_sucess_email(user.name, user.email)
         else:
             email_sent = False
+
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to change password. Error: {e}")
+        logging.error(f"Database error. Error: {e}")
         return jsonify(error_response), 500
+
         
     response_data ={
             "response":"success",

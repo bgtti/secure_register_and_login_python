@@ -16,12 +16,17 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * @param {object} props
  * @param {string} props.otp
  * @param {func} props.setOtp
- * @param {func} props.setOtpIsValid 
+ * @param {func} props.setOtpIsValid
+ * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable" 
  * @returns {React.ReactElement}
  * 
  */
 function InputOtp(props) {
-    const { otp, setOtp, setOtpIsValid } = props;
+    const { otp, setOtp, setOtpIsValid, cssClass = "" } = props;
+
+    // If this component is part of a form with many label/input pairs, it is recommended that only 
+    // "MAIN-form-display-table" is passed as the argument to cssClass. Example: Login form.
+    const styleClass = cssClass === "" ? "MAIN-form-display-table Auth-displayTable" : cssClass;
 
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -46,7 +51,7 @@ function InputOtp(props) {
 
     return (
         <>
-            <div className="MAIN-form-display-table">
+            <div className={`${styleClass}`}>
                 <label htmlFor="otp">OTP:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}

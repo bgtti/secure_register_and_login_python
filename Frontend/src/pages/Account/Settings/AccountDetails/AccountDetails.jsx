@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "./ModalAccountDetailChange";
-import ModalVerifyEmail from "./ModalVerifyEmail";
+import ModalVerifyAccount from "./ModalVerifyAccount";
 import ModalChangeName from "./ModalChangeName";
 
 /** 
@@ -36,7 +36,7 @@ function AccountDetails(props) {
     const [modalChangeCreds, setModalChangeAcctCreds] = useState(false)
 
     //State of modal that verifies account
-    const [modalVerifyEmail, setModalVerifyEmail] = useState(false)
+    const [modalVerifyAccount, setModalVerifyAccount] = useState(false)
 
     //State of modal that changes user's name
     const [modalChangeName, setModalChangeName] = useState(false)
@@ -74,8 +74,9 @@ function AccountDetails(props) {
     const modalChangeNameContent = modalChangeName && (
         <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
     );
-    const modalVerifyEmailContent = modalVerifyEmail && (
-        <ModalVerifyEmail modalToggler={toggleModalVerify} />
+
+    const modalVerifyAccountContent = modalVerifyAccount && (
+        <ModalVerifyAccount user={user} />
     );
 
     //Action selection
@@ -88,7 +89,7 @@ function AccountDetails(props) {
         setModalChangeAcctCreds(!modalChangeCreds);
     }
     function toggleModalVerify() {
-        setModalVerifyEmail(!modalVerifyEmail);
+        setModalVerifyAccount(!modalVerifyAccount)
     }
     function toggleModalChangeName() {
         setModalChangeName(!modalChangeName);
@@ -115,12 +116,12 @@ function AccountDetails(props) {
                 )
             }
             {
-                modalVerifyEmail && (
+                modalVerifyAccount && (
                     <Modal
                         title={`Verify Account`}
-                        content={modalVerifyEmailContent}
-                        modalStatus={modalVerifyEmail}
-                        setModalStatus={setModalVerifyEmail} />
+                        content={modalVerifyAccountContent}
+                        modalStatus={modalVerifyAccount}
+                        setModalStatus={setModalVerifyAccount} />
                 )
             }
             <h4>Account Details</h4>

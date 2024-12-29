@@ -12,7 +12,6 @@ import SignUp from "../pages/Auth//SignUp/SignUp";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow
-import VerifyEmail from "../pages/Auth/VerifyEmail/VerifyEmail";
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
 //Pages: protected route (registered users)
 import UserAccount from "../pages/Account/AccountMain"
@@ -65,7 +64,6 @@ const Router = () => {
                 <Route exact path="signup" element={<SignUp />} />
                 <Route exact path="resetPassword" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
-                <Route exact path="verifyEmail/:token" element={<VerifyEmail />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
                 <Route exact path="errorPage" element={<ErrorPage />} />

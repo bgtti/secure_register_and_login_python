@@ -152,6 +152,7 @@ function Login() {
             otp={otp}
             setOtp={setOtp}
             setOtpIsValid={setOtpIsValid}
+            cssClass={"MAIN-form-display-table"}
         />
     )
 

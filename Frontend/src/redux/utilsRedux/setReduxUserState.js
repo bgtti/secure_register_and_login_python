@@ -1,6 +1,6 @@
 import { store } from "../store"
 import { setUser, setUserLogout, setUserName, setUserAcctVerification } from "../user/userSlice";
-import { USER_ACCESS_TYPES, ACCT_VERIFICATION_STATUS } from "../../utils/constants"
+import { USER_ACCESS_TYPES } from "../../utils/constants"
 import { stringToBool } from "../../utils/helpers"
 
 // ABOUT THIS FILE
@@ -22,15 +22,13 @@ import { stringToBool } from "../../utils/helpers"
  * @param {string} name //"John"
  * @param {string} email //"john@fakemail.com"
  * @param {string} access //"user"
- * @param {string|bool} acctVerified //[true, false, "pending", "true", "false"]
+ * @param {string|bool} acctVerified //[true, false, "true", "false"]
  * @returns {boolean}
  */
 export function setReduxLogInUser(name, email, access, acctVerified) {
-    let verified;
-    if (acctVerified === "pending") { verified = acctVerified }
-    else { verified = stringToBool(acctVerified) }//convert to boolean if string
+    let verified = stringToBool(acctVerified)
 
-    let dataIsValid = name !== "" && email !== "" && USER_ACCESS_TYPES.includes(access) && ACCT_VERIFICATION_STATUS.includes(verified);
+    let dataIsValid = name !== "" && email !== "" && USER_ACCESS_TYPES.includes(access) && typeof verified === "boolean";
 
     if (dataIsValid) {
         const userData = {
@@ -86,19 +84,14 @@ export function setReduxUserName(name) {
  * 
  * Accepts no parameters and returns a boolean indicating success.
  * 
- * @param {string} acctVerified //[true, false, "pending"]
+ * @param {string} acctVerified //[true, false]
  * @returns {boolean}
  */
 export function setReduxUserAcctVerification(acctVerified) {
-    let verified;
-    if (acctVerified === "pending") { verified = acctVerified }
-    else { verified = stringToBool(acctVerified) }//convert to boolean if string
-    let dataIsValid = ACCT_VERIFICATION_STATUS.includes(verified);
+    let verified = stringToBool(acctVerified)//convert to boolean if string
+    let dataIsValid = typeof verified === "boolean"
     if (dataIsValid) {
-        const userData = {
-            acctVerified: verified,
-        };
-        store.dispatch(setUserAcctVerification(userData));
+        store.dispatch(setUserAcctVerification(verified));
         return true;
     } else {
         console.error("Redux encountered an error: user's verification status invalid")

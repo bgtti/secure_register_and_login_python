@@ -29,7 +29,7 @@ export const userSlice = createSlice({
             state.access = state.access;
             state.email = state.email;
             state.name = state.name;
-            state.acctVerified = action.payload; // should be either: true, false, or "pending"
+            state.acctVerified = action.payload; // should be either: true, or false
         },
         setUser: (state, action) => {
             state.loggedIn = action.payload.loggedIn;

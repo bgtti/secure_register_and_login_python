@@ -22,7 +22,7 @@ export const apiEndpoints = {
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
     // authentication -- registration
-    // ...
+    verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
     //authentication -- main
@@ -31,8 +31,6 @@ export const apiEndpoints = {
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
     //authentication -- account
-    acctRequestVerifyEmail: `${urlPrefix.auth}/request_email_verification`, //OK
-    acctVerifyEmail: `${urlPrefix.auth}/verify_acct_email`, //OK
     acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
     acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
     acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
