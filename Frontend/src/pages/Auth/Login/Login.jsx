@@ -144,6 +144,7 @@ function Login() {
             password={password}
             setPassword={setPassword}
             setPasswordIsValid={setPasswordIsValid}
+            cssClass={"MAIN-form-display-table"}
         />
     )
 
@@ -190,6 +191,7 @@ function Login() {
                     email={email}
                     setEmail={setEmail}
                     setEmailIsValid={setEmailIsValid}
+                    cssClass={"MAIN-form-display-table"}
                 />
 
                 {!otpActive && passwordComponent}

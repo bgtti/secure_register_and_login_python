@@ -3,31 +3,33 @@ import { useDispatch } from "react-redux";
 import { PropTypes } from "prop-types";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { setRecoveryEmail } from "../../../../config/apiHandler/authRecovery/recoveryEmail.js"
+import { setRecoveryEmail } from "../../../../config/apiHandler/authRecovery/setRecoveryEmail.js"
 import { getOTP } from "../../../../config/apiHandler/authSession/otp.js";
 import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage";
 import InputEmail from "../../../../components/Auth/InputEmail.jsx";
 import InputPassword from "../../../../components/Auth/InputPassword.jsx";
 import InputOtp from "../../../../components/Auth/InputOtp.jsx";
-// import "./modalAccountDetailChange.css"
+import HiddenUsername from "../../../../components/Auth/HiddenUsername.jsx"
 
 /**
- * This component is a modal used to change sensitive account information.
+ * This component is a modal used to set a recovery email address.
  * 
  * @param {object} props
  * @param {func} props.modalToggler opens/closes modal
+ * @param {object} props.user 
+ * @param {string} props.user.email 
+ * @param {string} props.acctRecovery
+ * @param {bool} props.acctRecovery.recoveryEmailAdded
  * @returns {React.ReactElement}
  */
-function ModalRecoveryEmail(props) {
-    const { modalToggler } = props;
+function ModalSetRecoveryEmail(props) {
+    const { modalToggler, user, acctRecovery } = props;
 
     const dispatch = useDispatch();
 
     const isComponentMounted = useIsComponentMounted();
 
     const userAgent = navigator.userAgent; //info to be passed on to BE
-
-    //TODO: get recovery email/ see if it exists
 
     // State for input components
     const [email, setEmail] = useState("");
@@ -39,24 +41,23 @@ function ModalRecoveryEmail(props) {
     const [passwordIsValid, setPasswordIsValid] = useState(false);
 
     // State set by api call
-    const [errorMessage, setErrorMessage] = useState("");
-    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [infoMessage, setInfoMessage] = useState("");
 
     // Form is valid when all fields are valid and api call did not return error
-    const formIsValid = (emailIsValid && passwordIsValid && otpIsValid && errorMessage === "")
+    const formIsValid = (emailIsValid && passwordIsValid && otpIsValid && infoMessage === "")
 
     //if a form error was shown, hide it when the user starts to correct the input
     useEffect(() => {
-        if (errorMessage !== "") {
-            setErrorMessage("")
+        if (infoMessage !== "") {
+            setInfoMessage("")
         }
     }, [email, otp]);
 
     const sendOtp = (e) => {
         e.preventDefault();
         // get rid of previous error messages
-        if (errorMessage !== "") { setErrorMessage("") }
-        if (!emailIsValid) { setErrorMessage("Please check email input."); return }
+        if (infoMessage !== "") { setInfoMessage("") }
+        if (!emailIsValid) { setInfoMessage("Please check email input."); return }
 
         const requestData = {
             email: email,
@@ -68,10 +69,7 @@ function ModalRecoveryEmail(props) {
             .then(res => {
                 if (isComponentMounted()) {
                     if (res.response) { setOtpWasSent(true); }
-                    else {
-                        setApiReqFailed(res.response);
-                        setErrorMessage(res.message);
-                    }
+                    else { setInfoMessage(res.message); }
                 }
             })
             .catch(error => {
@@ -89,19 +87,13 @@ function ModalRecoveryEmail(props) {
                 email: email,
                 password: password,
                 otp: otp,
-                honeypot: ""
+                userAgent: userAgent
             }
             dispatch(setLoader(true))
             setRecoveryEmail(requestData)
                 .then(res => {
                     if (isComponentMounted()) {
-                        if (res.response) {
-                            setErrorMessage("Recovery email set successfully!");
-                            setFormSubmitted(true)
-                        } else {
-                            setApiReqFailed(true);
-                            setErrorMessage(res.message);
-                        }
+                        setInfoMessage(res.message);
                     }
                 })
                 .catch(error => {
@@ -118,11 +110,13 @@ function ModalRecoveryEmail(props) {
         <>
             <form onSubmit={handleSubmit} className="ModalAccountDetailChange MAIN-form">
                 <div>
-                    <p>Note: two-step verification required.</p>
-                    <p>You will receive an OTP to confirm this email.</p>
+                    <p><i>Two-step verification required: OTP and password</i></p>
+                    <p>You will receive an OTP in the recovery email.</p>
+                    <p>Please copy and paste it bellow within 30 minutes.</p>
+                    <p>Confirm the password you use to log into your account.</p>
                 </div>
                 <InputEmail
-                    autocomplete="username"
+                    autocomplete="email"
                     email={email}
                     setEmail={setEmail}
                     setEmailIsValid={setEmailIsValid}
@@ -136,6 +130,11 @@ function ModalRecoveryEmail(props) {
                                 setOtpIsValid={setOtpIsValid}
                             />
 
+                            {/* HiddenUsername should help browser find "current-password" */}
+                            <HiddenUsername
+                                username={user.email}
+                            />
+
                             <InputPassword
                                 autocomplete="current-password"
                                 password={password}
@@ -146,23 +145,24 @@ function ModalRecoveryEmail(props) {
                     )
                 }
 
-                <div className="ModalAccountDetailChange-BtnContainer">
-                    <button
-                        className={!otpWasSent ? "MAIN-display-none" : ""}
-                        disabled={(!formIsValid || formSubmitted)}
-                        type="submit">
-                        Save
-                    </button>
+                <div className="Modal-BtnContainer">
 
                     <button
-                        className={formSubmitted ? "MAIN-display-none" : ""}
-                        disabled={formIsValid}
+                        className={acctRecovery.recoveryEmailAdded ? "MAIN-display-none" : ""}
+                        disabled={formIsValid || acctRecovery.recoveryEmailAdded}
                         onClick={(e) => { sendOtp(e) }}>
                         {otpWasSent ? "Resend OTP" : "Send OTP"}
                     </button>
 
                     <button
-                        className={!formSubmitted ? "MAIN-display-none" : ""}
+                        className={!otpWasSent ? "MAIN-display-none" : "Modal-ActionBtn"}
+                        disabled={(!formIsValid || acctRecovery.recoveryEmailAdded)}
+                        type="submit">
+                        Save
+                    </button>
+
+                    <button
+                        className={!acctRecovery.recoveryEmailAdded ? "MAIN-display-none" : ""}
                         disabled={formIsValid}
                         onClick={modalToggler}>
                         Close
@@ -170,8 +170,8 @@ function ModalRecoveryEmail(props) {
                 </div>
 
                 {
-                    errorMessage !== "" && (
-                        < ErrorMessage message={errorMessage} ariaDescribedby="api-response-error" />
+                    infoMessage !== "" && (
+                        < ErrorMessage message={infoMessage} ariaDescribedby="api-response-error" />
                     )
                 }
             </form>
@@ -179,8 +179,14 @@ function ModalRecoveryEmail(props) {
     );
 };
 
-ModalRecoveryEmail.propTypes = {
-    modalToggler: PropTypes.func.isRequired
+ModalSetRecoveryEmail.propTypes = {
+    modalToggler: PropTypes.func.isRequired,
+    user: PropTypes.shape({
+        email: PropTypes.string.isRequired
+    }).isRequired,
+    acctRecovery: PropTypes.shape({
+        recoveryEmailAdded: PropTypes.bool.isRequired
+    }).isRequired,
 };
 
-export default ModalRecoveryEmail;
+export default ModalSetRecoveryEmail;

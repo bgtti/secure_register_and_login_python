@@ -19,8 +19,9 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * @visibleName InputEmail
  * 
  * @param {object} props
- * @param {string} props.autocomplete // optional, defaults to "email"
- * @param {string} props.labelText // defaults to "Email"
+ * @param {string} [props.autocomplete] // optional, defaults to "email"
+ * @param {string} [props.labelText] // defaults to "Email"
+ * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable"
  * @param {string} props.email
  * @param {func} props.setEmail 
  * @param {func} props.setEmailIsValid 
@@ -28,7 +29,11 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * 
  */
 function InputEmail(props) {
-    const { email, setEmail, setEmailIsValid, autocomplete = "email", labelText = "Email" } = props;
+    const { email, setEmail, setEmailIsValid, autocomplete = "email", labelText = "Email", cssClass = "" } = props;
+
+    // If this component is part of a form with many label/input pairs, it is recommended that only 
+    // "MAIN-form-display-table" is passed as the argument to cssClass. Example: Login form.
+    const styleClass = cssClass === "" ? "MAIN-form-display-table Auth-displayTable" : cssClass;
 
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -45,7 +50,7 @@ function InputEmail(props) {
 
     return (
         <>
-            <div className="MAIN-form-display-table">
+            <div className={`${styleClass}`}>
                 <label htmlFor="email">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}

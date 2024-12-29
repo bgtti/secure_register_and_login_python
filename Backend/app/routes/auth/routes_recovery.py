@@ -53,9 +53,9 @@ from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import check_if_user_blocked, get_user_or_none, reset_user_session
+from app.routes.auth.auth_helpers import anonymize_email, check_if_user_blocked, get_user_or_none, reset_user_session
 from app.routes.auth.email_helpers import send_email_recovery_set
-from app.routes.auth.schemas import set_recovery_email_schema
+from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema
 
 # Blueprint
 from . import auth
@@ -96,11 +96,12 @@ def set_recovery_email():
 
     # Get the JSON data from the request body 
     json_data = request.get_json()
-    recovery_email = json_data["email"]
+    recovery_email = json_data["recovery_email"]
     password = json_data["password"]
     otp = json_data["otp"]
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
 
-    # Get the user from cookie
+    # Get the user from cookie --- try to call method directly on current_user to see if it works!
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
@@ -113,11 +114,6 @@ def set_recovery_email():
     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
-        try:
-            user.increment_login_attempts()
-            db.session.commit()
-        except Exception as e:
-            logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
         return jsonify({"response": "Password incorrect."} ), 401
 
     try:
@@ -125,37 +121,85 @@ def set_recovery_email():
             user.flag = "YELLOW"
         elif has_profanity(recovery_email):
                 user.flag = "PURPLE"
-
+        # TODO: if old recovery email, send message it is no longer (it has been changed)
         user.recovery_email = recovery_email
         db.session.commit()
     except Exception as e:
-        logging.error(f"Failed to get user. Error: {e}")
+        logging.error(f"Failed to save recovery email. Error: {e}")
         return jsonify(error_response), 500
     
-    # TODO: confirmation email that recovery email has been added
+    # Send confirmation emails that new recovery has been added
     try:
-        mail_sent = send_email_recovery_set(user.email, recovery_email)
+        mail_sent = send_email_recovery_set(user.name, user.email, recovery_email)
         if not mail_sent:
             logging.error(f"Failed to send confirmation emails of set account recovery email.")
     except Exception as e:
         logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
 
-    success_response = {
-        "response": "success",
-        "recovery_email": recovery_email
+    # Anonymize recovery email
+    anonymized_recovery_email = anonymize_email(recovery_email)
+
+    response_data = {
+            "response":"Recovery email added successfully!",
+            "recovery_email_added": True,
+            "recovery_email_preview": anonymized_recovery_email
         }
+    return jsonify(response_data)
 
-    return jsonify(success_response)
+####################################
+#        GET RECOVERY STATUS       #
+####################################
 
+@auth.route("/get_recovery_status")
+@login_required
+def get_recovery_status():
+    """
+    get_recovery_status() -> JsonType
+    ----------------------------------------------------------
 
+    Route sends user's recovery_email. 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "recovery_email_preview" value only included if recovery_email_added is true.
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    # If recovery_email is "john@email.com", it's preview will be:
+
+    ```python
+        response_data = {
+                "response":"success",
+                "recovery_email_added": true,
+                "recovery_email_preview": "j***@e***.com" 
+            }
+    ``` 
+    """
+    # Get the recovery email (it may be None or a string)
+    recovery_email = current_user.recovery_email
+
+    # Determine if a recovery email was added
+    recovery_email_added = recovery_email is not None and recovery_email.strip() != ""
+
+    # Anonymize email if it's provided
+    anonymized_recovery_email = anonymize_email(recovery_email) if recovery_email_added else ""
+
+    response_data = {
+            "response":"success",
+            "recovery_email_added": recovery_email_added,
+            "recovery_email_preview": anonymized_recovery_email
+        }
+    return jsonify(response_data)
 
 ####################################
 #        GET RECOVERY EMAIL        #
 ####################################
 
-# Standard error response
-@auth.route("/get_recovery_email")
+@auth.route("/get_recovery_email", methods=["POST"])
 @login_required
+@limiter.limit("5/minute;10/day")
+@validate_schema(get_recovery_email_schema) 
 def get_recovery_email():
     """
     get_recovery_email() -> JsonType
@@ -177,9 +221,32 @@ def get_recovery_email():
             }
     ``` 
     """
+    # Get the JSON data from the request body 
+    json_data = request.get_json()
+    password = json_data["password"]
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
+
+    # Get the user from cookie --- try to call method directly on current_user to see if it works!
+    try:
+        user = User.query.filter_by(email=current_user.email).first()
+    except Exception as e:
+        logging.error(f"Database query failed: {e}")
+        return jsonify({"response": "An error occurred while fetching the user."}), 500
+
+    # Check password     
+    salted_password = user.salt + password + get_pepper(user.created_at)
+    if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        return jsonify({"response": "Password incorrect."} ), 401
+
+    # Get the recovery email (it may be None or a string)
+    recovery_email = user.recovery_email
+
+    if not recovery_email:
+        return jsonify({"response": "No recovery email found."} ), 404
+    
 
     response_data = {
             "response":"success",
-            "recovery_email": current_user.recovery_email
+            "recovery_email": recovery_email
         }
     return jsonify(response_data)

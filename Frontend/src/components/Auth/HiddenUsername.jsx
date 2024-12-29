@@ -1,5 +1,4 @@
-// Check if this component is necessary
-// Currently not being used
+import { PropTypes } from "prop-types";
 
 /**
  * Component returns div with hidden username field
@@ -10,12 +9,12 @@
  * Use this component to get rid of the browser warning.
  * In certain forms, pass a prop "username" with the user's email to help password managers and assistive technology do their jobs
  * 
- * @visibleName Required Field
+ * @param {string} props.username // the user's login email address
  * 
  * @returns {React.ReactElement}
  * 
  */
-function HiddenUsernameField(props) {
+function HiddenUsername(props) {
     const { username = "leave this field empty" } = props
 
     return (
@@ -33,8 +32,8 @@ function HiddenUsernameField(props) {
         </div>
     );
 };
-HiddenUsernameField.propTypes = {
+HiddenUsername.propTypes = {
     username: PropTypes.string,
 };
 
-export default HiddenUsernameField;
+export default HiddenUsername;

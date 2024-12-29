@@ -119,12 +119,14 @@ function SignUp() {
                     email={email}
                     setEmail={setEmail}
                     setEmailIsValid={setEmailIsValid}
+                    cssClass={"MAIN-form-display-table"}
                 />
                 <InputPassword
                     password={password}
                     setPassword={setPassword}
                     setPasswordIsValid={setPasswordIsValid}
                     simpleValidation={false}
+                    cssClass={"MAIN-form-display-table"}
                 />
                 <InputPassword
                     autocomplete={"confirm-password"}
@@ -132,6 +134,7 @@ function SignUp() {
                     password={confirmPassword}
                     setPassword={setConfirmPassword}
                     setPasswordIsValid={setConfirmPasswordIsValid}
+                    cssClass={"MAIN-form-display-table"}
                 />
 
                 <Honeypot setHoneypotValue={setHoneypotValue} />

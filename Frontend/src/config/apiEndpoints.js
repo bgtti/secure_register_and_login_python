@@ -18,20 +18,20 @@ export const apiEndpoints = {
     //contact
     contactUs: `${urlPrefix.contact}/contact_form`, //OK
     //authentication -- profile
-    //...
+    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
+    getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
+    getRecoveryEmail: `${urlPrefix.auth}/get_recovery_email`, //on it
     // authentication -- registration
+    userSignUp: `${urlPrefix.auth}/signup`, //OK
     verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
-    //authentication -- main
-    userSignUp: `${urlPrefix.auth}/signup`, //OK
     userLogIn: `${urlPrefix.auth}/login`, //OK (test mfa)
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
     //authentication -- account
-    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
     acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
     acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
     acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step

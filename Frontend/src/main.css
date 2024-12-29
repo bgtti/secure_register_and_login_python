@@ -211,6 +211,10 @@ textarea {
     margin: 15px 0;
 }
 
+.MAIN-yellow-paragraph {
+    color: var(--YellowColor) !important;
+}
+
 /* Form-tag classes
     - MAIN-form: used in form-tags. For it to work, the form parent must have the following attributes: {
         display: flex; flex-direction: column;}, and form elements such as label and tags must be wrapped in a div with MAIN-form-display-table class. Error messages do not have to be placed in divs, and can be p tags bellow the div.

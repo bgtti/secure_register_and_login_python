@@ -22,17 +22,20 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * @visibleName Password Field
  * 
  * @param {object} props
- * @param {string} props.autocomplete // optional, defaults to "new-password"
- * @param {string} props.labelText // defaults to "Password"
+ * @param {string} [props.autocomplete] // optional, defaults to "new-password"
+ * @param {string} [props.labelText] // defaults to "Password"
  * @param {string} props.password
  * @param {func} props.setPassword 
  * @param {func} props.setPasswordIsValid 
- * @param {bool} props.simpleValidation //will be true if no value is passed
+ * @param {bool} [props.simpleValidation] //will be true if no value is passed
+ * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable" 
  * @returns {React.ReactElement}
  * 
  */
 function InputPassword(props) {
-    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password", labelText = "Password" } = props;
+    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password", labelText = "Password", cssClass = "" } = props;
+
+    const styleClass = cssClass === "" ? "MAIN-form-display-table Auth-displayTable" : cssClass;
 
     const validationFunc = (pw) => {
         if (simpleValidation) { return passwordValidationSimplified(pw) }
@@ -62,7 +65,7 @@ function InputPassword(props) {
 
     return (
         <>
-            <div className="MAIN-form-display-table">
+            <div className={`${styleClass}`}>
                 <label htmlFor="password">{labelText}:<RequiredFieldStar /></label>
                 <input
                     aria-invalid={errorMessage === "" ? "false" : "true"}

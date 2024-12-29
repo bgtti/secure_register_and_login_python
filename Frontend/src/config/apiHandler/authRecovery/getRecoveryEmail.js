@@ -1,69 +1,58 @@
 import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
-import { emailValidation, passwordValidationSimplified, otpValidation } from "../../../utils/validation.js";
+import { passwordValidationSimplified, sanitizedUserAgent } from "../../../utils/validation.js";
 
 /**
  * Async function that makes api call to save a recovery email address.
  * 
  * @param {object} data 
- * @param {string} data.email # the recovery email as provided by user
  * @param {string} data.password # the password provided by user
- * @param {string} data.otp # the otp provided by user
- * @param {string} data.honeypot # bot trap field, empty field indicates human behaviour
+ * @param {string} [data.userAgent]
  * @returns {object} # with boolean "response",  and string "message"
  * 
  * @example
  * //Input example:
  * const data = {
- *     email: "josy@example.com",
  *     password: "108854cd4b588sszb64010",
- *     otp: "12345678"
  * }
  * 
  * // Response from setRecoveryEmail:
- * setRecoveryEmail(requestData)
+ * fetchRecoveryEmail(requestData)
  *      .then(response => {
  *          console.log (response)
  * })
  * // a successfull response will yield:
  * {
         response: true,
-        message: ""
+        message: "john@email.com"
     }
  *  // an error response might yield:
     {
         response: false,
-        message: "Error: Failed to save recovery email."
+        message: "Error: Failed to get recovery email."
     }
  */
-export function setRecoveryEmail(data) {
+export function getRecoveryEmail(data) {
     // checking if data was received correctly
-    const email = data.email ? data.email : false;
     const password = data.password ? data.password : false;
-    const otp = data.otp ? data.otp : false;
+    const userAgent = data.userAgent ? data.userAgent : "";
+    const agent = userAgent !== "" ? sanitizedUserAgent(userAgent) : userAgent;
 
     const errorResponse = {
         response: false,
         message: "Error: Invalid input."
     };
 
-    if (!email || !password || !otp) {
-        return errorResponse
-    };
-    // double-checking the data
-    const passwordIsValid = passwordValidationSimplified(password); otpValidation(otp)
-    const emailIsValid = emailValidation(email);
-    const otpIsValid = otpValidation(otp);
-    const dataIsValid = emailIsValid.response && passwordIsValid.response && otpIsValid.response;
+    if (!password) { return errorResponse };
 
-    if (!dataIsValid) {
-        return errorResponse
-    }
+    // double-checking the data
+    const passwordIsValid = passwordValidationSimplified(password)
+
+    if (!passwordIsValid.response) { return errorResponse }
 
     let requestData = {
-        "recovery_email": email,
         "password": password,
-        "otp": otp,
+        "user_agent": agent,
     }
 
     // preparing the returned response
@@ -73,23 +62,24 @@ export function setRecoveryEmail(data) {
     }
 
     // making the request
-    const saveRecoveryEmail = async () => {
+    const fetchRecoveryEmail = async () => {
         try {
-            const response = await apiCredentials.post(apiEndpoints.setRecoveryEmail, requestData);
+            const response = await apiCredentials.post(apiEndpoints.getRecoveryEmail, requestData);
 
             let responseStatus = response.request.status;
 
             switch (responseStatus) {
                 case 200:
                     res.response = true;
+                    res.message = response.data.recovery_email
                     break;
                 case 400:
                 case 401:
                 case 403:
-                    res.message = "Error: Failed to save recovery email."
+                    res.message = response.data.response
                     break;
                 default:
-                    res.message = "Error: Please refresh the page and try again."
+                    res.message = "Error: An error occurred, please try again."
                     break;
             }
         } catch {
@@ -97,5 +87,5 @@ export function setRecoveryEmail(data) {
         }
         return res;
     }
-    return saveRecoveryEmail()
+    return fetchRecoveryEmail()
 }

@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
+import { getRecoveryStatus } from "../../../config/apiHandler/authRecovery/getRecoveryStatus"
 import AccountDeletion from "./DeleteAccount/AccountDeletion";
 import AccountDetails from "./AccountDetails/AccountDetails";
 import AccountPreferences from "./AccountPreferences/AccountPreferences";
@@ -16,11 +18,27 @@ function AccountSettings() {
 
     const user = useSelector((state) => state.user);
     const preferences = useSelector((state) => state.preferences);
+    const acctRecovery = useSelector((state) => state.accountRecovery);
+
+    // Get account recovery information if redux was not updated in this session
+    // Update recovery info upon mount if necessary
+    // Ref to track update: avoid duplicate calls (in strict mode)
+    const hasFetched = useRef(false);
+    useEffect(() => {
+        if (!acctRecovery.infoUpToDate && !hasFetched.current) {
+            hasFetched.current = true;
+            fetchRecoveryEmailStatus().catch(error => {
+                console.error("Error in fetchRecoveryEmailStatus function.", error);
+            });
+        }
+    }, []);
+
+    //Load recovery: recovery status and if recovery email, then, it...
 
     return (
         <div className="AccountSettings">
 
-            <h3>Account Settingsssss</h3>
+            <h3>Account Settings</h3>
 
             <AccountDetails
                 user={user} />
@@ -32,7 +50,10 @@ function AccountSettings() {
                 preferences={preferences} />
 
             <hr className="AccountSettings-hr" />
-            <AccountRecovery />
+            <AccountRecovery
+                user={user}
+                acctRecovery={acctRecovery}
+            />
 
             <hr className="AccountSettings-hr" />
             <AccountDeletion />
