@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
+import ModalDeleteRecoveryEmail from "./ModalRemoveRecoveryEmail";
 import ModalSetRecoveryEmail from "./ModalSetRecoveryEmail";
 import ModalViewRecoveryEmail from "./ModalViewRecoveryEmail";
 
@@ -25,6 +26,7 @@ function AccountRecovery(props) {
     //State of modal that changes account credentials (boolean defines whether or not to show modal)
     const [modalSetRecoveryEmail, setModalSetRecoveryEmail] = useState(false)
     const [modalViewRecoveryEmail, setModalViewRecoveryEmail] = useState(false)
+    const [modalDeleteRecoveryEmail, setModalDeleteRecoveryEmail] = useState(false)
 
     //Css class to hide/show modal
     // modalSetRecoveryEmail ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active"); 
@@ -36,6 +38,9 @@ function AccountRecovery(props) {
     const modalViewRecoveryEmailContent = modalViewRecoveryEmail && (
         <ModalViewRecoveryEmail modalToggler={toggleModalView} user={user} acctRecovery={acctRecovery} />
     );
+    const modalDeleteRecoveryEmailContent = modalDeleteRecoveryEmail && (
+        <ModalDeleteRecoveryEmail modalToggler={toggleModalDelete} user={user} />
+    );
 
     //Modal state toggle
     function toggleModalSet() {
@@ -45,7 +50,7 @@ function AccountRecovery(props) {
         setModalViewRecoveryEmail(!modalViewRecoveryEmail);
     }
     function toggleModalDelete() {
-        console.log("delete")
+        setModalDeleteRecoveryEmail(!modalDeleteRecoveryEmail);
     }
 
     return (
@@ -67,6 +72,16 @@ function AccountRecovery(props) {
                         content={modalViewRecoveryEmailContent}
                         modalStatus={modalViewRecoveryEmail}
                         setModalStatus={setModalViewRecoveryEmail}
+                    />
+                )
+            }
+            {
+                modalDeleteRecoveryEmail && (
+                    <Modal
+                        title={`Remove Recovery Email`}
+                        content={modalDeleteRecoveryEmailContent}
+                        modalStatus={modalDeleteRecoveryEmail}
+                        setModalStatus={setModalDeleteRecoveryEmail}
                     />
                 )
             }

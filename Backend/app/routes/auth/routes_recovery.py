@@ -53,9 +53,9 @@ from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import anonymize_email, check_if_user_blocked, get_user_or_none, reset_user_session
-from app.routes.auth.email_helpers import send_email_recovery_set
-from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema
+from app.routes.auth.auth_helpers import anonymize_email
+from app.routes.auth.email_helpers_recovery import send_email_recovery_set, send_email_recovery_deletion, send_email_recovery_change, send_email_change_and_set_recovery
+from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
 
 # Blueprint
 from . import auth
@@ -121,20 +121,28 @@ def set_recovery_email():
             user.flag = "YELLOW"
         elif has_profanity(recovery_email):
                 user.flag = "PURPLE"
-        # TODO: if old recovery email, send message it is no longer (it has been changed)
+        old_recovery_email = user.recovery_email
         user.recovery_email = recovery_email
         db.session.commit()
     except Exception as e:
+        db.session.rollback()
         logging.error(f"Failed to save recovery email. Error: {e}")
         return jsonify(error_response), 500
     
-    # Send confirmation emails that new recovery has been added
-    try:
-        mail_sent = send_email_recovery_set(user.name, user.email, recovery_email)
-        if not mail_sent:
-            logging.error(f"Failed to send confirmation emails of set account recovery email.")
-    except Exception as e:
-        logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+    # Send confirmation emails that new recovery has been added 
+    if old_recovery_email:
+        print("**********************")
+        print("HERE")
+        print(old_recovery_email)
+        print("**********************")
+        mail_sent = send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
+    else:
+        try:
+            mail_sent = send_email_recovery_set(user.name, user.email, recovery_email)
+            if not mail_sent:
+                logging.error(f"Failed to send confirmation emails of set account recovery email.")
+        except Exception as e:
+            logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
 
     # Anonymize recovery email
     anonymized_recovery_email = anonymize_email(recovery_email)
@@ -250,3 +258,77 @@ def get_recovery_email():
             "recovery_email": recovery_email
         }
     return jsonify(response_data)
+
+####################################
+#      DELETE RECOVERY EMAIL       #
+####################################
+
+@auth.route("/delete_recovery_email", methods=["POST"])
+@login_required
+@limiter.limit("5/minute;10/day")
+@validate_schema(delete_recovery_email_schema) 
+def delete_recovery_email():
+    """
+    delete_recovery_email() -> JsonType
+    ----------------------------------------------------------
+
+    Route deletes the user's recovery_email. 
+    
+    Returns Json object containing strings:
+    - "response" value is always included.  
+    - "recovery_email_added" value only included if response is 200. 
+    - "recovery_email_preview" value only included if response is 200.
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"Recovery email deleted sucessfully!",
+                "recovery_email_added": false,
+                "recovery_email_preview": "" 
+            }
+    ```
+    """
+    # Get the JSON data from the request body 
+    json_data = request.get_json()
+    password = json_data["password"]
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
+
+    # Get the user from cookie 
+    try:
+        user = User.query.filter_by(email=current_user.email).first()
+    except Exception as e:
+        logging.error(f"Database query failed: {e}")
+        return jsonify({"response": "An error occurred while fetching the user."}), 500
+
+    # Check password     
+    salted_password = user.salt + password + get_pepper(user.created_at)
+    if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        return jsonify({"response": "Password incorrect."} ), 401
+
+    # Delete the recovery email
+    try:
+        old_recovery_email = user.recovery_email
+        user.recovery_email = None
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Failed to delete recovery email: {e}")
+        return {"response": "Failed to delete recovery email."}, 500
+    
+    # Send confirmation emails that recovery has been removed
+    try:
+        mail_sent = send_email_recovery_deletion(user.name, user.email, old_recovery_email)
+        if not mail_sent:
+            logging.error(f"Failed to send confirmation emails of set account recovery email.")
+    except Exception as e:
+        logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+
+    response_data = {
+            "response":"Recovery email deleted sucessfully!",
+            "recovery_email_added": False,
+            "recovery_email_preview": ""
+        }
+    return jsonify(response_data)
+

@@ -27,8 +27,8 @@ function AccountSettings() {
     useEffect(() => {
         if (!acctRecovery.infoUpToDate && !hasFetched.current) {
             hasFetched.current = true;
-            fetchRecoveryEmailStatus().catch(error => {
-                console.error("Error in fetchRecoveryEmailStatus function.", error);
+            getRecoveryStatus().catch(error => {
+                console.error("Error in getRecoveryStatus function.", error);
             });
         }
     }, []);

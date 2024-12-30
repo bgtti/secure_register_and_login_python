@@ -97,7 +97,7 @@ function ModalSetRecoveryEmail(props) {
                     }
                 })
                 .catch(error => {
-                    console.error("Error in adding account email.", error);
+                    console.error("Error in adding recovery email.", error);
                 })
                 .finally(() => {
                     dispatch(setLoader(false));

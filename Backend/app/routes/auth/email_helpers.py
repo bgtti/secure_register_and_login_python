@@ -18,9 +18,7 @@ BLOCKED_BY_ADMIN_REMINDER = "emails/blocked_by_admin_reminder.html"
 CHANGE_AUTH_CRED = "emails/change_auth_creds.html"
 CHANGE_AUTH_CRED_SUCCESS = "emails/change_auth_creds_success.html"
 OTP = "emails/otp.html"
-RECOVERY_EMAIL_ADDED = "emails/recovery_email_added.html"
 USER_EXISTS = "emails/user_exists.html"
-VERIFY_EMAIL = "emails/verify_email.html"
 VERIFY_EMAIL_SUCCESS = "emails/verify_email_success.html"
 
 ####################################
@@ -89,65 +87,6 @@ def send_otp_email(user_name: str, otp: str, recipient_email: str) -> bool:
 ####################################
 #      ACCT EMAIL VERIFICATION     #
 ####################################
-
-def send_acct_verification_req_email(user_name: str, verification_url: str, recipient_email: str) -> bool:
-    """
-    Sends an account verification email to the specified recipient.
-
-    This function generates and sends an email containing a secure verification link for the user 
-    to verify their email account. It requires the email credentials to be correctly set up 
-    in the `.env` file or the application's configuration.
-
-    -----------------------------------------------------------------------------
-    **Parameters:**
-        user_name (str): The name of the user to be addressed in the email.
-        verification_url (str): The secure verification URL to include in the email.
-        recipient_email (str): The email address of the recipient.
-
-    **Returns:**
-        - `True` if the email was sent successfully.
-        - `False` if the email sending failed.
-    
-    -----------------------------------------------------------------------------
-    **Example usage:**
-    ```python
-        user_name = "John Doe"
-        verification_url = "https://example.com/verify?token=abc123"
-        recipient_email = "john.doe@example.com"
-        success = send_acct_verification_req_email(user_name, verification_url, recipient_email)
-        if success:
-            print("Verification email sent successfully!")
-        else:
-            print("Failed to send verification email.")
-    ```
-    """
-    if EMAIL_CREDENTIALS["email_set"] == False:
-        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
-        return False
-    
-    url_link = verification_url
-
-    email_body = render_template(
-        VERIFY_EMAIL,  # email template name
-        user_name=user_name,
-        btn_link=url_link
-    )
-    new_email = EmailMessage(
-        subject = f"{APP_NAME} Email verification request.",
-        sender = EMAIL_CREDENTIALS["email_address"],
-        recipients = [recipient_email]
-    )
-    new_email.html = email_body
-
-    try:
-        mail.send(new_email)
-    except Exception as e:
-        logging.error(f"Could not send email. Error: {e}")
-        return False
-
-    logging.info(f"Message sent to email.")
-
-    return True
 
 def send_acct_verification_sucess_email(user_name: str, user_email: str) -> bool:
     """
@@ -566,72 +505,7 @@ def send_email_acct_exists(user_name: str, recipient_email: str) -> None:
     logging.info(f"Message sent to email.")
 
 ####################################
-#       RECOVERY EMAIL SETUP       #
+#         RECOVERY EMAIL          #
 ####################################
 
-def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str) -> bool:
-    """
-    Sends emails to inform the user about setting a recovery email successfully.
-
-    Notification emails are sent to both the account and recovery email addresses.
-
-    -----------------------------------------------------------------------------
-    **Parameters:**
-        user_name (str): The name of the user to be addressed in the emails.
-        acct_email (str): The user's main email address.
-        recovery_email (str): The user's recovery email address.
-
-    **Returns:**
-        - `True` if both emails were sent successfully.
-        - `False` if sending any of the emails failed.
-    
-    -----------------------------------------------------------------------------
-    **Example usage:**
-    ```python
-        user_name = "John Doe"
-        acct_email = "acct.mail@example.com"
-        recovery_email = "recover.acct.mail@example.com"
-
-        success = send_email_change_sucess_emails(user_name, acct_email, recovery_email)
-
-        if success:
-            print("Emails sent successfully!")
-        else:
-            print("Failed to send emails.")
-    """
-    if EMAIL_CREDENTIALS["email_set"] == False:
-        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
-        return False
-
-
-    def send_mail(recipient):
-        email_body = render_template(
-            RECOVERY_EMAIL_ADDED, # email template name 
-            user_name=user_name,
-            acct_email=acct_email,
-            recovery_email = recovery_email,
-        )
-        email_message = EmailMessage(
-            subject = f"{APP_NAME} Recovery email set ",
-            sender = EMAIL_CREDENTIALS["email_address"],
-            recipients = [recipient]
-        )
-        email_message.html = email_body
-
-        try:
-            mail.send(email_message)
-        except Exception as e:
-            logging.error(f"Could not send email to {recipient}. Error: {e}")
-            return False
-        
-        logging.info(f"Message sent to {recipient}.")
-        return True
-    
-    # Sending email to both old and new accounts
-    email_1_sent = send_mail(acct_email)
-    email_2_sent = send_mail(recovery_email)
-    
-    if email_1_sent and email_2_sent:
-        return True
-
-    return False
+# functions moved to another file

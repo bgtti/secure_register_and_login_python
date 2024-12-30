@@ -283,3 +283,26 @@ get_recovery_email_schema = {
     "additionalProperties": False,
     "required": ["password"]
 }
+
+delete_recovery_email_schema = {
+    "type": "object",
+    "title": "Will delete the user's recovery email.",
+    "properties": {
+        "password": {
+            "description": "Can only accept password.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'],
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN
+            },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            }
+    },
+
+    "additionalProperties": False,
+    "required": ["password"]
+}

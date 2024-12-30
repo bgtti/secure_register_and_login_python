@@ -127,7 +127,7 @@ def get_otp():
     # Create OTP
     try:
         otp = user.generate_otp()
-        send_otp_email(user.name, otp, email) # not using user.email because otp can be used to confirm recovery email address too
+        send_otp_email(user.name, otp, email) # not using user.email because otp can be used to confirm recovery email address
     except Exception as e:
         logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
         return jsonify(error_response), 500

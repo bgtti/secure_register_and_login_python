@@ -54,7 +54,6 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 # Auth helpers (this file)
 from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid
 from app.routes.auth.email_helpers import (
-    send_acct_verification_req_email, # ==> delete
     send_acct_verification_sucess_email,
     send_email_acct_exists
 )

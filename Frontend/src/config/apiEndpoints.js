@@ -22,7 +22,8 @@ export const apiEndpoints = {
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
     getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
-    getRecoveryEmail: `${urlPrefix.auth}/get_recovery_email`, //on it
+    getRecoveryEmail: `${urlPrefix.auth}/get_recovery_email`, //OK
+    deleteRecoveryEmail: `${urlPrefix.auth}/delete_recovery_email`, //--on it
     // authentication -- registration
     userSignUp: `${urlPrefix.auth}/signup`, //OK
     verifyAccount: `${urlPrefix.auth}/verify_account`, //OK

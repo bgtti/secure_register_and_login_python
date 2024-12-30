@@ -1,0 +1,54 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Recovery email changed
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>We wanted to let you know that changes were made to the recovery email associated with your account:</p>
+    <p><b>{{ acct_email}}</b></p>
+</div>
+
+<div class="p_block">
+    <p>The email address <b>{{ old_recovery_email }}</b> has been removed as the backup method for accessing your
+        account.</p>
+</div>
+
+<div class="p_block">
+    <p>A new recovery email address has been added. </p>
+    <p>You will receive a confirmation email about the new recovery email shortly,
+        sent to both your primary and new recovery email addresses.</p>
+</div>
+
+<div class="p_block">
+    <p>Recovery emails help you regain access to your account if you lose access to your primary email or forget your
+        password.
+        We recommend keeping this information up-to-date for account security.</p>
+</div>
+
+<div class="p_block">
+    <p>In case you did not make this change, contact support immediatelly.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}
