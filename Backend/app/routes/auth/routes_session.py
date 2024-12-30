@@ -167,10 +167,10 @@ def login_user():
                     "name": "John", 
                     "email": "john@email.com",
                     "access": "user",
-                    "email_is_verified": False
+                    "email_is_verified": False,
+                    "mfa_enabled": False,
                     },
                 "preferences":{
-                    "mfa_enabled": False,
                     "in_mailing_list": False,
                     "night_mode_enabled": True,
                 } 
@@ -300,10 +300,10 @@ def login_user():
                 "access": user.access_level.value,
                 "name": user.name, 
                 "email": user.email,
-                "email_is_verified": user.email_is_verified.value
+                "email_is_verified": user.email_is_verified.value,
+                "mfa_enabled": user.mfa_enabled.value
                 },
             "preferences":{
-                "mfa_enabled": user.mfa_enabled.value,
                 "in_mailing_list": user.in_mailing_list.value,
                 "night_mode_enabled": user.night_mode_enabled.value,
             } 
@@ -367,10 +367,10 @@ def get_current_user():
                     "name": "John", 
                     "email": "john@email.com",
                     "access": "user",
-                    "email_is_verified": False
+                    "email_is_verified": False,
+                    "mfa_enabled": False,
                     }, 
                 "preferences":{
-                    "mfa_enabled": False,
                     "in_mailing_list": True,
                     "night_mode_enabled": False,
                 }
@@ -386,10 +386,10 @@ def get_current_user():
                 "access": user.access_level.value, 
                 "name": user.name, 
                 "email": user.email,
-                "email_is_verified": user.email_is_verified.value
+                "email_is_verified": user.email_is_verified.value,
+                "mfa_enabled": user.mfa_enabled.value,
                 },
             "preferences":{
-                "mfa_enabled": user.mfa_enabled.value,
                 "in_mailing_list": user.in_mailing_list.value,
                 "night_mode_enabled": user.night_mode_enabled.value,
             }

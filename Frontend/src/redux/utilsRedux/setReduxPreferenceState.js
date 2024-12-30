@@ -19,15 +19,13 @@ import { stringToBool } from "../../utils/helpers"
  */
 export function setReduxPreferences(mfa, mailingList, nightMode) {
     // convert to boolean in case vallue arrives as string
-    mfa = stringToBool(mfa)
     mailingList = stringToBool(mailingList)
     nightMode = stringToBool(nightMode)
 
-    let dataIsValid = (typeof mfa === "boolean") && (typeof mailingList === "boolean") && (typeof mailingList === "boolean");
+    let dataIsValid = (typeof mailingList === "boolean") && (typeof mailingList === "boolean");
 
     if (dataIsValid) {
         const prefData = {
-            mfa: mfa,
             mailingList: mailingList,
             nightMode: nightMode,
         };

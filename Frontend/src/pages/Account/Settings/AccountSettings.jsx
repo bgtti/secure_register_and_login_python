@@ -5,6 +5,7 @@ import AccountDeletion from "./DeleteAccount/AccountDeletion";
 import AccountDetails from "./AccountDetails/AccountDetails";
 import AccountPreferences from "./AccountPreferences/AccountPreferences";
 import AccountRecovery from "./AccountRecovery/AccountRecovery";
+import AccountSecurity from "./AccountSecurity/AccountSecurity";
 import "./accountSettings.css"
 
 /**
@@ -44,8 +45,12 @@ function AccountSettings() {
                 user={user} />
 
             <hr className="AccountSettings-hr" />
-
             <AccountPreferences
+                user={user}
+                preferences={preferences} />
+
+            <hr className="AccountSettings-hr" />
+            <AccountSecurity
                 user={user}
                 preferences={preferences} />
 

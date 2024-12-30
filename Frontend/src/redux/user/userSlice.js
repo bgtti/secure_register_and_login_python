@@ -11,6 +11,7 @@ const initialState = {
     email: "",
     name: "",
     acctVerified: false,
+    mfa: false
 }
 
 export const userSlice = createSlice({
@@ -23,6 +24,7 @@ export const userSlice = createSlice({
             state.email = state.email;
             state.name = action.payload;
             state.acctVerified = state.acctVerified;
+            state.mfa = state.mfa;
         },
         setUserAcctVerification: (state, action) => {
             state.loggedIn = state.loggedIn;
@@ -30,6 +32,15 @@ export const userSlice = createSlice({
             state.email = state.email;
             state.name = state.name;
             state.acctVerified = action.payload; // should be either: true, or false
+            state.mfa = state.mfa;
+        },
+        setUserMfa: (state, action) => {
+            state.loggedIn = state.loggedIn;
+            state.access = state.access;
+            state.email = state.email;
+            state.name = state.name;
+            state.acctVerified = state.acctVerified;
+            state.mfa = action.payload; // should be either: true, or false
         },
         setUser: (state, action) => {
             state.loggedIn = action.payload.loggedIn;
@@ -37,6 +48,7 @@ export const userSlice = createSlice({
             state.email = action.payload.email;
             state.name = action.payload.name;
             state.acctVerified = action.payload.acctVerified;
+            state.mfa = action.payload.mfa;
         },
         setUserLogout: (state) => {
             state.loggedIn = false;
@@ -44,13 +56,14 @@ export const userSlice = createSlice({
             state.email = "";
             state.name = "";
             state.acctVerified = false;
+            state.mfa = false;
         },
     }
 });
 
 const userReducer = userSlice.reducer;
 
-export const { setUserName, setUserAcctVerification, setUser, setUserLogout } = userSlice.actions;
+export const { setUserName, setUserAcctVerification, setUserMfa, setUser, setUserLogout } = userSlice.actions;
 export default userReducer;
 
 // Example usage:

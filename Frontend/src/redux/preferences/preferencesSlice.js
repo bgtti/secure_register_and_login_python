@@ -6,7 +6,6 @@ import { createSlice } from "@reduxjs/toolkit"
  */
 
 const initialState = {
-    mfa: false,
     mailingList: false,
     nightMode: true,
 }
@@ -16,12 +15,10 @@ export const preferencesSlice = createSlice({
     initialState,
     reducers: {
         setPreferences: (state, action) => {
-            state.mfa = action.payload.mfa;
             state.mailingList = action.payload.mailingList;
             state.nightMode = action.payload.nightMode;
         },
         setResetPreferences: (state) => {
-            state.mfa = false;
             state.mailingList = false;
             state.nightMode = true;
         },

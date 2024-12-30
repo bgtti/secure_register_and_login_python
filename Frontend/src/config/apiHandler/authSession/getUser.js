@@ -57,11 +57,11 @@ export function getUserData() {
                     response.data.user.name,
                     response.data.user.email,
                     response.data.user.access,
-                    response.data.user.email_is_verified
+                    response.data.user.email_is_verified,
+                    response.data.user.mfa_enabled,
                 )
                 //Saving user preferences in Redux store
                 setReduxPreferences(
-                    response.data.preferences.mfa_enabled,
                     response.data.preferences.in_mailing_list,
                     response.data.preferences.night_mode_enabled
                 )

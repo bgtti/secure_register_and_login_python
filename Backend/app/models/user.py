@@ -139,6 +139,7 @@ class User(db.Model, UserMixin):
     # acct:
     created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     # access:
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
@@ -153,7 +154,6 @@ class User(db.Model, UserMixin):
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     # preferences
-    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     in_mailing_list = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
     # multi-factor authentication (mfa)
@@ -282,6 +282,25 @@ class User(db.Model, UserMixin):
         return True
 
     # MFA methods
+    def set_mfa(self, enable_mfa: bool) -> bool:
+        """
+        Sets mfa_enable to true, meaning user has enabled multi-factor auth in their account.
+
+        This method sets the user's `mfa_enable` attribute to `modelBool.TRUE`, indicating that
+        MFA is required for login and similar operations. 
+
+        Parameters:
+            enable_mfa: boolean indicating whether or enable (True) or disable (False) MFA
+
+        Returns:
+            bool: True if mfa was enabled, False otherwise.
+        """
+        if enable_mfa:
+            self.mfa_enabled = modelBool.TRUE
+        else: 
+            self.mfa_enabled = modelBool.FALSE
+            return True
+    
     def mfa_first_factor_used(self, method: LoginMethods) -> None:
         """
         Logs the successfull first factor of a multi-factor authentication process.

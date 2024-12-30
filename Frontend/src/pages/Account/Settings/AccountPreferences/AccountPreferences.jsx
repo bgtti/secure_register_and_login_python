@@ -13,8 +13,6 @@ import Tooltip from "../../../../components/Tooltip/Tooltip"
 function AccountPreferences(props) {
     const { user, preferences } = props;
 
-    //State of MFA
-    const [mfaEnabled, setMfaEnabled] = useState(preferences.mfa)
     //State of mailing list
     const [inMailingList, setInMailingList] = useState(preferences.mailingList)
     //State of night mode
@@ -24,11 +22,6 @@ function AccountPreferences(props) {
     let mfaToggleEnable = user.acctVerified === true;
 
     // Handlers for toggles
-    const handleMfaToggle = () => {
-        if (mfaToggleEnable) {
-            setMfaEnabled((prev) => !prev);
-        }
-    };
     const handleMailingListToggle = () => {
         setInMailingList((prev) => !prev);
     };
@@ -42,19 +35,6 @@ function AccountPreferences(props) {
         <section >
             <h4>Preferences</h4>
             <div className="AccountSettings-Preferences">
-                <div>
-                    <p><Tooltip text="MFA" message="Enable multi-factor authentication" /></p>
-                    <div>
-                        <label className="toggleBtn" title={mfaToggleEnable ? "" : "Verify your account to enable MFA"}>
-                            <input
-                                checked={mfaEnabled}
-                                disabled={!mfaToggleEnable}
-                                onChange={handleMfaToggle}
-                                type="checkbox" />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                </div>
 
                 <div>
                     <p><Tooltip text="Mailing List" message="Receive app news per email" /></p>
@@ -87,7 +67,6 @@ function AccountPreferences(props) {
 };
 AccountPreferences.propTypes = {
     preferences: PropTypes.shape({
-        mfa: PropTypes.bool.isRequired,
         mailingList: PropTypes.bool.isRequired,
         nightMode: PropTypes.bool.isRequired
     }).isRequired,

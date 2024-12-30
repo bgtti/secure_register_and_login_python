@@ -15,6 +15,10 @@
     font-weight: normal;
 }
 
+.Tooltip-text-bold {
+    font-weight: bold;
+}
+
 /* Info icon styled as a circle */
 .Tooltip-info-icon {
     display: inline-flex;

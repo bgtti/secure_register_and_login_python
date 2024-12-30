@@ -103,12 +103,12 @@ export function loginUser(data) {
                         response.data.user.name,
                         response.data.user.email,
                         response.data.user.access,
-                        response.data.user.email_is_verified
+                        response.data.user.email_is_verified,
+                        response.data.user.mfa_enabled,
                     )
                     res.response = userIsLoggedIn;
                     res.message = userIsLoggedIn ? "" : "Error: Registration failed."
                     setReduxPreferences(
-                        response.data.preferences.mfa_enabled,
                         response.data.preferences.in_mailing_list,
                         response.data.preferences.night_mode_enabled
                     )

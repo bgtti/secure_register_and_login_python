@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "./ModalAccountDetailChange";
-import ModalVerifyAccount from "./ModalVerifyAccount";
 import ModalChangeName from "./ModalChangeName";
 
 /** 
@@ -25,7 +24,7 @@ const ACCOUNT_ACTIONS = ["name", "email", "password"]
  * @param {object} props.user 
  * @param {string} props.user.name
  * @param {string} props.user.email
- * @param {string} props.user.acctVerified
+ * @param {string} props.user.acctVerified //=> check if required
  * @returns {React.ReactElement}
  * 
  */
@@ -35,33 +34,11 @@ function AccountDetails(props) {
     //State of modal that changes account credentials (boolean defines whether or not to show modal)
     const [modalChangeCreds, setModalChangeAcctCreds] = useState(false)
 
-    //State of modal that verifies account
-    const [modalVerifyAccount, setModalVerifyAccount] = useState(false)
-
     //State of modal that changes user's name
     const [modalChangeName, setModalChangeName] = useState(false)
 
     //Desired modal action of modalChangeCreds (ie: what credential to be changed)
     const [accountAction, setAccountAction] = useState("")
-
-    //Account verification status
-    const [acctVerificationStatus, setAcctVerificationStatus] = useState("")
-
-    // Set account verification status
-    useEffect(() => {
-        let str;
-        if (user.acctVerified === "pending") {
-            str = "verification pending (check your email)"
-        } else if (user.acctVerified === true) {
-            str = "account verified"
-        } else {
-            str = "account not verified"
-        }
-        setAcctVerificationStatus(str)
-    }, [user.acctVerified]);
-
-    //Whether user may verify the account (disabling button)
-    let acctCanBeVerified = user.acctVerified ? true : false
 
     //Css class to hide/show modal
     modalChangeCreds ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
@@ -75,10 +52,6 @@ function AccountDetails(props) {
         <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
     );
 
-    const modalVerifyAccountContent = modalVerifyAccount && (
-        <ModalVerifyAccount user={user} />
-    );
-
     //Action selection
     function selectAccountAction(action) {
         ACCOUNT_ACTIONS.includes(action.toLowerCase()) ? setAccountAction(action) : setAccountAction("");
@@ -88,9 +61,7 @@ function AccountDetails(props) {
     function toggleModalCred() {
         setModalChangeAcctCreds(!modalChangeCreds);
     }
-    function toggleModalVerify() {
-        setModalVerifyAccount(!modalVerifyAccount)
-    }
+
     function toggleModalChangeName() {
         setModalChangeName(!modalChangeName);
     }
@@ -115,15 +86,7 @@ function AccountDetails(props) {
                         setModalStatus={setModalChangeName} />
                 )
             }
-            {
-                modalVerifyAccount && (
-                    <Modal
-                        title={`Verify Account`}
-                        content={modalVerifyAccountContent}
-                        modalStatus={modalVerifyAccount}
-                        setModalStatus={setModalVerifyAccount} />
-                )
-            }
+
             <h4>Account Details</h4>
             <p><b>Name:</b> {user.name}</p>
 
@@ -151,14 +114,6 @@ function AccountDetails(props) {
                 </button>
             </div>
 
-            <br />
-
-            <p><b>Status:</b> {acctVerificationStatus}</p>
-            <div>
-                <button disabled={acctCanBeVerified} onClick={() => { toggleModalVerify() }} title={acctCanBeVerified ? "Your account has already been verified" : ""}>
-                    Verify account
-                </button>
-            </div>
         </section>
     );
 };

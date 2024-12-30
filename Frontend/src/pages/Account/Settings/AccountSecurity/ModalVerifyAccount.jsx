@@ -58,7 +58,6 @@ function ModalVerifyAccount(props) {
 
     const sendOtp = (e) => {
         if (e) { e.preventDefault(); }
-        console.log("sending a request")
 
         // get rid of previous error messages
         if (infoMessage !== "") { setInfoMessage("") }

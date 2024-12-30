@@ -1,5 +1,5 @@
 import { store } from "../store"
-import { setUser, setUserLogout, setUserName, setUserAcctVerification } from "../user/userSlice";
+import { setUser, setUserLogout, setUserName, setUserMfa, setUserAcctVerification } from "../user/userSlice";
 import { USER_ACCESS_TYPES } from "../../utils/constants"
 import { stringToBool } from "../../utils/helpers"
 
@@ -23,12 +23,14 @@ import { stringToBool } from "../../utils/helpers"
  * @param {string} email //"john@fakemail.com"
  * @param {string} access //"user"
  * @param {string|bool} acctVerified //[true, false, "true", "false"]
+ * @param {string|bool} mfa //[true, false, "true", "false"]
  * @returns {boolean}
  */
-export function setReduxLogInUser(name, email, access, acctVerified) {
+export function setReduxLogInUser(name, email, access, acctVerified, mfa) {
     let verified = stringToBool(acctVerified)
+    let multifa = stringToBool(mfa)
 
-    let dataIsValid = name !== "" && email !== "" && USER_ACCESS_TYPES.includes(access) && typeof verified === "boolean";
+    let dataIsValid = (name !== "") && (email !== "") && USER_ACCESS_TYPES.includes(access) && (typeof verified === "boolean") && (typeof multifa === "boolean");
 
     if (dataIsValid) {
         const userData = {
@@ -37,6 +39,7 @@ export function setReduxLogInUser(name, email, access, acctVerified) {
             access: access,
             email: email,
             acctVerified: verified,
+            mfa: multifa,
         };
         store.dispatch(setUser(userData));
         return true;
@@ -95,6 +98,27 @@ export function setReduxUserAcctVerification(acctVerified) {
         return true;
     } else {
         console.error("Redux encountered an error: user's verification status invalid")
+        store.dispatch(setUserLogout());
+        return false;
+    }
+}
+
+/**
+ * Function changes user's mfa status in the redux store.
+ * 
+ * Accepts no parameters and returns a boolean indicating success.
+ * 
+ * @param {string} acctVerified //[true, false]
+ * @returns {boolean}
+ */
+export function setReduxUserMfa(mfaEnabled) {
+    let mfa = stringToBool(mfaEnabled)//convert to boolean if string
+    let dataIsValid = typeof mfa === "boolean"
+    if (dataIsValid) {
+        store.dispatch(setUserMfa(mfa));
+        return true;
+    } else {
+        console.error("Redux encountered an error: user's mfa status invalid")
         store.dispatch(setUserLogout());
         return false;
     }

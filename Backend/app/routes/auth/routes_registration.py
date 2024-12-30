@@ -1,11 +1,9 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_registration.py contains routes responsible for the user account's existence and verification.
+auth/routes_registration.py contains routes responsible for the user account's existence.
 Here you will find the following routes:
 - **signup** route creates the user's account
-- **request_email_verification** route is the first step in the email verification process
-- **verify_acct_email** route is the second step in the email verification process
 - **delete_user_acct** route #=> TODO
 
 The format of data sent by the client is validated using Json Schema. 
@@ -54,7 +52,6 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 # Auth helpers (this file)
 from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid
 from app.routes.auth.email_helpers import (
-    send_acct_verification_sucess_email,
     send_email_acct_exists
 )
 from app.routes.auth.schemas import (
@@ -98,10 +95,10 @@ def signup_user():
                     "access": "user"
                     "name": "John", 
                     "email": "john@email.com",
-                    "email_is_verified": False # will always be false after signup
+                    "email_is_verified": False # will always be false after signup,
+                    "mfa_enabled": False,
                     }, 
                 "preferences":{
-                    "mfa_enabled": False,
                     "in_mailing_list": False,
                     "night_mode_enabled": True,
                 }
@@ -212,10 +209,10 @@ def signup_user():
                 "access": new_user.access_level.value, 
                 "name": new_user.name, 
                 "email": new_user.email,
-                "email_is_verified": False
+                "email_is_verified": False,
+                "mfa_enabled": False,
                 },
             "preferences":{
-                "mfa_enabled": False,
                 "in_mailing_list": False,
                 "night_mode_enabled": True,
             }
@@ -223,76 +220,3 @@ def signup_user():
     return jsonify(response_data)
 
 
-####################################
-#            VERIFY ACCT           #
-####################################
-
-@auth.route("/verify_account", methods=["POST"]) # TODO: TEST
-@login_required
-@validate_schema(verify_account_schema)
-@limiter.limit("5/day")
-def verify_account(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
-    """
-    **verify_account() -> JsonType**
-
-    ----------------------------------------------------------
-    Route receives the request to verify the user's email address
-    and sends email with confirmation of verification if successfull. 
-    
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" boolean value indicates whether the user received a success email.
-    - "acct_verified" boolean value indicates whether the user's account email has been verified'.
-
-    ----------------------------------------------------------
-    **Response example:**
-
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-                "acct_verified": True,
-            }
-    ``` 
-    """
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    otp = json_data["otp"]
-
-    #TODO: get user_agent and log it
-
-    # Standard error response
-    error_response = {
-        "response": "Invalid or expired token.",
-        "mail_sent": False,
-        "acct_verified": False,
-        }
-    
-    user = current_user
-    
-    try:
-        # Check OTP
-        if user.check_otp(otp) is False:
-            logging.info(f"Invalid or expired token could not be validated. Account validation failed for {user.email}.")
-            return jsonify(error_response), 400
-        
-        # Verify account
-        is_verified = user.verify_account()
-        db.session.commit()
-        if is_verified:
-            email_sent = send_acct_verification_sucess_email(user.name, user.email)
-        else:
-            email_sent = False
-
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"Database error. Error: {e}")
-        return jsonify(error_response), 500
-
-        
-    response_data ={
-            "response":"success",
-            "mail_sent": email_sent,
-            "acct_verified": is_verified,
-        }
-    return jsonify(response_data)

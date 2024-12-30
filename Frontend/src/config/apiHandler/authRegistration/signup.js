@@ -104,7 +104,8 @@ export function signupUser(data = {}) {
                         response.data.user.name,
                         response.data.user.email,
                         response.data.user.access,
-                        response.data.user.email_is_verified
+                        response.data.user.email_is_verified,
+                        response.data.user.mfa_enabled,
                     )
                     res.response = userIsLoggedIn;
                     res.message = userIsLoggedIn ? "" : "Error: Registration failed."

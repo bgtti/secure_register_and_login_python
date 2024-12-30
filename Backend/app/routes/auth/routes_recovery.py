@@ -101,7 +101,7 @@ def set_recovery_email():
     otp = json_data["otp"]
     user_agent = json_data.get("user_agent", "") #TODO log this in event
 
-    # Get the user from cookie --- try to call method directly on current_user to see if it works!
+    # Get the user from cookie 
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
@@ -131,10 +131,7 @@ def set_recovery_email():
     
     # Send confirmation emails that new recovery has been added 
     if old_recovery_email:
-        print("**********************")
-        print("HERE")
-        print(old_recovery_email)
-        print("**********************")
+        #TODO: SSL issue not resolved
         mail_sent = send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
     else:
         try:
