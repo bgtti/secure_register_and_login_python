@@ -42,6 +42,7 @@ function ModalSetRecoveryEmail(props) {
 
     // State set by api call
     const [infoMessage, setInfoMessage] = useState("");
+    const [recoverySet, setRecoverySet] = useState(false);
 
     // Form is valid when all fields are valid and api call did not return error
     const formIsValid = (emailIsValid && passwordIsValid && otpIsValid && infoMessage === "")
@@ -94,6 +95,7 @@ function ModalSetRecoveryEmail(props) {
                 .then(res => {
                     if (isComponentMounted()) {
                         setInfoMessage(res.message);
+                        if (res.response) { setRecoverySet(true) }
                     }
                 })
                 .catch(error => {
@@ -148,21 +150,21 @@ function ModalSetRecoveryEmail(props) {
                 <div className="Modal-BtnContainer">
 
                     <button
-                        className={acctRecovery.recoveryEmailAdded ? "MAIN-display-none" : ""}
-                        disabled={formIsValid || acctRecovery.recoveryEmailAdded}
+                        className={recoverySet ? "MAIN-display-none" : ""}
+                        disabled={formIsValid || recoverySet}
                         onClick={(e) => { sendOtp(e) }}>
                         {otpWasSent ? "Resend OTP" : "Send OTP"}
                     </button>
 
                     <button
                         className={!otpWasSent ? "MAIN-display-none" : "Modal-ActionBtn"}
-                        disabled={(!formIsValid || acctRecovery.recoveryEmailAdded)}
+                        disabled={(!formIsValid || recoverySet)}
                         type="submit">
                         Save
                     </button>
 
                     <button
-                        className={!acctRecovery.recoveryEmailAdded ? "MAIN-display-none" : ""}
+                        className={!recoverySet ? "MAIN-display-none" : ""}
                         disabled={formIsValid}
                         onClick={modalToggler}>
                         Close

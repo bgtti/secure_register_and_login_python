@@ -58,7 +58,7 @@ function AccountRecovery(props) {
             {
                 modalSetRecoveryEmail && (
                     <Modal
-                        title={`Set Recovery Email`}
+                        title={acctRecovery.recoveryEmailAdded ? "Change Recovery Email" : "Set Recovery Email"}
                         content={modalSetRecoveryEmailContent}
                         modalStatus={modalSetRecoveryEmail}
                         setModalStatus={setModalSetRecoveryEmail}

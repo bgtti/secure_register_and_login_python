@@ -234,7 +234,7 @@ def login_user():
     if user_is_blocked:
         if blocked_status["temporary_block"] is False:
             send_email_admin_blocked(user.name, user.email)
-        return jsonify(blocked_status["message"]), 403
+        return jsonify(blocked_status["message"]), 401 #should be 403, but do not want to give clues
 
     # If either email and pw/otp are invalid, return
     if invalid_pw or invalid_email:
