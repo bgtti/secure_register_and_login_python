@@ -18,7 +18,6 @@ BLOCKED_BY_ADMIN_REMINDER = "emails/blocked_by_admin_reminder.html"
 CHANGE_AUTH_CRED = "emails/change_auth_creds.html"
 CHANGE_AUTH_CRED_SUCCESS = "emails/change_auth_creds_success.html"
 OTP = "emails/otp.html"
-USER_EXISTS = "emails/user_exists.html"
 VERIFY_EMAIL_SUCCESS = "emails/verify_email_success.html"
 
 ####################################
@@ -411,44 +410,4 @@ def send_email_admin_blocked(user_name: str, recipient_email: str) -> None:
 
     logging.info(f"Message sent to email.")
 
-####################################
-#    CANNOT SIGNUP: ACCT EXISTS    #
-####################################
-def send_email_acct_exists(user_name: str, recipient_email: str) -> None:
-    """
-    Sends the user a reminder that his account is already registered in the system: reason signup not possible.
 
-    This function generates and sends an email containing this information.
-
-    -----------------------------------------------------------------------------
-    **Parameters:**
-        user_name (str): The name of the user to be addressed in the email.
-        recipient_email (str): The email address of the recipient.
-    ```
-    """
-    if EMAIL_CREDENTIALS["email_set"] == False:
-        print_to_terminal("Email credentials not set up. Could not send email.", "RED")
-    
-    email_body = render_template(
-        USER_EXISTS,  # email template name
-        user_name=user_name,
-    )
-    new_email = EmailMessage(
-        subject = f"{APP_NAME} Attempted signup failed: account already registered",
-        sender = EMAIL_CREDENTIALS["email_address"],
-        recipients = [recipient_email]
-    )
-    new_email.html = email_body
-
-    try:
-        mail.send(new_email)
-    except Exception as e:
-        logging.error(f"Could not send email. Error: {e}")
-
-    logging.info(f"Message sent to email.")
-
-####################################
-#         RECOVERY EMAIL          #
-####################################
-
-# functions moved to another file

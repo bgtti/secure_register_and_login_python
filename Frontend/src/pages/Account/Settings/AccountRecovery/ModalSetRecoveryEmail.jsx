@@ -152,7 +152,8 @@ function ModalSetRecoveryEmail(props) {
                     <button
                         className={recoverySet ? "MAIN-display-none" : ""}
                         disabled={formIsValid || recoverySet}
-                        onClick={(e) => { sendOtp(e) }}>
+                        onClick={(e) => { sendOtp(e) }}
+                        type="button">
                         {otpWasSent ? "Resend OTP" : "Send OTP"}
                     </button>
 
@@ -166,7 +167,8 @@ function ModalSetRecoveryEmail(props) {
                     <button
                         className={!recoverySet ? "MAIN-display-none" : ""}
                         disabled={formIsValid}
-                        onClick={modalToggler}>
+                        onClick={modalToggler}
+                        type="button">
                         Close
                     </button>
                 </div>

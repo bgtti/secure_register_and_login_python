@@ -211,6 +211,7 @@ def login_user():
     if user is None:
         delay = random.uniform(1, 6)
         time.sleep(delay)
+        return jsonify(error_response), 401
 
     # Set control variables
     invalid_pw = False

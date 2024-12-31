@@ -61,7 +61,8 @@ function AccountSettings() {
             />
 
             <hr className="AccountSettings-hr" />
-            <AccountDeletion />
+            <AccountDeletion
+                user={user} />
         </div>
     );
 }

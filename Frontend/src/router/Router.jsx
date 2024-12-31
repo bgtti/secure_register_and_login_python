@@ -13,6 +13,7 @@ import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
+import AccountDeleted from "../pages/AccountDeleted/AccountDeleted";
 //Pages: protected route (registered users)
 import UserAccount from "../pages/Account/AccountMain"
 import UserDashboard from "../pages/Account/Dashboard/Dashboard";
@@ -66,6 +67,7 @@ const Router = () => {
                 <Route exact path="contact" element={<Contact />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
+                <Route exact path="accountDeleted" element={<AccountDeleted />} />
                 <Route exact path="errorPage" element={<ErrorPage />} />
                 <Route exact path="botError" element={<BotError />} />
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />

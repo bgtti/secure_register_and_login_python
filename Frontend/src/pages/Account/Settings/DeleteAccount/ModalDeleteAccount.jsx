@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { PropTypes } from "prop-types";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { INPUT_LENGTH } from "../../../../utils/constants";
-import { passwordValidationSimplified } from "../../../../utils/validation";
-
+import { getOTP } from "../../../../config/apiHandler/authSession/otp.js";
+import { deleteOwnAccount } from "../../../../config/apiHandler/authRegistration/deleteAccount.js"
+import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage";
+import InputPassword from "../../../../components/Auth/InputPassword.jsx";
+import InputOtp from "../../../../components/Auth/InputOtp.jsx";
+import HiddenUsername from "../../../../components/Auth/HiddenUsername.jsx"
 /**
  * This component is a modal used delete the user's account.
  * 
@@ -17,76 +21,94 @@ import { passwordValidationSimplified } from "../../../../utils/validation";
  * @returns {React.ReactElement}
  */
 function ModalDeleteAccount(props) {
-    const { modalToggler } = props;
-
-    const user = useSelector((state) => state.user);
-    const preferences = useSelector((state) => state.preferences);
+    const { modalToggler, user } = props;
 
     const userAgent = navigator.userAgent; //info to be passed on to BE
 
-    const isComponentMounted = useIsComponentMounted();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const isComponentMounted = useIsComponentMounted();
 
-    // if mfa is enabled, user must confirm account deletion per email 
-    // if not, require user to type in password
-    const [linkSent, setLinkSent] = useState(null);
+    // State for input components
+    const [otp, setOtp] = useState("");
+    const [otpIsValid, setOtpIsValid] = useState(false);
+    const [otpWasSent, setOtpWasSent] = useState(false);
+    const [password, setPassword] = useState("");
+    const [passwordIsValid, setPasswordIsValid] = useState(false);
 
-    // Used for actual fields
-    const [formData, setFormData] = useState({
-        password: "",
-        passwordIsValid: { response: false, message: "" },
-    });
-    const handleChange = (e) => {
-        const { value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            password: value,
-            passwordIsValid: passwordValidationSimplified(value),
-        }));
-        //Ensures that, if an error message had appeared before, that it disappears as user corrects input
-        if (!formData.passwordIsValid.response) {
-            setFormData((prevData) => ({
-                ...prevData,
-                passwordIsValid: { response: false, message: "" },
-            }));
+    // State set by api call
+    const [infoMessage, setInfoMessage] = useState("");
+
+    // Form is valid when all fields are valid and api call did not return error
+    const formIsValid = (passwordIsValid && otpIsValid && infoMessage === "")
+
+    //if a form error was shown, hide it when the user starts to correct the input
+    useEffect(() => {
+        if (infoMessage !== "") {
+            setInfoMessage("")
         }
-    };
+    }, [password, otp]);
 
-    const handleBlur = (e) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            passwordIsValid: passwordValidationForLogin(e.target.value),
-        }));
+    const sendOtp = (e) => {
+        e.preventDefault();
+        // get rid of previous error messages
+        if (infoMessage !== "") { setInfoMessage("") }
+
+        const requestData = {
+            email: user.email,
+            honeyPot: ""
+        }
+
+        dispatch(setLoader(true))
+        getOTP(requestData)
+            .then(res => {
+                if (isComponentMounted()) {
+                    if (res.response) { setOtpWasSent(true); }
+                    else { setInfoMessage(res.message); }
+                }
+            })
+            .catch(error => {
+                console.error("Error in otp function.", error);
+            })
+            .finally(() => {
+                dispatch(setLoader(false));
+            })
     };
 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("account deletion")
+        if (!passwordIsValid || (!otpIsValid && user.mfa)) { setInfoMessage("Check credentials"); return }
 
-        // dispatch(setLoader(true));
+        const requestData = {
+            password: password,
+            otp: otp,
+            userAgent: userAgent
+        }
 
-        // const handleResponse = (response) => {
-        //     if (isComponentMounted()) {
-        //         if (response.success) { setLinkSent(true) }
-        //         else { setLinkSent(false) }
-        //     }
-        // };
+        dispatch(setLoader(true));
 
-        // const handleError = (error) => {
-        //     if (isComponentMounted()) {
-        //         console.warn("clickHandler in modal encountered an error", error);
-        //     }
-        // };
+        const handleResponse = (response) => {
+            if (isComponentMounted()) {
+                if (response.response) { navigate("/accountDeleted"); }
+                else { setInfoMessage(response.message) }
+            }
+        };
 
-        // const handleFinally = () => {
-        //     dispatch(setLoader(false));
-        // };
+        const handleError = (error) => {
+            if (isComponentMounted()) {
+                console.warn("clickHandler in modal encountered an error", error);
+            }
+        };
 
-        // acctRequestVerifyEmail(userAgent)
-        //     .then(response => handleResponse(response))
-        //     .catch(error => { handleError(error) })
-        //     .finally(handleFinally);
+        const handleFinally = () => {
+            dispatch(setLoader(false));
+        };
+
+        deleteOwnAccount(requestData)
+            .then(response => handleResponse(response))
+            .catch(error => { handleError(error) })
+            .finally(handleFinally);
     };
 
 
@@ -94,69 +116,100 @@ function ModalDeleteAccount(props) {
     return (
         <>
             <form onSubmit={handleSubmit} className="MAIN-form">
+                <p><b>Warning: You are about to delete your account.</b></p>
+                <p>This action cannot be undone.</p>
+
                 {
-                    preferences.mfa === true ? (
+                    user.mfa === true ? (
                         <>
                             <p>Multi-factor authentication is enabled in your account.</p>
-                            <p>For this reason, to delete your account you shall receive a link per email.</p>
-                            <p>Clicking on the link will confirm your account deletion.</p>
-                            <p>The link will be valid for one hour.</p>
+                            <p>Click the button to receive an OTP per email to proceed.</p>
                         </>
                     ) : (
                         <>
-                            <p>Are you sure you want to delete your account?</p>
-                            <p>Type your password bellow to proceed</p>
+                            <p>Type your password bellow to proceed.</p>
                         </>
                     )
                 }
-                {/* Hidden field for username: helps password managers associate info. (Avoids browser warning) */}
+
+                {/* Form fields */}
+                {
+                    (!user.mfa || (user.mfa && otpWasSent)) && (
+                        <>
+                            <HiddenUsername
+                                username={user.email}
+                            />
+                            <InputPassword
+                                autocomplete="current-password"
+                                password={password}
+                                setPassword={setPassword}
+                                setPasswordIsValid={setPasswordIsValid}
+                            />
+                            {user.mfa && (
+                                <InputOtp
+                                    otp={otp}
+                                    setOtp={setOtp}
+                                    setOtpIsValid={setOtpIsValid}
+                                />
+                            )}
+                        </>
+                    )
+                }
+
+                {/* Form buttons */}
 
                 {
-                    preferences.mfa !== true && (
-                        <div className="MAIN-display-none">
-                            <label htmlFor="username">Username</label>
-                            <input
-                                autoComplete="username"
-                                id="username"
-                                name="username"
-                                readOnly
-                                type="text"
-                                value={user.email}
-                            />
+                    user.mfa && (
+                        <div className="Modal-BtnContainer">
+                            <button
+                                className={!otpWasSent ? "Modal-ActionBtn" : ""}
+                                // disabled={otpWasSent}
+                                onClick={(e) => { sendOtp(e) }}
+                                type="button">
+                                {otpWasSent ? "Resend OTP" : "Send OTP"}
+                            </button>
+                            {
+                                otpWasSent ? (
+                                    <button
+                                        className="MAIN-DeleteBtn"
+                                        disabled={(!formIsValid)}
+                                        type="submit">
+                                        Delete account
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={modalToggler}
+                                        type="button">
+                                        Keep account
+                                    </button>
+                                )
+                            }
                         </div>
                     )
                 }
-                <div className="MAIN-form-display-table">
-                    <label htmlFor="password">Password:<span className="MAIN-form-star"> *</span></label>
-                    <input
-                        aria-invalid={formData.passwordIsValid.message === "" ? "false" : "true"}
-                        aria-describedby="password-error"
-                        autoComplete="current-password"
-                        id="password"
-                        maxLength={`${INPUT_LENGTH.password.maxValue}`}
-                        minLength={`${INPUT_LENGTH.password.minValue}`}
-                        name="password"
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                        required
-                        type="password"
-                        value={formData.password}
-                    />
-                </div>
                 {
-                    formData.passwordIsValid.message !== "" && (
-                        <p className="MAIN-error-message" id="password-error">
-                            <i>{formData.passwordIsValid.message}</i>
-                        </p>
+                    !user.mfa && (
+                        <div className="Modal-BtnContainer">
+                            <button
+                                className="MAIN-DeleteBtn"
+                                disabled={(!passwordIsValid)}
+                                type="submit">
+                                Delete account
+                            </button>
+                            <button
+                                onClick={modalToggler}
+                                type="button">
+                                Keep account
+                            </button>
+                        </div>
                     )
                 }
-                <br />
-                <div className="">
-                    {/* <button disabled={formSubmitted} type="submit" className="MAIN-DeleteBtn">{preferences.mfa === true ? "Send link" : "Delete"}</button> */}
-                    {/* <button onClick={modalToggler}>{formSubmitted ? "Close" : "Cancel"}</button> */}
-                    <button type="submit" className="MAIN-DeleteBtn">{preferences.mfa === true ? "Send link" : "Delete account"}</button>
-                    <button onClick={modalToggler}>Cancel</button>
-                </div>
+                {
+                    infoMessage !== "" && (
+                        < ErrorMessage message={infoMessage} ariaDescribedby="api-response-error" />
+                    )
+                }
+
             </form>
         </>
     );

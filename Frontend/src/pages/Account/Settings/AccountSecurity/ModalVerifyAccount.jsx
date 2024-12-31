@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { PropTypes } from "prop-types";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice.js"
-import { verifyAccount } from "../../../../config/apiHandler/authRegistration/verifyAccount.js"
+import { verifyAccount } from "../../../../config/apiHandler/authSecurity/verifyAccount.js"
 import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage.jsx";
 import { getOTP } from "../../../../config/apiHandler/authSession/otp.js";
 import InputOtp from "../../../../components/Auth/InputOtp.jsx";

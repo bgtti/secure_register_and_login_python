@@ -21,7 +21,6 @@ export const apiEndpoints = {
     acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
     acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
     acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
-    acctDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
     getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
@@ -29,14 +28,15 @@ export const apiEndpoints = {
     deleteRecoveryEmail: `${urlPrefix.auth}/delete_recovery_email`, //OK
     //authentication -- registration
     userSignUp: `${urlPrefix.auth}/signup`, //OK
-    verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
+    acctDeleteOwnAccount: `${urlPrefix.auth}/delete_user`, //---on it
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
-    userLogIn: `${urlPrefix.auth}/login`, //OK ---- should work with MFA!
+    userLogIn: `${urlPrefix.auth}/login`, //OK
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
     //authentication -- security
     setMfa: `${urlPrefix.auth}/set_mfa`, //OK
+    verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
     //ADMIN
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING

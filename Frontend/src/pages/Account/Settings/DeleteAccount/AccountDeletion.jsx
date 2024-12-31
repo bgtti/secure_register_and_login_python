@@ -9,7 +9,9 @@ import ModalDeleteAccount from "./ModalDeleteAccount";
  * @returns {React.ReactElement}
  * 
  */
-function AccountDeletion() {
+function AccountDeletion(props) {
+    const { user } = props;
+
     //State of modal that changes account credentials (boolean defines whether or not to show modal)
     const [modalDeleteAcct, setModalDeleteAcct] = useState(false)
     //Css class to hide/show modal
@@ -17,7 +19,7 @@ function AccountDeletion() {
 
     //Modal content
     const modalDeleteAcctContent = modalDeleteAcct && (
-        <ModalDeleteAccount modalToggler={toggleModal} />
+        <ModalDeleteAccount modalToggler={toggleModal} user={user} />
     );
 
     //Modal state toggle

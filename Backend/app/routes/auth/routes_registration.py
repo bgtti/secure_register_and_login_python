@@ -22,16 +22,19 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
+import random
+import time
 # from flask import Blueprint, request, jsonify, session
 from flask import request, jsonify
 from flask_login import (
     login_user as flask_login_user,
+    logout_user as flask_logout_user,
     current_user,
     login_required,
 )
 
 # Extensions
-from app.extensions.extensions import db, limiter
+from app.extensions.extensions import db, limiter, flask_bcrypt
 
 # Database models
 from app.models.user import User
@@ -44,19 +47,22 @@ from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.log_event_utils.log import log_event
 from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import generate_salt
+from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.token_utils.sign_and_verify import verify_signed_token
 from app.utils.token_utils.verification_urls import create_verification_url
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid
-from app.routes.auth.email_helpers import (
-    send_email_acct_exists
+from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid, reset_user_session
+from app.routes.auth.email_helpers_registration import (
+    send_email_acct_exists,
+    send_email_acct_created,
+    send_email_acct_deleted
+
 )
 from app.routes.auth.schemas import (
     signup_schema,
-    verify_account_schema
+    delete_user_schema
 )
 
 # Blueprint
@@ -64,7 +70,6 @@ from . import auth
 
 
 ############# ROUTES ###############
-
 
 ####################################
 #             SIGN UP              #
@@ -176,7 +181,10 @@ def signup_user():
         new_user.new_session() # an alternative id should be created to be used in session management
         db.session.commit()
 
+        send_email_acct_created(new_user.name, new_user.email)
+
     except Exception as e:
+        db.session.rollback() 
         logging.error(f"User registration failed. Error: {e}")
         try:
             log_event("ACCOUNT_SIGNUP", "signup failed")
@@ -220,3 +228,93 @@ def signup_user():
     return jsonify(response_data)
 
 
+
+####################################
+#       DELETE USER ACCOUNT        #
+####################################
+
+@auth.route("/delete_user", methods=["POST"])
+@login_required
+@limiter.limit("2/minute; 10/day")
+@validate_schema(delete_user_schema)
+def delete_user():
+    """
+    delete_user() -> JsonType
+    ----------------------------------------------------------
+
+    Route deletes the user's account.
+    
+    Requires json data from the client. 
+    Sets a session cookie in response.
+    Returns Json object containing strings:
+    - "response" value is always included.  
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"User deleted successfully!"
+            }
+    ``` 
+    """
+    # NOTE: consider placing account in quarantene (in case user did not want a deletion)
+
+    # Standard error response
+    error_response = {"response": "An error prevented account from being deleted."} 
+
+    # Get the JSON data from the request body 
+    json_data = request.get_json()
+    password = json_data["password"]
+    otp = json_data.get("otp", "")
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    
+    # Check if user exists
+
+    user = get_user_or_none(current_user.email, "delete_user")
+
+    print(current_user)
+
+    # Delay response in case of wrong credentials to mitigate attacks by introducing randomized delay
+    def delay_response():
+        delay = random.uniform(1, 10)
+        time.sleep(delay)
+
+    if user is None:
+        delay_response()
+        return jsonify(error_response), 404
+    
+    # Wrong credentials response
+    wrong_creds_res = {"response": "Wrong credentials: password/OTP expired or incorrect."} 
+
+    # Check password
+    salted_password = user.salt + password + get_pepper(user.created_at)
+    if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        delay_response()
+        return jsonify(wrong_creds_res), 401
+    
+    # Check OTP only if user has mfa set
+    mfa_enabled = user.mfa_enabled == modelBool.TRUE
+    if mfa_enabled:
+        if user.check_otp(password) is False:
+            delay_response()
+            return jsonify(wrong_creds_res), 401
+        
+    # Credentials correct: delete user
+    try:
+        name=user.name
+        email=user.email
+        db.session.delete(user)
+        db.session.commit()
+        send_email_acct_deleted(name, email)
+        logging.info("User deleted account.")
+
+        #logout user
+        reset_user_session(current_user) # invalidate old auth sessions
+        flask_logout_user() # classic flask-login log out
+
+        return jsonify({"message": "User deleted successfully!"}), 200
+    except Exception as e:
+        db.session.rollback() 
+        logging.error(f"Failed to delete user. Details: {str(e)}")
+        return jsonify(error_response), 500
