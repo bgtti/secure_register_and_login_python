@@ -138,8 +138,7 @@ class User(db.Model, UserMixin):
     otp_token_creation = db.Column(UTCDateTime, nullable=True)
     # acct:
     created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
-    email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
-    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
+    email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     # access:
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
@@ -150,16 +149,17 @@ class User(db.Model, UserMixin):
     last_login_attempt = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
-    # auth credential change or verification:
-    new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
-    token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     # preferences
     in_mailing_list = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
     # multi-factor authentication (mfa)
+    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used_date = db.Column(UTCDateTime, default=datetime.now(timezone.utc), nullable=True)
     first_factor_type = db.Column(db.Enum(LoginMethods), nullable=True)
+    # auth credential change or verification:
+    new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
+    token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     
     # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):
@@ -345,11 +345,12 @@ class User(db.Model, UserMixin):
             return False
         
         # Reset the first mfa step because it is either too old or the second step is approved
+        date = self.first_factor_used_date
         self.mfa_first_factor_reset()
 
         # Check if time for MFA elapsed
         now = datetime.now(timezone.utc)
-        time_difference = (now - self.first_factor_used_date).total_seconds() / 60  # Calculate time in minutes
+        time_difference = (now - date).total_seconds() / 60  # Calculate time in minutes
         if time_difference > 30:  
             return False
         return True

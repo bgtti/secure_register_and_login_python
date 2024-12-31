@@ -122,7 +122,7 @@ def send_email_mfa_set(user_name: str, user_email: str, mfa_enabled: bool) -> bo
         user_name=user_name,
     )
     new_email = EmailMessage(
-        subject = f"{APP_NAME} MFA {email_subject}.",
+        subject = f"{APP_NAME} MFA {email_subject}",
         sender = EMAIL_CREDENTIALS["email_address"],
         recipients = [user_email]
     )

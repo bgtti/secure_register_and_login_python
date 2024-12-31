@@ -21,16 +21,16 @@ import "./login.css"
  * Successfull user authentication will re-direct the user to the dashboard.
  * Unsuccessful authentication will lead to error. Some errors will have feedback shown in this component, while others will lead to a re-direct to the error page. Check the axios configurations in the config folder to learn more about this behaviour.
  * 
- * @visibleName LogIn
  * @returns {React.ReactElement}
  * 
- * @todo When user inputs the wrong credentials 3+ times, a timer should be shown to reflect the temporary login block time. Check the login route( user model in the backend to confirm the temporary block time).
  */
 function Login() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const isComponentMounted = useIsComponentMounted();
+
+    const userAgent = navigator.userAgent; //info to be passed on to BE
 
     // Used for honeypot
     const [honeypotValue, setHoneypotValue] = useState("");
@@ -107,18 +107,20 @@ function Login() {
             else { if (otpActive) { method = "otp" } else { method = "password" } }
             const requestData = {
                 email: email,
-                password: otpActive ? otp : password,
+                password: method === "otp" ? otp : password,
                 method: method,
-                honeyPot: honeypotValue
+                honeyPot: honeypotValue,
+                isFirstFactor: !mfaStep2,
+                userAgent: userAgent,
             }
             dispatch(setLoader(true))
             loginUser(requestData)
                 .then(res => {
                     if (isComponentMounted()) {
                         if (res.response) {
-                            if (res.response.status === 202) {
+                            if (res.status === 202) {
                                 setMfaStep2(true)
-                                setMfaMessage(res.response.message)
+                                setMfaMessage(res.message)
                             } else {
                                 navigate("/userAccount");
                             }

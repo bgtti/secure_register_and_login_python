@@ -98,15 +98,25 @@ login_schema = {
             "type": "string", 
             "enum": login_method_values
         },
+        "is_first_factor": {
+            "description": "Indicates whether this is the first (true) or second (false) authentication factor",
+            "type": "boolean", 
+        },
         "honeypot": {
             "description": "Designed for catching bots.",
             "type": "string", 
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
             "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
             },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. Optional.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            }
     },
     "additionalProperties": False,
-    "required": ["email", "password","method", "honeypot"]
+    "required": ["email", "password","method", "is_first_factor", "honeypot"]
 }
 
 ####################################

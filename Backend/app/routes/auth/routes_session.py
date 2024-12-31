@@ -33,6 +33,8 @@ Status:
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
+import random
+import time
 from flask import request, jsonify
 
 # Extensions
@@ -115,10 +117,10 @@ def get_otp():
         return jsonify(error_response), 418
 
     # Check if user exists
-    if current_user is None:
+    if current_user.is_anonymous:
         user = get_user_or_none(email, "get_otp")
     else:
-        user = current_user
+        user = get_user_or_none(current_user.email, "get_otp")
 
     # Return success even if user does not exist (to avoid information leakage)
     if user is None:
@@ -192,61 +194,64 @@ def login_user():
     password = json_data["password"]
     method =json_data["method"] # login method can be "otp" or "password"
     honeypot = json_data["honeypot"]
+    is_first_factor = json_data["is_first_factor"]
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
 
     # Filter out bots
     if len(honeypot) > 0:
         bot_caught(request, "login")
         return jsonify(error_response), 418
     
-    # Set control variables
-    invalid_email = False
-    invalid_pw = False
-    user_is_blocked = False
-
     # Check if user exists
 
     user = get_user_or_none(email, "login")
 
+    # Delay response in case user does not exist
+    # Reason: mitigating timing attacks by introducing randomized delay
     if user is None:
-        invalid_email = True
+        delay = random.uniform(1, 6)
+        time.sleep(delay)
+
+    # Set control variables
+    invalid_pw = False
+    user_is_blocked = False
 
     # Check password or otp accordingly
-    if not invalid_email:
-        if method == LoginMethods.PASSWORD.value:
-            salted_password = user.salt + password + get_pepper(user.created_at)
-            if not flask_bcrypt.check_password_hash(user.password, salted_password):
-                invalid_pw = True
-        elif method == LoginMethods.OTP.value:
-            if user.check_otp(password) is False:
-                invalid_pw = True
     
-        if invalid_pw:
-            # Increment login attempts and block if necessary
-            try:
-                user.increment_login_attempts()
-                db.session.commit()
-            except Exception as e:
-                logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+    if method == LoginMethods.PASSWORD.value:
+        salted_password = user.salt + password + get_pepper(user.created_at)
+        if not flask_bcrypt.check_password_hash(user.password, salted_password):
+            invalid_pw = True
+    elif method == LoginMethods.OTP.value:
+        if user.check_otp(password) is False:
+            invalid_pw = True
 
-        blocked_status = check_if_user_blocked(user, get_client_ip(request))
-        user_is_blocked = blocked_status["blocked"]
+    if invalid_pw:
+        # Increment login attempts and block if necessary
+        try:
+            user.increment_login_attempts()
+            db.session.commit()
+        except Exception as e:
+            logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+    blocked_status = check_if_user_blocked(user, get_client_ip(request))
+    user_is_blocked = blocked_status["blocked"]
 
     if user_is_blocked:
         if blocked_status["temporary_block"] is False:
             send_email_admin_blocked(user.name, user.email)
         return jsonify(blocked_status["message"]), 401 #should be 403, but do not want to give clues
 
-    # If either email and pw/otp are invalid, return
-    if invalid_pw or invalid_email:
+    # If pw/otp is invalid, return
+    if invalid_pw:
         return jsonify(error_response), 401
     
     # MFA: if enabled, handle the step the user is in now
     mfa_enabled = user.mfa_enabled == modelBool.TRUE
 
     if mfa_enabled:
-        is_first_factor = user.first_factor_used == modelBool.FALSE
         if is_first_factor:
             user.mfa_first_factor_used(LoginMethods(method).name)
+            db.session.commit()
             if method == LoginMethods.PASSWORD.value:
                 msg = "Please confirm the OTP sent to your email address."
                 try:
@@ -263,6 +268,10 @@ def login_user():
                 }
             return jsonify(res), 202
         else:
+            # confirm that first factor has indeed been used
+            is_really_first = user.first_factor_used == modelBool.TRUE
+            if is_really_first is False:
+                return jsonify({"response": "First MFA factor was not completed or the request is out of sequence."} ), 422
             second_factor_success = user.mfa_second_factor_check(LoginMethods(method).name)
             if second_factor_success is False:
                 # Likely the user failed to submit the second factor within a specific time frame
