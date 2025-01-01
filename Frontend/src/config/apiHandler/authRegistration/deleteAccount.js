@@ -60,7 +60,7 @@ export function deleteOwnAccount(data = {}) {
 
     //If OTP provided (in case user has MFA it will be required), add to payload
     if (data.otp && data.otp !== "") {
-        const otpIsValid = otpValidation(otp);
+        const otpIsValid = otpValidation(data.otp);
         if (!otpIsValid.response) { return errorResponse }
         requestData.otp = data.otp;
     }

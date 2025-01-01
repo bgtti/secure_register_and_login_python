@@ -1,6 +1,3 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { logOutDeletedUser } from "../../config/apiHandler/authRegistration/accountDeleted";
 
@@ -13,7 +10,7 @@ import { logOutDeletedUser } from "../../config/apiHandler/authRegistration/acco
  * 
  */
 function AccountDeleted() {
-    logOutDeletedUser()
+    logOutDeletedUser();
 
     return (
         <div >
@@ -23,7 +20,11 @@ function AccountDeleted() {
             </Helmet>
             <h2>Account deleted</h2>
             <br />
-            <p>Your account was deleted successfully!</p>
+            <p><b>Your account was deleted successfully!</b></p>
+            <br />
+            <p>You shall receive a confirmation of deletion shortly.</p>
+            <br />
+            <p>We are sorry to see you go and wish you all the best!</p>
         </div>
     );
 }

@@ -291,14 +291,14 @@ def delete_user():
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
         delay_response()
-        return jsonify(wrong_creds_res), 401
+        return jsonify({"response": "Wrong credentials: password incorrect."} ), 401
     
     # Check OTP only if user has mfa set
     mfa_enabled = user.mfa_enabled == modelBool.TRUE
     if mfa_enabled:
-        if user.check_otp(password) is False:
+        if user.check_otp(otp) is False:
             delay_response()
-            return jsonify(wrong_creds_res), 401
+            return jsonify({"response": "Wrong credentials: OTP incorrect or expired."}), 401
         
     # Credentials correct: delete user
     try:
