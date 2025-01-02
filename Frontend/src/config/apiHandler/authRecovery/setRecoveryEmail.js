@@ -96,7 +96,7 @@ export function setRecoveryEmail(data) {
                 case 400:
                 case 401:
                 case 403:
-                    res.message = response.data.response
+                    res.message = response.response.data.response
                     break;
                 default:
                     res.message = "Error: Please refresh the page and try again."

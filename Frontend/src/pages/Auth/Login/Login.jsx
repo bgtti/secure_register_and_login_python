@@ -66,6 +66,18 @@ function Login() {
         }
     }, [email, password, otp]);
 
+    //CONSIDER: allow user to click on 'resend' OTP again only 10 seconds after clicking it
+    // useEffect(() => {
+    //     if (otpWasSent) {
+    //         const timer = setTimeout(() => {
+    //             setOtpWasSent(false); // Reset otpWasSent to false after 10 seconds
+    //         }, 10000); // 10000ms = 10 seconds
+
+    //         // Cleanup function to clear the timer if the component unmounts
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [otpWasSent]);
+
     const sendOtp = (e) => {
         e.preventDefault();
         // get rid of previous error messages

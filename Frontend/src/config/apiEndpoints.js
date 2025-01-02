@@ -17,12 +17,13 @@ export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //AUTH
     //authentication -- credential change
-    resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //--on it
+    resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //OK
+    changePassword: `${urlPrefix.auth}/change_password`, //OK
     //authentication -- profile
     acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
-    acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
+    acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //MISSING, CHANGE
     acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
-    acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
+    acctChangePassword: `${urlPrefix.auth}/...`, //MISSING, CHANGE
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
     getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK

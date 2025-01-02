@@ -107,6 +107,12 @@ def set_recovery_email():
     except Exception as e:
         logging.error(f"Failed to get user. Error: {e}")
         return jsonify(error_response), 500
+    
+    # Recovery email should not be the same as email
+    if user.email == recovery_email:
+        user.otp_reset()
+        db.session.commit()
+        return jsonify({"response": "Recovery must be different than account email."} ), 400
 
     # Check password and OTP
     if user.check_otp(otp) is False:

@@ -5,14 +5,14 @@ import { PATH_TO } from "../../../router/routePaths.js"
 import InputToken from "../../../components/Auth/InputToken.jsx";
 
 /**
- * Component returns Reset Password page
+ * Component returns Reset Password No Token page
  * 
- * When a password reset is requested, user should get an email with a link leading to a new password input page
+ * When a password reset is requested, user should get an email with a putton leading to the reset password page and a link to be pasted in the browser in case the button does not redirect.
+ * This is the link page, where the user has to input the token manually on the page because the button with the full link including token did not work.
  * 
- * @visibleName LogIn
+ * This component will re-direct to the Reset Password page.
+ * 
  * @returns {React.ReactElement}
- * 
- * @todo api request
  */
 function ResetPasswordNoToken() {
     const navigate = useNavigate();

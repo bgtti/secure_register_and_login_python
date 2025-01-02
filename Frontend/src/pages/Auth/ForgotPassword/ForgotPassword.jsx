@@ -9,14 +9,11 @@ import Honeypot from "../../../components/Honeypot/Honeypot.jsx";
 import InputEmail from "../../../components/Auth/InputEmail.jsx";
 
 /**
- * Component returns Reset Password page
+ * Component returns Forgot Password page, which initiates the request for a password reset
  * 
  * When a password reset is requested, user should get an email with a link leading to a new password input page
  * 
- * @visibleName LogIn
  * @returns {React.ReactElement}
- * 
- * @todo api request
  */
 function ForgotPassword() {
     const dispatch = useDispatch();
@@ -119,8 +116,6 @@ function ForgotPassword() {
                     <p className="MAIN-info-paragraph">Check your email account to proceed.</p>
                 </div>
             )}
-
-
 
         </div>
     );

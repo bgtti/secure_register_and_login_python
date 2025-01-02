@@ -1,30 +1,40 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice"
-import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
+import { changePassword } from "../../../config/apiHandler/authCredChange/changePassword.js";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
+import { PATH_TO } from "../../../router/routePaths.js"
+import { tokenFormatIsValid } from "../../../utils/validation.js"
 import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
 import Honeypot from "../../../components/Honeypot/Honeypot";
-import InputEmail from "../../../components/Auth/InputEmail.jsx";
+import HiddenUsername from "../../../components/Auth/HiddenUsername.jsx";
 import InputPassword from "../../../components/Auth/InputPassword";
 import InputOtp from "../../../components/Auth/InputOtp.jsx";
 
 /**
  * Component returns Reset Password page
  * 
- * When a password reset is requested, user should get an email with a link leading to a new password input page
+ * When a password reset is requested, user should get an email with a link leading to this page.
+ * The user will be prompted to give a news password.
+ * If MFA is enable on the user's account, the server will respond with 202 and the user will also be asked to input an OTP sent to the user's recovery email address.
  * 
- * @visibleName LogIn
  * @returns {React.ReactElement}
- * 
- * @todo api request
  */
 function ResetPassword() {
     const dispatch = useDispatch();
     const isComponentMounted = useIsComponentMounted();
 
-    const userAgent = navigator.userAgent; //info to be passed on to BE
+    //info to be passed on to BE
+    const userAgent = navigator.userAgent;
+
+    // Extract the token from the url
+    const location = useLocation();
+
+    // Extract the url path 
+    const currentPath = location.pathname;
+    const tokenInUrl = currentPath.split("token=")[1];
 
     // Used for honeypot
     const [honeypotValue, setHoneypotValue] = useState("");
@@ -36,11 +46,10 @@ function ResetPassword() {
     const [confirmPasswordIsValid, setConfirmPasswordIsValid] = useState(false);
     const [otp, setOtp] = useState("");
     const [otpIsValid, setOtpIsValid] = useState(false);
-    const [otpWasSent, setOtpWasSent] = useState(false);
 
     // If mfa enabled: State set by api call
     const [mfaStep2, setMfaStep2] = useState(false);
-    const [mfaMessage, setMfaMessage] = useState("");
+    const [mfaInfo, setMfaInfo] = useState(false);
 
     // State set by api call
     const [infoMessage, setInfoMessage] = useState("");
@@ -55,75 +64,32 @@ function ResetPassword() {
         }
     }, [password, confirmPassword, otp]);
 
-    //allow user to click on 'resend' OTP again only 10 seconds after clicking it
-    useEffect(() => {
-        if (otpWasSent) {
-            const timer = setTimeout(() => {
-                setOtpWasSent(false); // Reset otpWasSent to false after 10 seconds
-            }, 10000); // 10000ms = 10 seconds
-
-            // Cleanup function to clear the timer if the component unmounts
-            return () => clearTimeout(timer);
-        }
-    }, [otpWasSent]);
-
-    const sendOtp = (e) => {
-        e.preventDefault();
-        // get rid of previous error messages
-        if (infoMessage !== "") { setErrorMessage("") }
-        if (!formIsValid) {
-            setInfoMessage("Please check email input.");
-            return
-        }
-        const requestData = {
-            email: email, //how to get email....? must be recovery
-            honeyPot: honeypotValue
-        }
-
-        dispatch(setLoader(true))
-        getOTP(requestData)
-            .then(res => {
-                if (isComponentMounted()) {
-                    if (res.response) { setOtpWasSent(true); }
-                    else { setInfoMessage(res.message); }
-                }
-            })
-            .catch(error => {
-                console.error("Error in otp function.", error);
-            })
-            .finally(() => {
-                dispatch(setLoader(false));
-            })
-    };
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formIsValid) { setInfoMessage("Check credentials."); }
-        console.log("sent")
-        // dispatch(setLoader(true))
-        // loginUser(requestData)
-        //     .then(res => {
-        //         if (isComponentMounted()) {
-        //             if (res.response) {
-        //                 if (res.status === 202) {
-        //                     setMfaStep2(true)
-        //                     setMfaMessage(res.message)
-        //                 } else {
-        //                     navigate("/userAccount");
-        //                 }
-        //             } else {
-        //                 setLoginFailed(res.response);
-        //                 setErrorMessage(res.message);
-        //             }
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.error("Error in login function.", error);
-        //     })
-        //     .finally(() => {
-        //         dispatch(setLoader(false));
-        //     })
+        if (!tokenFormatIsValid(tokenInUrl)) { setInfoMessage("Token format invalid."); }
+
+        let requestData = {
+            "newPassword": password,
+            "pwChangeReason": "reset",
+            "isFirstFactor": !mfaStep2,
+            "honeypot": honeypotValue,
+            "userAgent": userAgent,
+            "signedToken": tokenInUrl,
+            "otp": otp
+        }
+
+        dispatch(setLoader(true))
+        changePassword(requestData)
+            .then(res => {
+                if (isComponentMounted()) {
+                    if (res.status === 202) { setMfaStep2(true); setMfaInfo(res.message) }
+                    else { setInfoMessage(res.message); }
+                }
+            })
+            .catch(error => { console.error("Error in reset password function.", error); })
+            .finally(() => { dispatch(setLoader(false)); })
     };
 
     const otpComponent = (
@@ -157,6 +123,9 @@ function ResetPassword() {
 
             <form onSubmit={handleSubmit} className='MAIN-form'>
 
+                <HiddenUsername
+                    username="" />
+
                 <InputPassword
                     cssClass={"MAIN-form-display-table"}
                     disableField={mfaStep2}
@@ -181,8 +150,8 @@ function ResetPassword() {
                     mfaStep2 && (
                         <>
                             <div>
-                                <p className="MAIN-info-paragraph">An OTP was sent to your recovery email: b***@***.com</p>
-                                <p className="MAIN-info-paragraph">Please copy and paste it bellow within 30 minutes.</p>
+                                <p className="MAIN-info-paragraph">{mfaInfo}</p>
+                                <p className="MAIN-info-paragraph">Please copy and paste it bellow within 30 minutes to complete the process.</p>
                             </div>
 
                             {otpComponent}
@@ -206,15 +175,8 @@ function ResetPassword() {
             </form>
 
             {
-                mfaStep2 && !otpWasSent && (
-                    <p>Did not receive OTP? <a href="#" onClick={sendOtp}>Resend OTP</a></p>
-                )
-            }
-            {
-                mfaStep2 && otpWasSent && (
-                    <p className="MAIN-info-paragraph"><i>
-                        OTP was resent, please check your recovery email.
-                    </i></p>
+                mfaStep2 && (
+                    <p>Did not receive OTP? <a href={PATH_TO.contact}>contact us</a></p>
                 )
             }
 

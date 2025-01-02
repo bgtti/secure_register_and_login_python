@@ -17,6 +17,7 @@
 export const PATH_TO = {
     //Unprotected routes
     login: "/login",
+    contact: "/contact",
     signup: "/signup",
     forgotPassword: "/forgotPassword",
     resetPassword: "/resetPassword/token=",

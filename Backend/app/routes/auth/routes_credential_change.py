@@ -67,6 +67,7 @@ from app.routes.auth.email_helpers_credential_change import (
 )
 from app.routes.auth.schemas import (
     reset_password_token_schema,
+    change_password_schema,
     change_name_schema,
     req_auth_change_schema,
     req_token_validation_schema,
@@ -173,7 +174,7 @@ def reset_password_token():
 ####################################
 
 @auth.route("/change_password", methods=["POST"])
-@validate_schema(reset_password_token_schema) #TODO: new schema necessary
+@validate_schema(change_password_schema)
 @limiter.limit("1/minute; 5/day")
 def change_password(): 
     """
@@ -223,7 +224,7 @@ def change_password():
     old_password = json_data.get("old_password", "")
     pw_change_reason = json_data["pw_change_reason"]
     otp = json_data.get("otp", "")
-    signed_token = json_data.get("token", "")
+    signed_token = json_data.get("signed_token", "")
     honeypot = json_data["honeypot"]
     user_agent = json_data.get("user_agent", "") #TODO log this in event
 
@@ -243,7 +244,7 @@ def change_password():
     if pw_change_reason == PasswordChangeReason.RESET.value:
 
         # validate token
-        res = validate_and_verify_signed_token(signed_token, PasswordChangeReason.RESET, "change_password", False)
+        res = validate_and_verify_signed_token(signed_token, TokenPurpose.PW_RESET, "change_password", False)
 
         if res["status"] != 200:
             return jsonify({"response": res["message"]}), res["status"]
@@ -274,7 +275,7 @@ def change_password():
         if not hashed_password:
             return jsonify({"response": "New password does not meet criteria."}), 400
         try:
-            user.new_password = new_password
+            user.new_password = hashed_password
             db.session.commit()
         except Exception as e:
             db.session.rollback() 
@@ -288,7 +289,7 @@ def change_password():
         # PW reset has two factors checked in separate requests when MFA is enabled
         if is_first_factor and pw_change_reason == PasswordChangeReason.RESET.value:
             # Send OTP to recovery email so user can proceed to second MFA step
-            recovery_email = current_user.recovery_email
+            recovery_email = user.recovery_email
             if recovery_email is None:
                 return jsonify({"response": "MFA enabled, but no recovery email on record. Contact support."}), 422
             try:
