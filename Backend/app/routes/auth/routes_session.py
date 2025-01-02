@@ -51,7 +51,7 @@ from app.extensions.extensions import db, flask_bcrypt, limiter, login_manager
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import LoginMethods,modelBool
+from app.utils.constants.enum_class import AuthMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.log_event_utils.log import log_event
@@ -219,13 +219,16 @@ def login_user():
 
     # Check password or otp accordingly
     
-    if method == LoginMethods.PASSWORD.value:
+    if method == AuthMethods.PASSWORD.value:
         salted_password = user.salt + password + get_pepper(user.created_at)
         if not flask_bcrypt.check_password_hash(user.password, salted_password):
             invalid_pw = True
-    elif method == LoginMethods.OTP.value:
+    elif method == AuthMethods.OTP.value:
         if user.check_otp(password) is False:
             invalid_pw = True
+    else:
+        logging.error("Invalid AuthMethods value passed to login function")
+        invalid_pw = True
 
     if invalid_pw:
         # Increment login attempts and block if necessary
@@ -251,9 +254,9 @@ def login_user():
 
     if mfa_enabled:
         if is_first_factor:
-            user.mfa_first_factor_used(LoginMethods(method).name)
+            user.mfa_first_factor_used(AuthMethods(method).name)
             db.session.commit()
-            if method == LoginMethods.PASSWORD.value:
+            if method == AuthMethods.PASSWORD.value:
                 msg = "Please confirm the OTP sent to your email address."
                 try:
                     otp = user.generate_otp()
@@ -273,7 +276,7 @@ def login_user():
             is_really_first = user.first_factor_used == modelBool.TRUE
             if is_really_first is False:
                 return jsonify({"response": "First MFA factor was not completed or the request is out of sequence."} ), 422
-            second_factor_success = user.mfa_second_factor_check(LoginMethods(method).name)
+            second_factor_success = user.mfa_second_factor_check(AuthMethods(method).name)
             if second_factor_success is False:
                 # Likely the user failed to submit the second factor within a specific time frame
                 res = {"response": "Request Timeout (process abandoned) . Please re-start login process."}

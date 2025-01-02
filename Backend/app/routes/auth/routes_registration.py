@@ -27,9 +27,9 @@ import time
 # from flask import Blueprint, request, jsonify, session
 from flask import request, jsonify
 from flask_login import (
+    current_user,
     login_user as flask_login_user,
     logout_user as flask_logout_user,
-    current_user,
     login_required,
 )
 

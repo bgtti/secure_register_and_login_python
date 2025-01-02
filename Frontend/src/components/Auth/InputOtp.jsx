@@ -14,10 +14,10 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * @visibleName Input OTP
  * 
  * @param {object} props
+ * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable"
  * @param {string} props.otp
  * @param {func} props.setOtp
- * @param {func} props.setOtpIsValid
- * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable" 
+ * @param {func} props.setOtpIsValid 
  * @returns {React.ReactElement}
  * 
  */

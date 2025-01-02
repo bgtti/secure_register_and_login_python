@@ -44,7 +44,7 @@ from app.models.user import User
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import LoginMethods,modelBool
+from app.utils.constants.enum_class import modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_address_validation import get_client_ip

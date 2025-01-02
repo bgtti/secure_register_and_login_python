@@ -23,17 +23,18 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * 
  * @param {object} props
  * @param {string} [props.autocomplete] // optional, defaults to "new-password"
+ * @param {string} [props.cssClass] // optional: defaults to "MAIN-form-display-table Auth-displayTable" 
+ * @param {bool} [props.disableField] // optional: defaults to 'false'. If set to 'true' input field is disabled
  * @param {string} [props.labelText] // defaults to "Password"
  * @param {string} props.password
  * @param {func} props.setPassword 
  * @param {func} props.setPasswordIsValid 
  * @param {bool} [props.simpleValidation] //will be true if no value is passed
- * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable" 
  * @returns {React.ReactElement}
  * 
  */
 function InputPassword(props) {
-    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password", labelText = "Password", cssClass = "" } = props;
+    const { password, setPassword, setPasswordIsValid, simpleValidation = true, autocomplete = "new-password", labelText = "Password", cssClass = "", disableField = false } = props;
 
     const styleClass = cssClass === "" ? "MAIN-form-display-table Auth-displayTable" : cssClass;
 
@@ -71,6 +72,8 @@ function InputPassword(props) {
                     aria-invalid={errorMessage === "" ? "false" : "true"}
                     aria-describedby={`${autocomplete}-error`}
                     autoComplete={autocomplete}
+                    className={disableField ? "Auth-InputDisabled" : ""}
+                    disabled={disableField}
                     id={autocomplete}
                     maxLength={`${INPUT_LENGTH.password.maxValue}`}
                     minLength={`${INPUT_LENGTH.password.minValue}`}

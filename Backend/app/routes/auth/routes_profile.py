@@ -153,246 +153,246 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
     return jsonify(response_data)
 
 
-####################################
-#      CHANGE EMAIL/PW (STEP 1)    #
-####################################
+# ####################################
+# #      CHANGE EMAIL/PW (STEP 1)    #
+# ####################################
 
-@auth.route("/request_auth_change", methods=["POST"]) # TODO: TEST
-@login_required
-@validate_schema(req_auth_change_schema)
-@limiter.limit("5/day")
-def request_auth_change(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
-    """
-    **request_auth_change() -> JsonType**
+# @auth.route("/request_auth_change", methods=["POST"]) # TODO: TEST
+# @login_required
+# @validate_schema(req_auth_change_schema)
+# @limiter.limit("5/day")
+# def request_auth_change(): # TODO --> Add to logs so user actions can show in history, consider db rollbacks
+#     """
+#     **request_auth_change() -> JsonType**
 
-    ----------------------------------------------------------
-    Route receives the request to change a user's login credential (email or password)
-    and sends email(s) with verification url(s) to the user. 
+#     ----------------------------------------------------------
+#     Route receives the request to change a user's login credential (email or password)
+#     and sends email(s) with verification url(s) to the user. 
     
-    Returns Json object containing strings:
-    - "response" value is always included.  
-    - "mail_sent" boolean value only included if response is "success".
+#     Returns Json object containing strings:
+#     - "response" value is always included.  
+#     - "mail_sent" boolean value only included if response is "success".
 
-    ----------------------------------------------------------
-    **Response example:**
+#     ----------------------------------------------------------
+#     **Response example:**
 
-    ```python
-        response_data = {
-                "response":"success",
-                "mail_sent": True, 
-            }
-    ``` 
-    """
-    # Standard error response
-    error_response = {"response": "There was an error changing the user's credentials."}
+#     ```python
+#         response_data = {
+#                 "response":"success",
+#                 "mail_sent": True, 
+#             }
+#     ``` 
+#     """
+#     # Standard error response
+#     error_response = {"response": "There was an error changing the user's credentials."}
 
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    change_request_type = json_data["type"]
-    user_agent = json_data.get("user_agent", "")
+#     # Get the JSON data from the request body
+#     json_data = request.get_json()
+#     change_request_type = json_data["type"]
+#     user_agent = json_data.get("user_agent", "")
 
-    client_ip = get_client_ip(request)
+#     client_ip = get_client_ip(request)
 
-    user = User.query.filter_by(email=current_user.email).first()
+#     user = User.query.filter_by(email=current_user.email).first()
 
-    if change_request_type == "password":
-        try:
-            token = Token(user_id=user.id, purpose=TokenPurpose.PW_CHANGE, ip_address=client_ip, user_agent=user_agent) 
-            db.session.add(token)
-            db.session.commit()
+#     if change_request_type == "password":
+#         try:
+#             token = Token(user_id=user.id, purpose=TokenPurpose.PW_CHANGE, ip_address=client_ip, user_agent=user_agent) 
+#             db.session.add(token)
+#             db.session.commit()
 
-        except Exception as e:
-            logging.error(f"Token creation failed. Error: {e}")
-            return jsonify(error_response), 500
+#         except Exception as e:
+#             logging.error(f"Token creation failed. Error: {e}")
+#             return jsonify(error_response), 500
         
-        link = create_verification_url(token.token, TokenPurpose.PW_CHANGE)
-        mail_sent = send_pw_change_email(user.name, link, user.email)
+#         link = create_verification_url(token.token, TokenPurpose.PW_CHANGE)
+#         mail_sent = send_pw_change_email(user.name, link, user.email)
     
-    elif change_request_type == "email":
-        new_email = json_data["new_email"]
-        if new_email is None:
-            return jsonify({"response": "New email is required."}), 400
-        try:
-            user.new_email = new_email
-            token_group = get_group_id(user.id)
-            # logging.debug(f"Creating token for EMAIL_CHANGE_OLD_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_OLD_EMAIL}")
-            token_old_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_OLD_EMAIL, ip_address=client_ip, user_agent=user_agent) 
-            # logging.debug(f"Creating token for EMAIL_CHANGE_NEW_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_NEW_EMAIL}")
-            token_new_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_NEW_EMAIL, ip_address=client_ip, user_agent=user_agent) 
-            db.session.add(token_old_email)
-            db.session.add(token_new_email)
-            db.session.commit()
-        except Exception as e:
-            logging.error(f"New email/Token could not be added to user. Error: {e}")
-            return jsonify(error_response), 500
-        link_old_email = create_verification_url(token_old_email.token, TokenPurpose.EMAIL_CHANGE_OLD_EMAIL)
-        link_new_email = create_verification_url(token_new_email.token, TokenPurpose.EMAIL_CHANGE_NEW_EMAIL)
-        mail_sent = send_email_change_emails(user.name, link_old_email, link_new_email, user.email, new_email)
-    else:
-        return jsonify(error_response), 400
+#     elif change_request_type == "email":
+#         new_email = json_data["new_email"]
+#         if new_email is None:
+#             return jsonify({"response": "New email is required."}), 400
+#         try:
+#             user.new_email = new_email
+#             token_group = get_group_id(user.id)
+#             # logging.debug(f"Creating token for EMAIL_CHANGE_OLD_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_OLD_EMAIL}")
+#             token_old_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_OLD_EMAIL, ip_address=client_ip, user_agent=user_agent) 
+#             # logging.debug(f"Creating token for EMAIL_CHANGE_NEW_EMAIL with purpose: {TokenPurpose.EMAIL_CHANGE_NEW_EMAIL}")
+#             token_new_email = Token(user_id=user.id, group_id=token_group, purpose=TokenPurpose.EMAIL_CHANGE_NEW_EMAIL, ip_address=client_ip, user_agent=user_agent) 
+#             db.session.add(token_old_email)
+#             db.session.add(token_new_email)
+#             db.session.commit()
+#         except Exception as e:
+#             logging.error(f"New email/Token could not be added to user. Error: {e}")
+#             return jsonify(error_response), 500
+#         link_old_email = create_verification_url(token_old_email.token, TokenPurpose.EMAIL_CHANGE_OLD_EMAIL)
+#         link_new_email = create_verification_url(token_new_email.token, TokenPurpose.EMAIL_CHANGE_NEW_EMAIL)
+#         mail_sent = send_email_change_emails(user.name, link_old_email, link_new_email, user.email, new_email)
+#     else:
+#         return jsonify(error_response), 400
     
-    response_data ={
-            "response":"success",
-            "mail_sent": mail_sent,
-        }
-    return jsonify(response_data)
+#     response_data ={
+#             "response":"success",
+#             "mail_sent": mail_sent,
+#         }
+#     return jsonify(response_data)
 
-####################################
-#      CHANGE EMAIL/PW (STEP 2)    #
-####################################
+# ####################################
+# #      CHANGE EMAIL/PW (STEP 2)    #
+# ####################################
 
-@auth.route('/request_token_validation', methods=['POST']) # TODO: improve + logging
-@limiter.limit("5/day")
-@validate_schema(req_token_validation_schema)
-def request_token_validation():
-    """
-    request_token_validation() -> JsonType 
+# @auth.route('/request_token_validation', methods=['POST']) # TODO: improve + logging
+# @limiter.limit("5/day")
+# @validate_schema(req_token_validation_schema)
+# def request_token_validation():
+#     """
+#     request_token_validation() -> JsonType 
 
-    ----------------------------------------------------------
-    Validate a token to change the user's email or password.
+#     ----------------------------------------------------------
+#     Validate a token to change the user's email or password.
     
-    Returns:
-        JsonType: Response JSON containing:
-            - "response": String status of the operation ("success" or error message).
-            - "cred_changed": Boolean indicating if auth credentials were changed.
-            - "signed_token": String echo of the input token.
-            - "purpose": String echo purpose of the token. One of: TokenPurpose.value
-            - "email_sent": Boolean whether a success email was sent to user or not
+#     Returns:
+#         JsonType: Response JSON containing:
+#             - "response": String status of the operation ("success" or error message).
+#             - "cred_changed": Boolean indicating if auth credentials were changed.
+#             - "signed_token": String echo of the input token.
+#             - "purpose": String echo purpose of the token. One of: TokenPurpose.value
+#             - "email_sent": Boolean whether a success email was sent to user or not
 
-    ----------------------------------------------------------
-    **Response example:**
+#     ----------------------------------------------------------
+#     **Response example:**
 
-    ```python
-        response_data = {
-                "response":"success",
-                "cred_changed": True, 
-                "signed_token": "knslsknskns27t21o....", 
-                "purpose": "pw_change",
-                "email_sent": True
-            }
-    ``` 
-    """
-    # Get the JSON data from the request body
-    json_data = request.get_json()
-    signed_token = json_data["signed_token"]
-    purpose = json_data["purpose"]
+#     ```python
+#         response_data = {
+#                 "response":"success",
+#                 "cred_changed": True, 
+#                 "signed_token": "knslsknskns27t21o....", 
+#                 "purpose": "pw_change",
+#                 "email_sent": True
+#             }
+#     ``` 
+#     """
+#     # Get the JSON data from the request body
+#     json_data = request.get_json()
+#     signed_token = json_data["signed_token"]
+#     purpose = json_data["purpose"]
 
-    # Standard error response
-    error_response = {
-        "response": "Invalid or expired token.",
-        "cred_changed": False,
-        "signed_token": signed_token,
-        "purpose": purpose,
-        "email_sent": False #=> TODO: whether emails are sent or not, the front end is not handling this data
-        }
+#     # Standard error response
+#     error_response = {
+#         "response": "Invalid or expired token.",
+#         "cred_changed": False,
+#         "signed_token": signed_token,
+#         "purpose": purpose,
+#         "email_sent": False #=> TODO: whether emails are sent or not, the front end is not handling this data
+#         }
 
-    # Verify token signature and timestamp
-    token = verify_signed_token(signed_token, purpose)
+#     # Verify token signature and timestamp
+#     token = verify_signed_token(signed_token, purpose)
 
-    if not token:
-        logging.info(f"Invalid or expired token could not be validated.")
-        return jsonify(error_response), 400 
+#     if not token:
+#         logging.info(f"Invalid or expired token could not be validated.")
+#         return jsonify(error_response), 400 
     
-    # Fetch the token from the database
-    try:
-        the_token =Token.query.filter_by(token=token).first()
-    except Exception as e:
-        logging.error(f"Database error while fetching token. Error: {e}")
-        return jsonify(error_response), 500
+#     # Fetch the token from the database
+#     try:
+#         the_token =Token.query.filter_by(token=token).first()
+#     except Exception as e:
+#         logging.error(f"Database error while fetching token. Error: {e}")
+#         return jsonify(error_response), 500
 
-    if not the_token:
-        logging.info(f"Verified token not found in the database.")
-        return jsonify(error_response), 400 
+#     if not the_token:
+#         logging.info(f"Verified token not found in the database.")
+#         return jsonify(error_response), 400 
     
-    # Validate token
-    try:
-        if the_token.validate_token():
-            db.session.commit()
-        else:
-            logging.info(f"Token validation failed.")
-            return jsonify(error_response), 400 
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"Database error while validating token. Error: {e}")
-        return jsonify(error_response), 500
+#     # Validate token
+#     try:
+#         if the_token.validate_token():
+#             db.session.commit()
+#         else:
+#             logging.info(f"Token validation failed.")
+#             return jsonify(error_response), 400 
+#     except Exception as e:
+#         db.session.rollback()
+#         logging.error(f"Database error while validating token. Error: {e}")
+#         return jsonify(error_response), 500
     
-    # Token validated, now take appropriate action
-    credentials_changed = False
-    email_sent = False
+#     # Token validated, now take appropriate action
+#     credentials_changed = False
+#     email_sent = False
 
-    token_purpose = TokenPurpose(purpose) 
+#     token_purpose = TokenPurpose(purpose) 
 
-    # Case: password change
-    if token_purpose == TokenPurpose.PW_CHANGE:
-        new_pw = json_data["new_password"]
-        if not new_pw:
-            logging.error(f"No new password provided in request. Failed to change password.")
-            return jsonify(error_response), 400  
+#     # Case: password change
+#     if token_purpose == TokenPurpose.PW_CHANGE:
+#         new_pw = json_data["new_password"]
+#         if not new_pw:
+#             logging.error(f"No new password provided in request. Failed to change password.")
+#             return jsonify(error_response), 400  
         
-        try: 
-            user = the_token.user
-            new_pw_hashed = get_hashed_pw(new_pw, user.created_at, user.salt)
-            if not new_pw_hashed:
-                logging.error(f"Password in request does not meet standards.")
-                return jsonify(error_response), 400
+#         try: 
+#             user = the_token.user
+#             new_pw_hashed = get_hashed_pw(new_pw, user.created_at, user.salt)
+#             if not new_pw_hashed:
+#                 logging.error(f"Password in request does not meet standards.")
+#                 return jsonify(error_response), 400
             
-            user.password = new_pw_hashed
-            db.session.delete(the_token)
-            db.session.commit()
-            credentials_changed = True
-            email_sent = send_pw_change_sucess_email(user.name, user.email)
-        except Exception as e:
-            db.session.rollback()
-            logging.error(f"Failed to change password. Error: {e}")
-            return jsonify(error_response), 500
+#             user.password = new_pw_hashed
+#             db.session.delete(the_token)
+#             db.session.commit()
+#             credentials_changed = True
+#             email_sent = send_pw_change_sucess_email(user.name, user.email)
+#         except Exception as e:
+#             db.session.rollback()
+#             logging.error(f"Failed to change password. Error: {e}")
+#             return jsonify(error_response), 500
         
-    # Case: email change    
-    else:
-        related_tokens = Token.query.filter_by(group_id=the_token.group_id).all()
-        if len(related_tokens) != 2:
-            logging.error(f"Invalid number of related tokens for group_id: {the_token.group_id}. 2 are required for email changes")
-            return jsonify(error_response), 500
+#     # Case: email change    
+#     else:
+#         related_tokens = Token.query.filter_by(group_id=the_token.group_id).all()
+#         if len(related_tokens) != 2:
+#             logging.error(f"Invalid number of related tokens for group_id: {the_token.group_id}. 2 are required for email changes")
+#             return jsonify(error_response), 500
         
-        second_token = next((t for t in related_tokens if t != the_token), None)
-        if not second_token:
-            logging.error(f"Second token not found for group_id: {the_token.group_id}.")
-            return jsonify(error_response), 500
+#         second_token = next((t for t in related_tokens if t != the_token), None)
+#         if not second_token:
+#             logging.error(f"Second token not found for group_id: {the_token.group_id}.")
+#             return jsonify(error_response), 500
         
-        if second_token.token_verified == modelBool.TRUE:
-            # User has validated both required tokens and may now change emails
-            try: 
-                user = the_token.user
-                new_email = user.new_email
-                old_email = user.email
-                email_was_changed = user.change_email() 
+#         if second_token.token_verified == modelBool.TRUE:
+#             # User has validated both required tokens and may now change emails
+#             try: 
+#                 user = the_token.user
+#                 new_email = user.new_email
+#                 old_email = user.email
+#                 email_was_changed = user.change_email() 
 
-                if email_was_changed:
-                    db.session.delete(the_token)
-                    db.session.delete(second_token)
-                    db.session.commit()
-                    credentials_changed = True
-                    # If success emails fail to be sent, no error should be returned 
-                    try:
-                        email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
-                    except Exception as e:
-                        logging.warning(f"Failed to send email change success notification. Error: {e}") 
-                else:
-                    logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
-                    return jsonify(error_response), 500
-            except Exception as e:
-                db.session.rollback()
-                logging.error(f"Failed to change email. Error: {e}")
-                return jsonify(error_response), 500
+#                 if email_was_changed:
+#                     db.session.delete(the_token)
+#                     db.session.delete(second_token)
+#                     db.session.commit()
+#                     credentials_changed = True
+#                     # If success emails fail to be sent, no error should be returned 
+#                     try:
+#                         email_sent = send_email_change_sucess_emails(user.name, old_email, new_email)
+#                     except Exception as e:
+#                         logging.warning(f"Failed to send email change success notification. Error: {e}") 
+#                 else:
+#                     logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
+#                     return jsonify(error_response), 500
+#             except Exception as e:
+#                 db.session.rollback()
+#                 logging.error(f"Failed to change email. Error: {e}")
+#                 return jsonify(error_response), 500
 
-    # Log out user from any open session in case the credentials have changed.
-    if credentials_changed:
-        reset_user_session(user)
+#     # Log out user from any open session in case the credentials have changed.
+#     if credentials_changed:
+#         reset_user_session(user)
 
-    response_data ={
-                "response":"success",
-                "cred_changed": credentials_changed,
-                "signed_token": signed_token,
-                "purpose": purpose,
-                "email_sent": email_sent
-            }
-    return jsonify(response_data), 200
+#     response_data ={
+#                 "response":"success",
+#                 "cred_changed": credentials_changed,
+#                 "signed_token": signed_token,
+#                 "purpose": purpose,
+#                 "email_sent": email_sent
+#             }
+#     return jsonify(response_data), 200

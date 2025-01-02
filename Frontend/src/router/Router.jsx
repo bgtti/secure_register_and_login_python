@@ -9,9 +9,11 @@ import Footer from "../layout/Footer";
 import Home from '../pages/Home/Home';
 import Login from "../pages/Auth/Login/Login";
 import SignUp from "../pages/Auth//SignUp/SignUp";
-import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
+import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow
+import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
+import ResetPasswordNoToken from "../pages/Auth/ResetPassword/ResetPasswordNoToken"
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
 import AccountDeleted from "../pages/AccountDeleted/AccountDeleted";
 //Pages: protected route (registered users)
@@ -59,18 +61,23 @@ const Router = () => {
             {loaderDisplay ? <Loader></Loader> : ""}
             <NavBar />
             <Routes>
+                {/* Unprotected routes */}
                 <Route index element={<Home />} />
                 <Route exact path="/" element={<Home />} />
                 <Route exact path="login" element={<Login />} />
                 <Route exact path="signup" element={<SignUp />} />
-                <Route exact path="resetPassword" element={<ResetPassword />} />
+                <Route exact path="forgotPassword" element={<ForgotPassword />} />
+                <Route exact path="resetPassword" element={<ResetPasswordNoToken />} />
+                <Route exact path="resetPassword/:token" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
                 <Route exact path="accountDeleted" element={<AccountDeleted />} />
+                {/* Error routes */}
                 <Route exact path="errorPage" element={<ErrorPage />} />
                 <Route exact path="botError" element={<BotError />} />
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />
+                {/* Protected routes */}
                 <Route element={<ProtectedUserRoute />}>
                     <Route path="userAccount" element={<UserAccount />}>
                         <Route index element={<Navigate to="userdashboard" replace />} />
@@ -78,6 +85,7 @@ const Router = () => {
                         <Route path="acctSettings" element={<AcctSettings />} />
                     </Route>
                 </Route>
+                {/* Admin routes */}
                 <Route element={<ProtectedAdminRoute />}>
                     <Route path="adminArea" element={<AdminArea />}>
                         <Route index element={<Navigate to="adminDashboard" replace />} />

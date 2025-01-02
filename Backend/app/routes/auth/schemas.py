@@ -10,14 +10,17 @@ These schemas are passed in to `validate_schema` (see `app/utils/custom_decorato
 
 """
 from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN, OTP_PATTERN
-from app.utils.constants.enum_class import TokenPurpose, LoginMethods
+from app.utils.constants.enum_class import TokenPurpose, AuthMethods, PasswordChangeReason
 
 # Enum to list
 token_purpose_values = [purpose.value for purpose in TokenPurpose]
-"""purpose can be: 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
+"""purpose can be: 'pw_reset', 'pw_change', 'email_change_old_email', 'email_change_new_email', 'email_verification'"""
 
-login_method_values = [method.value for method in LoginMethods]
+login_method_values = [method.value for method in AuthMethods]
 """method can be: 'otp', 'password'"""
+
+pw_change_reason = [reason.value for reason in PasswordChangeReason]
+"""reason can be: 'reset', 'change'"""
 
 ####################################
 #      REGISTRATION SCHEMAS        #
@@ -382,4 +385,35 @@ set_mfa_schema = {
     },
     "additionalProperties": False,
     "required": ["enable_mfa", "password"]
+}
+
+####################################
+#    CREDENTIAL CHANGE SCHEMAS     #
+####################################
+
+reset_password_token_schema = {
+    "type": "object",
+    "title": "Will send a token per email so user may reset password", 
+    "properties": {
+        "email": {
+            "description": "Email of user logging in.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN},
+        "honeypot": {
+            "description": "Designed for catching bots.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
+            "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
+            },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            }
+    },
+    "additionalProperties": False,
+    "required": ["email", "honeypot"]
 }

@@ -16,6 +16,8 @@ const adminUrl = {
 export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
     //AUTH
+    //authentication -- credential change
+    resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //--on it
     //authentication -- profile
     acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
     acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
@@ -28,7 +30,7 @@ export const apiEndpoints = {
     deleteRecoveryEmail: `${urlPrefix.auth}/delete_recovery_email`, //OK
     //authentication -- registration
     userSignUp: `${urlPrefix.auth}/signup`, //OK
-    acctDeleteOwnAccount: `${urlPrefix.auth}/delete_user`, //---on it
+    acctDeleteOwnAccount: `${urlPrefix.auth}/delete_user`, //OK
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
     userLogIn: `${urlPrefix.auth}/login`, //OK

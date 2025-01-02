@@ -21,7 +21,7 @@ def sign_token(token, purpose):
     **sign_token(token: str, purpose: enum) --> str**
 
     ---------------------
-    Signs and timestams token and returns the signed token.
+    Signs and timestamps token and returns the signed token.
     Token will be salted with the given purpose.
     A token should only be sent [eg to a user] after it has been signed. 
 

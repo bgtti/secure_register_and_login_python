@@ -16,12 +16,11 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * When, however, in a login form, this should be best set to "username". 
  * It helps password managers dintinguish between a common email or a username/password match.
  * 
- * @visibleName InputEmail
- * 
  * @param {object} props
  * @param {string} [props.autocomplete] // optional, defaults to "email"
- * @param {string} [props.labelText] // defaults to "Email"
  * @param {string} [props.cssClass] //=> optional: defaults to "MAIN-form-display-table Auth-displayTable"
+ * @param {bool} [props.disableField] // optional: defaults to 'false'. If set to 'true' input field is disabled
+ * @param {string} [props.labelText] // defaults to "Email"
  * @param {string} props.email
  * @param {func} props.setEmail 
  * @param {func} props.setEmailIsValid 
@@ -29,7 +28,7 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
  * 
  */
 function InputEmail(props) {
-    const { email, setEmail, setEmailIsValid, autocomplete = "email", labelText = "Email", cssClass = "" } = props;
+    const { email, setEmail, setEmailIsValid, autocomplete = "email", labelText = "Email", cssClass = "", disableField = false } = props;
 
     // If this component is part of a form with many label/input pairs, it is recommended that only 
     // "MAIN-form-display-table" is passed as the argument to cssClass. Example: Login form.
@@ -56,6 +55,7 @@ function InputEmail(props) {
                     aria-invalid={errorMessage === "" ? "false" : "true"}
                     aria-describedby="email-error"
                     autoComplete={autocomplete}
+                    disabled={disableField}
                     id="email"
                     maxLength={`${INPUT_LENGTH.email.maxValue}`}
                     minLength={`${INPUT_LENGTH.email.minValue}`}

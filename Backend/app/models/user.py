@@ -29,7 +29,7 @@ from app.extensions.sqlalchemy_config import EncryptedType, UTCDateTime
 
 # Utilities
 from app.utils.constants.account_constants import INPUT_LENGTH, OTP_PATTERN
-from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, LoginMethods
+from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, AuthMethods
 from app.utils.constants.enum_helpers import map_string_to_enum
 
 ############ CONSTANTS #############
@@ -156,9 +156,10 @@ class User(db.Model, UserMixin):
     mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used_date = db.Column(UTCDateTime, default=datetime.now(timezone.utc), nullable=True)
-    first_factor_type = db.Column(db.Enum(LoginMethods), nullable=True)
+    first_factor_type = db.Column(db.Enum(AuthMethods), nullable=True)
     # auth credential change or verification:
     new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
+    new_password = db.Column(db.String(60), nullable=True)
     token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     
     # METHODS
@@ -301,12 +302,12 @@ class User(db.Model, UserMixin):
             self.mfa_enabled = modelBool.FALSE
             return True
     
-    def mfa_first_factor_used(self, method: LoginMethods) -> None:
+    def mfa_first_factor_used(self, method: AuthMethods) -> None:
         """
         Logs the successfull first factor of a multi-factor authentication process.
 
         Args:
-            method (LoginMethods): Method belonging to enum LoginMethods.
+            method (AuthMethods): Method belonging to enum AuthMethods.
         
         user.first_factor_used will be set to true
         user.first_factor_type will be set to the method authenticated
@@ -330,13 +331,13 @@ class User(db.Model, UserMixin):
             logging.error(f"Failed to reset MFA for user {self.id}: {e}")
             raise
 
-    def mfa_second_factor_check(self, method: LoginMethods) -> bool:
+    def mfa_second_factor_check(self, method: AuthMethods) -> bool:
         """
         Checks if the second authentication step in mfa is valid.
         If second method is valid or time constraint overlapsed, first step data will be reset.
         
         Args:
-            method (LoginMethods): Method belonging to enum LoginMethods.
+            method (AuthMethods): Method belonging to enum AuthMethods.
         Returns:
             bool: True if the second factor is valid, False otherwise.
         """

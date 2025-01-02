@@ -15,6 +15,14 @@
  * 
  */
 export const PATH_TO = {
+    //Unprotected routes
+    login: "/login",
+    signup: "/signup",
+    forgotPassword: "/forgotPassword",
+    resetPassword: "/resetPassword/token=",
+    //Protected routes
+    userAccount: "/userAccount",
+    //Admin routes
     adminArea_usersTable: "/adminArea/users/usersTable",
     adminArea_userInfo: "/adminArea/users/userInfo",
     adminArea_userLogs: "/adminArea/users/userLogs",

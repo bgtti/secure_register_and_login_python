@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Helmet } from "react-helmet-async";
 import { setLoader } from "../../../redux/loader/loaderSlice"
-import { emailValidation } from "../../../utils/validation";
-import { INPUT_LENGTH } from "../../../utils/constants";
+import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
+import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
+import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
 import Honeypot from "../../../components/Honeypot/Honeypot";
+import InputEmail from "../../../components/Auth/InputEmail.jsx";
+import InputPassword from "../../../components/Auth/InputPassword";
+import InputOtp from "../../../components/Auth/InputOtp.jsx";
 
 /**
  * Component returns Reset Password page
@@ -18,126 +22,202 @@ import Honeypot from "../../../components/Honeypot/Honeypot";
  */
 function ResetPassword() {
     const dispatch = useDispatch();
+    const isComponentMounted = useIsComponentMounted();
+
+    const userAgent = navigator.userAgent; //info to be passed on to BE
 
     // Used for honeypot
     const [honeypotValue, setHoneypotValue] = useState("");
 
     // Used for actual fields
-    const [formData, setFormData] = useState({
-        email: "",
-        emailIsValid: { response: false, message: "" },
-    });
+    const [password, setPassword] = useState("");
+    const [passwordIsValid, setPasswordIsValid] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [confirmPasswordIsValid, setConfirmPasswordIsValid] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [otpIsValid, setOtpIsValid] = useState(false);
+    const [otpWasSent, setOtpWasSent] = useState(false);
 
-    //useEffect used to enable button as user is typing the password: smoother mouseless navigation
+    // If mfa enabled: State set by api call
+    const [mfaStep2, setMfaStep2] = useState(false);
+    const [mfaMessage, setMfaMessage] = useState("");
 
-    const handleChange = (e) => {
-        let inputValue = e.target.value
-        setFormData((prevData) => ({
-            ...prevData,
-            email: inputValue,
-        }));
+    // State set by api call
+    const [infoMessage, setInfoMessage] = useState("");
 
-        //Only validate after the user has typed a certain number of characters after the "@"
-        if (inputValue.includes("@") && inputValue.split("@")[1]?.length >= 3) {
-            setFormData((prevData) => ({
-                ...prevData,
-                emailIsValid: emailValidation(inputValue),
-            }))
+    // Form is valid when all fields are valid and api call did not return error
+    const formIsValid = mfaStep2 ? (passwordIsValid && confirmPasswordIsValid && otpIsValid && infoMessage === "") : (passwordIsValid && confirmPasswordIsValid && infoMessage === "")
+
+    //if a form error was shown, hide it when the user starts to correct the input
+    useEffect(() => {
+        if (infoMessage !== "") {
+            setInfoMessage("")
+        }
+    }, [password, confirmPassword, otp]);
+
+    //allow user to click on 'resend' OTP again only 10 seconds after clicking it
+    useEffect(() => {
+        if (otpWasSent) {
+            const timer = setTimeout(() => {
+                setOtpWasSent(false); // Reset otpWasSent to false after 10 seconds
+            }, 10000); // 10000ms = 10 seconds
+
+            // Cleanup function to clear the timer if the component unmounts
+            return () => clearTimeout(timer);
+        }
+    }, [otpWasSent]);
+
+    const sendOtp = (e) => {
+        e.preventDefault();
+        // get rid of previous error messages
+        if (infoMessage !== "") { setErrorMessage("") }
+        if (!formIsValid) {
+            setInfoMessage("Please check email input.");
+            return
+        }
+        const requestData = {
+            email: email, //how to get email....? must be recovery
+            honeyPot: honeypotValue
         }
 
-        //Ensures that, if an error message had appeared before, that it disappears as user corrects input
-        if (!formData.emailIsValid.response) {
-            setFormData((prevData) => ({
-                ...prevData,
-                emailIsValid: { response: false, message: "" },
-            }));
-        }
+        dispatch(setLoader(true))
+        getOTP(requestData)
+            .then(res => {
+                if (isComponentMounted()) {
+                    if (res.response) { setOtpWasSent(true); }
+                    else { setInfoMessage(res.message); }
+                }
+            })
+            .catch(error => {
+                console.error("Error in otp function.", error);
+            })
+            .finally(() => {
+                dispatch(setLoader(false));
+            })
     };
 
-    const handleBlur = (e) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            emailIsValid: emailValidation(e.target.value),
-        }));
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (formData.emailIsValid) {
-            const requestData = {
-                email: formData.email,
-                honeyPot: honeypotValue
-            }
-            console.log(requestData)
-            // dispatch(setLoader(true))
-            // loginUser(requestData)
-            //     .then(res => {
-            //         if (res.response) {
-            //             navigate("/userAccount");
-            //         } else {
-            //             setFormData((prevData) => ({
-            //                 ...prevData,
-            //                 credentialsAreValid: {
-            //                     response: res.response,
-            //                     message: res.message
-            //                 },
-            //             }));
-            //         }
-            //     })
-            //     .catch(error => {
-            //         console.error("Error in login function.", error);
-            //     })
-            //     .finally(() => {
-            //         dispatch(setLoader(false));
-            //     })
-        }
+        if (!formIsValid) { setInfoMessage("Check credentials."); }
+        console.log("sent")
+        // dispatch(setLoader(true))
+        // loginUser(requestData)
+        //     .then(res => {
+        //         if (isComponentMounted()) {
+        //             if (res.response) {
+        //                 if (res.status === 202) {
+        //                     setMfaStep2(true)
+        //                     setMfaMessage(res.message)
+        //                 } else {
+        //                     navigate("/userAccount");
+        //                 }
+        //             } else {
+        //                 setLoginFailed(res.response);
+        //                 setErrorMessage(res.message);
+        //             }
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error("Error in login function.", error);
+        //     })
+        //     .finally(() => {
+        //         dispatch(setLoader(false));
+        //     })
     };
 
+    const otpComponent = (
+        <InputOtp
+            otp={otp}
+            setOtp={setOtp}
+            setOtpIsValid={setOtpIsValid}
+            cssClass={"MAIN-form-display-table"}
+        />
+    )
+
     return (
-        <div className="LogIn">
+        <div>
+
             <Helmet>
                 <title>Reset Password</title>
-                <meta name="description" content="Reset Password" />
+                <meta name="robots" content="noindex, nofollow" />
             </Helmet>
+
             <h2>Reset Password</h2>
+
             <p className="MAIN-info-paragraph">
-                Provide the email address that you used to sign up for your account.
+                Provide a new password and confirm it bellow.
             </p>
+
+            <p className="MAIN-info-paragraph">
+                If you have MFA set in your account, you will be requested to provide an OTP that will be sent to your recovery email address. If you lost access to your recovery email address, please contact support.
+            </p>
+
+            <br />
+
             <form onSubmit={handleSubmit} className='MAIN-form'>
-                <div className="MAIN-form-display-table">
-                    <label htmlFor="email">Email:<span className="MAIN-form-star"> *</span></label>
-                    <input
-                        aria-invalid={formData.emailIsValid.message === "" ? "false" : "true"}
-                        aria-describedby="email-error"
-                        autoComplete="email"
-                        id="email"
-                        maxLength={`${INPUT_LENGTH.email.maxValue}`}
-                        minLength={`${INPUT_LENGTH.email.minValue}`}
-                        name="email"
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                        required
-                        type="text"
-                        value={formData.email}
-                    />
-                </div>
+
+                <InputPassword
+                    cssClass={"MAIN-form-display-table"}
+                    disableField={mfaStep2}
+                    labelText={"New Password"}
+                    password={password}
+                    setPassword={setPassword}
+                    setPasswordIsValid={setPasswordIsValid}
+                    simpleValidation={false}
+                />
+
+                <InputPassword
+                    autocomplete={"confirm-password"}
+                    cssClass={"MAIN-form-display-table"}
+                    disableField={mfaStep2}
+                    labelText={"Confirm Password"}
+                    password={confirmPassword}
+                    setPassword={setConfirmPassword}
+                    setPasswordIsValid={setConfirmPasswordIsValid}
+                />
+
                 {
-                    formData.emailIsValid.message !== "" && (
-                        <p className="MAIN-error-message" id="email-error">
-                            <i>{formData.emailIsValid.message}</i>
-                        </p>
+                    mfaStep2 && (
+                        <>
+                            <div>
+                                <p className="MAIN-info-paragraph">An OTP was sent to your recovery email: b***@***.com</p>
+                                <p className="MAIN-info-paragraph">Please copy and paste it bellow within 30 minutes.</p>
+                            </div>
+
+                            {otpComponent}
+                        </>
                     )
                 }
 
                 <Honeypot setHoneypotValue={setHoneypotValue} />
 
-                <button disabled={!formData.emailIsValid.response} type="submit">Reset password</button>
+                <button
+                    disabled={!formIsValid}
+                    type="submit">
+                    Reset password
+                </button>
 
+                {
+                    infoMessage !== "" && (
+                        < ErrorMessage message={infoMessage} ariaDescribedby="api-response-error" />
+                    )
+                }
             </form>
 
-            <p className="MAIN-info-paragraph">
-                If the email you provided is registered with us, you shall receive a link to change your password.
-            </p>
+            {
+                mfaStep2 && !otpWasSent && (
+                    <p>Did not receive OTP? <a href="#" onClick={sendOtp}>Resend OTP</a></p>
+                )
+            }
+            {
+                mfaStep2 && otpWasSent && (
+                    <p className="MAIN-info-paragraph"><i>
+                        OTP was resent, please check your recovery email.
+                    </i></p>
+                )
+            }
+
         </div>
     );
 };

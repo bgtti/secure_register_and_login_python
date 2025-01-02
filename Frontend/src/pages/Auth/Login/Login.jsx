@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { PATH_TO } from "../../../router/routePaths.js"
 import { setLoader } from "../../../redux/loader/loaderSlice"
 import { loginUser } from "../../../config/apiHandler/authSession/login"
 import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
@@ -122,7 +123,7 @@ function Login() {
                                 setMfaStep2(true)
                                 setMfaMessage(res.message)
                             } else {
-                                navigate("/userAccount");
+                                navigate(PATH_TO.userAccount);
                             }
                         } else {
                             setLoginFailed(res.response);
@@ -143,19 +144,19 @@ function Login() {
     const passwordComponent = (
         <InputPassword
             autocomplete="current-password"
+            cssClass={"MAIN-form-display-table"}
             password={password}
             setPassword={setPassword}
             setPasswordIsValid={setPasswordIsValid}
-            cssClass={"MAIN-form-display-table"}
         />
     )
 
     const otpComponent = (
         <InputOtp
+            cssClass={"MAIN-form-display-table"}
             otp={otp}
             setOtp={setOtp}
             setOtpIsValid={setOtpIsValid}
-            cssClass={"MAIN-form-display-table"}
         />
     )
 
@@ -251,8 +252,8 @@ function Login() {
                     </div>
                 ) : (
                     <div className="LogIn-ExtraOpts">
-                        <p>Forgot your password? <a href="/resetPassword">Reset password</a>.</p>
-                        <p>Don't have an account yet? <a href="/signup">Sign up</a>.</p>
+                        <p>Forgot your password? <a href={PATH_TO.forgotPassword}>Reset password</a>.</p>
+                        <p>Don't have an account yet? <a href={PATH_TO.signup}>Sign up</a>.</p>
                     </div>
                 )
             }

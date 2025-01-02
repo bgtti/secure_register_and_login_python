@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { PATH_TO } from "../../../router/routePaths.js"
 import { setLoader } from "../../../redux/loader/loaderSlice"
 import { signupUser } from "../../../config/apiHandler/authRegistration/signup"
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
@@ -20,9 +21,7 @@ import "./signup.css"
  * Successfull user authentication will re-direct the user to the dashboard.
  * Unsuccessful authentication will lead to error. Some errors will have feedback shown in this component, while others will lead to a re-direct to the error page. Check the axios configurations in the config folder to learn more about this behaviour.
  * 
- * @visibleName SignUp
  * @returns {React.ReactElement}
- * 
  */
 function SignUp() {
     const dispatch = useDispatch();
@@ -83,7 +82,7 @@ function SignUp() {
                 .then(res => {
                     if (isComponentMounted) {
                         if (res.response) {
-                            navigate("/userAccount");
+                            navigate(PATH_TO.userAccount);
                         } else {
                             setSignupFailed(res.response);
                             setErrorMessage(res.message);
@@ -109,32 +108,34 @@ function SignUp() {
             <form onSubmit={handleSubmit} className='MAIN-form'>
 
                 <InputName
+                    cssClass={"MAIN-form-display-table"}
                     name={name}
                     setName={setName}
                     setNameIsValid={setNameIsValid}
-                    cssClass={"MAIN-form-display-table"}
                 />
 
                 <InputEmail
+                    cssClass={"MAIN-form-display-table"}
                     email={email}
                     setEmail={setEmail}
                     setEmailIsValid={setEmailIsValid}
-                    cssClass={"MAIN-form-display-table"}
                 />
+
                 <InputPassword
+                    cssClass={"MAIN-form-display-table"}
                     password={password}
                     setPassword={setPassword}
                     setPasswordIsValid={setPasswordIsValid}
                     simpleValidation={false}
-                    cssClass={"MAIN-form-display-table"}
                 />
+
                 <InputPassword
                     autocomplete={"confirm-password"}
+                    cssClass={"MAIN-form-display-table"}
                     labelText={"Confirm Password"}
                     password={confirmPassword}
                     setPassword={setConfirmPassword}
                     setPasswordIsValid={setConfirmPasswordIsValid}
-                    cssClass={"MAIN-form-display-table"}
                 />
 
                 <Honeypot setHoneypotValue={setHoneypotValue} />
@@ -155,7 +156,7 @@ function SignUp() {
             }
 
             <p className="MAIN-info-paragraph">
-                Already have an account? <a href="/login">Log in</a> instead.
+                Already have an account? <a href={PATH_TO.login}>Log in</a> instead.
             </p>
         </div>
     );

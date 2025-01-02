@@ -66,20 +66,23 @@ class TokenPurpose(enum.Enum):
     Purpose definition is tightly liked to the Token model and logic surrounding token-based urls. 
     Check both the Token db model and the token utils *(inside app/utils)* before changing constants.
     """
-    PW_CHANGE = "pw_change" 
+    PW_RESET = "pw_reset" 
+    PW_CHANGE = "pw_change" #check if necessary
     EMAIL_CHANGE_OLD_EMAIL = "email_change_old_email" 
     EMAIL_CHANGE_NEW_EMAIL = "email_change_new_email"
     EMAIL_VERIFICATION = "email_verification" 
 
-class LoginMethods(enum.Enum):
+class AuthMethods(enum.Enum):
     """
-    `LoginMethods` is an Enum to indicate the method a user chooses for logging in.
+    `AuthMethods` is an Enum to indicate the method a user chooses to authenticate.
+    Login should allow OTP or password.
+    Credential changes may allow for token.
 
     ------------------------------------------------------------
     **Options:**
     
-    - `LoginMethods.PASSWORD = "password"` 
-    - `LoginMethods.OTP = "otp"` .
+    - `AuthMethods.PASSWORD = "password"` 
+    - `AuthMethods.OTP = "otp"` .
 
     ------------------------------------------------------------
     **Purpose:**
@@ -87,4 +90,24 @@ class LoginMethods(enum.Enum):
     A user can choose to log in with an otp or with a one-time password.
     """
     PASSWORD = "password" 
-    OTP = "otp"  
+    OTP = "otp" 
+    TOKEN = "token" 
+
+
+class PasswordChangeReason(enum.Enum):
+    """
+    `PasswordChangeReason` is an Enum to indicate the reason for a password change.
+
+    ------------------------------------------------------------
+    **Options:**
+    
+    - `PasswordChangeReason.RESET = "reset"` for when a user forgets the password
+    - `PasswordChangeReason.CHANGE = "change"` for when a user wants to change the password
+
+    ------------------------------------------------------------
+    **Purpose:**
+
+    Each reason will require a different method to change a password.
+    """
+    RESET = "reset" 
+    CHANGE = "change"  

@@ -17,17 +17,20 @@ BE_URL = BASE_URLS["backend"]
 FE_URL = BASE_URLS["frontend"]
 
 # TODO: build FE pages
-LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw/token="
-LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange/token="
-LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail/token="
-LINK_EMAIL_VERIFICATION = f"{FE_URL}/verifyEmail/token=" # does not exist / not yet in use! reserved for future development
+LINK_PASSWORD_RESET = f"{FE_URL}/resetPassword"
+LINK_CONFIRM_PASSWORD_CHANGE = f"{FE_URL}/setNewPw"
+LINK_CONFIRM_EMAIL_CHANGE_OLD = f"{FE_URL}/confirmEmailChange"
+LINK_CONFIRM_EMAIL_CHANGE_NEW = f"{FE_URL}/confirmNewEmail"
+LINK_EMAIL_VERIFICATION = f"{FE_URL}/verifyEmail" # does not exist / not yet in use! reserved for future development
 
-purpose_urd_dic = {
-    "pw_change": LINK_CONFIRM_PASSWORD_CHANGE,
+purpose_url_dic = {
+    "pw_reset": LINK_PASSWORD_RESET,
+    "pw_change": LINK_CONFIRM_PASSWORD_CHANGE, #check if needed
     "email_change_old_email": LINK_CONFIRM_EMAIL_CHANGE_OLD,
     "email_change_new_email": LINK_CONFIRM_EMAIL_CHANGE_NEW,
     "email_verification" : LINK_EMAIL_VERIFICATION,
 }
+URL_SUFFIX_TOKEN = "/token="
 
 def create_verification_url(token: str, purpose: TokenPurpose) -> str:
     """
@@ -42,12 +45,15 @@ def create_verification_url(token: str, purpose: TokenPurpose) -> str:
     Generates a verification URL based on the purpose and token.
 
     **Parameters**:
-        token (str): The signed token to include in the URL.
+        token (str): The unsigned token to include in the URL.
         purpose (TokenPurpose): An enum value representing the purpose of the verification 
-                                (e.g., `TokenPurpose.PW_CHANGE`).
+                                (e.g., `TokenPurpose.PW_RESET`).
 
     **Returns:**
-        str: A string representing the full verification URL.
+        dic: with keys:
+        - "url", base link without the token ending,
+        - "token_url", the url containing the the token at the end of the url,
+        - "signed_token" will return the signed token.
     
     ----------------
 
@@ -55,23 +61,33 @@ def create_verification_url(token: str, purpose: TokenPurpose) -> str:
     ```python
         from app.utils.constants.enum_class import TokenPurpose
 
-        token = "abc123"
-        purpose = TokenPurpose.PW_CHANGE
+        token = "m-cLur0aKWCDLsR-D4RCoEcgAZ7SwN_kA07IaiIMfZg"
+        purpose = TokenPurpose.PW_RESET
         verification_url = create_verification_url(token, purpose)
-        print(verification_url)
-        # Output: "https://example.com//confirmNewEmail/token= ..."
+        print(verification_url["url"])
+        # Output: "https://example.com//resetPassword"
+        print(verification_url["token_url"])
+        # Output: "https://example.com//resetPassword/token=Im0tY0x1cjBhS1dDRExzUi1ENFJDb0VjZ0FaN1N3Tl9rQTA3SWFpSU1mWmci.Z3WQMg.nBm85vaOIsATzVQskCfja412_io"
+        print(verification_url["signed_token"])
+        # Output: "Im0tY0x1cjBhS1dDRExzUi1ENFJDb0VjZ0FaN1N3Tl9rQTA3SWFpSU1mWmci.Z3WQMg.nBm85vaOIsATzVQskCfja412_io"
     ```
     """
     signed_token = sign_token(token, purpose)
 
     # Get the base URL from the dictionary
-    base_url = purpose_urd_dic.get(purpose.value)
-    if not base_url:
+    url = purpose_url_dic.get(purpose.value)
+    if not url:
         raise ValueError(f"No URL mapped for purpose '{purpose.value}'")
     
-    url = f"{base_url}{signed_token}"
+    token_url = f"{url}{URL_SUFFIX_TOKEN}{signed_token}"
 
-    return url
+    data = {
+        "url": url,
+        "token_url": token_url,
+        "signed_token": signed_token
+    }
+
+    return data
 
 
 
