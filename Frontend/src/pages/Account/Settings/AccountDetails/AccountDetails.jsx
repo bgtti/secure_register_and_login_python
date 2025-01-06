@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
 import ModalAccountDetailChange from "./ModalAccountDetailChange";
 import ModalChangeName from "./ModalChangeName";
+import ModalChangePassword from "./ModalChangePassword";
 
 /** 
  * @constant
@@ -37,6 +38,9 @@ function AccountDetails(props) {
     //State of modal that changes user's name
     const [modalChangeName, setModalChangeName] = useState(false)
 
+    //State of modal that changes user's password
+    const [modalChangePassword, setModalChangePassword] = useState(false)
+
     //Desired modal action of modalChangeCreds (ie: what credential to be changed)
     const [accountAction, setAccountAction] = useState("")
 
@@ -51,6 +55,9 @@ function AccountDetails(props) {
     const modalChangeNameContent = modalChangeName && (
         <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
     );
+    const modalChangePasswordContent = modalChangePassword && (
+        <ModalChangePassword modalToggler={toggleModalChangePassword} user={user} />
+    );
 
     //Action selection
     function selectAccountAction(action) {
@@ -64,6 +71,10 @@ function AccountDetails(props) {
 
     function toggleModalChangeName() {
         setModalChangeName(!modalChangeName);
+    }
+
+    function toggleModalChangePassword() {
+        setModalChangePassword(!modalChangePassword);
     }
 
     return (
@@ -84,6 +95,15 @@ function AccountDetails(props) {
                         content={modalChangeNameContent}
                         modalStatus={modalChangeName}
                         setModalStatus={setModalChangeName} />
+                )
+            }
+            {
+                modalChangePassword && (
+                    <Modal
+                        title={`Change Password`}
+                        content={modalChangePasswordContent}
+                        modalStatus={modalChangePassword}
+                        setModalStatus={setModalChangePassword} />
                 )
             }
 
@@ -109,7 +129,7 @@ function AccountDetails(props) {
 
             <p><b>Password:</b> ********</p>
             <div>
-                <button onClick={() => { selectAccountAction("password"); toggleModalCred() }}>
+                <button onClick={toggleModalChangePassword}>
                     Change password
                 </button>
             </div>

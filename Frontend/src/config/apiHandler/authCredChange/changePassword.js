@@ -62,8 +62,6 @@ export function changePassword(data) {
         message: "Error: Invalid input."
     };
 
-    console.log(data)
-
     // checking required data
     const newPassword = data.newPassword ? data.newPassword : false;
     const pwChangeReason = data.pwChangeReason ? data.pwChangeReason : false;
@@ -93,7 +91,7 @@ export function changePassword(data) {
         if (!data.oldPassword) { return Promise.resolve(errorResponse) };
         let oldPwIsValid = passwordValidation(data.oldPassword);
         if (!oldPwIsValid.response) { return Promise.resolve(errorResponse) };
-        requestData.old_password = data.otp
+        requestData.old_password = data.oldPassword
         // if "reset", signed token will be required
     } else if (pwChangeReason == REASON[1]) {
         if (!data.signedToken || !tokenFormatIsValid(data.signedToken)) { return Promise.resolve(errorResponse) };

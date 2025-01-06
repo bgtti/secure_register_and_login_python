@@ -20,6 +20,7 @@ import InputOtp from "../../../components/Auth/InputOtp.jsx";
  * The user will be prompted to give a news password.
  * If MFA is enable on the user's account, the server will respond with 202 and the user will also be asked to input an OTP sent to the user's recovery email address.
  * 
+ * @requires parameter in the url named "token="
  * @returns {React.ReactElement}
  */
 function ResetPassword() {
@@ -56,6 +57,7 @@ function ResetPassword() {
 
     // Form is valid when all fields are valid and api call did not return error
     const formIsValid = mfaStep2 ? (passwordIsValid && confirmPasswordIsValid && otpIsValid && infoMessage === "") : (passwordIsValid && confirmPasswordIsValid && infoMessage === "")
+    const passwordsMatch = (password === confirmPassword)
 
     //if a form error was shown, hide it when the user starts to correct the input
     useEffect(() => {
@@ -64,11 +66,14 @@ function ResetPassword() {
         }
     }, [password, confirmPassword, otp]);
 
+    //CONSIDER: add mechanism that user cannot send OTP requests: see Settings>Details>Modal change password to see functionality.
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formIsValid) { setInfoMessage("Check credentials."); }
+        if (!formIsValid) { setInfoMessage("Check credentials."); return }
         if (!tokenFormatIsValid(tokenInUrl)) { setInfoMessage("Token format invalid."); }
+        if (!passwordsMatch) { setInfoMessage("Passwords do not match: New Password should be idetical to Confirm Password."); return }
 
         let requestData = {
             "newPassword": password,
