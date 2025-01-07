@@ -26,6 +26,14 @@ export const userSlice = createSlice({
             state.acctVerified = state.acctVerified;
             state.mfa = state.mfa;
         },
+        setUserEmail: (state, action) => {
+            state.loggedIn = state.loggedIn;
+            state.access = state.access;
+            state.email = action.payload;
+            state.name = state.name;
+            state.acctVerified = state.acctVerified;
+            state.mfa = state.mfa;
+        },
         setUserAcctVerification: (state, action) => {
             state.loggedIn = state.loggedIn;
             state.access = state.access;
@@ -63,7 +71,7 @@ export const userSlice = createSlice({
 
 const userReducer = userSlice.reducer;
 
-export const { setUserName, setUserAcctVerification, setUserMfa, setUser, setUserLogout } = userSlice.actions;
+export const { setUserName, setUserEmail, setUserAcctVerification, setUserMfa, setUser, setUserLogout } = userSlice.actions;
 export default userReducer;
 
 // Example usage:

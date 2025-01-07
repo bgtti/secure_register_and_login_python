@@ -1,5 +1,5 @@
 import { store } from "../store"
-import { setUser, setUserLogout, setUserName, setUserMfa, setUserAcctVerification } from "../user/userSlice";
+import { setUser, setUserEmail, setUserLogout, setUserName, setUserMfa, setUserAcctVerification } from "../user/userSlice";
 import { USER_ACCESS_TYPES } from "../../utils/constants"
 import { stringToBool } from "../../utils/helpers"
 
@@ -65,7 +65,7 @@ export function setReduxLogOutUser() {
 /**
  * Function changes user's name in the redux store.
  * 
- * Accepts no parameters and returns a boolean indicating success.
+ * Accepts the name as parameter and returns a boolean indicating success.
  * 
  * @param {string} name //"John"
  * @returns {boolean}
@@ -77,6 +77,26 @@ export function setReduxUserName(name) {
         return true;
     } else {
         console.error("Redux encountered an error: user's name invalid")
+        store.dispatch(setUserLogout());
+        return false;
+    }
+}
+
+/**
+ * Function changes user's email in the redux store.
+ * 
+ * Accepts the new email as parameter and returns a boolean indicating success.
+ * 
+ * @param {string} email //"John"
+ * @returns {boolean}
+ */
+export function setReduxUserEmail(email) {
+    let dataIsValid = email !== ""
+    if (dataIsValid) {
+        store.dispatch(setUserEmail(email));
+        return true;
+    } else {
+        console.error("Redux encountered an error: user's email invalid")
         store.dispatch(setUserLogout());
         return false;
     }
@@ -108,7 +128,7 @@ export function setReduxUserAcctVerification(acctVerified) {
  * 
  * Accepts no parameters and returns a boolean indicating success.
  * 
- * @param {string} acctVerified //[true, false]
+ * @param {string} mfaEnabled //[true, false]
  * @returns {boolean}
  */
 export function setReduxUserMfa(mfaEnabled) {

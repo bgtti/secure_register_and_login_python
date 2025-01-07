@@ -15,6 +15,7 @@ import Contact from "../pages/Contact/Contact";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import ResetPasswordNoToken from "../pages/Auth/ResetPassword/ResetPasswordNoToken"
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
+import ChangeEmailNoToken from "../pages/Auth/ChangeEmail/ChangeEmailNoToken"
 import AccountDeleted from "../pages/AccountDeleted/AccountDeleted";
 //Pages: protected route (registered users)
 import UserAccount from "../pages/Account/AccountMain"
@@ -37,14 +38,10 @@ import ProtectedUserRoute from "./ProtectedUserRoute";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
 //include about page
-//include contact page
 //include privacy policy page
 //include terms and conditions page
 //include cookie policy page
 //include FAQ page
-
-// TODO: confirm email page
-// TODO: change password page
 
 // TODO: separation of user and admin logic
 // TODO: urls and relative urls in shared files with BE
@@ -70,6 +67,8 @@ const Router = () => {
                 <Route exact path="resetPassword" element={<ResetPasswordNoToken />} />
                 <Route exact path="resetPassword/:token" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
+                <Route exact path="confirmEmailChange" element={<ChangeEmailNoToken />} />
+                <Route exact path="confirmNewEmail" element={<ChangeEmailNoToken />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
                 <Route exact path="accountDeleted" element={<AccountDeleted />} />

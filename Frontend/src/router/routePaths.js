@@ -21,6 +21,8 @@ export const PATH_TO = {
     signup: "/signup",
     forgotPassword: "/forgotPassword",
     resetPassword: "/resetPassword/token=",
+    emailChangeConfirmEmail: "/confirmEmailChange/token=",
+    emailChangeConfirmNewEmail: "/confirmNewEmail/token=",
     //Protected routes
     userAccount: "/userAccount",
     //Admin routes

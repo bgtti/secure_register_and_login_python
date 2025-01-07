@@ -539,6 +539,15 @@ class User(db.Model, UserMixin):
         else:
             logging.error(f"User account could not be verified. It is possible the account has been verified before. email_is_verified = {self.email_is_verified}. Check User model.")
             return False
+    
+    def check_if_account_is_verified(self) -> bool:
+        """
+        Checks if the user has a verified account.
+
+        Returns:
+            bool: True if the email has been verified, False otherwise.
+        """
+        return self.email_is_verified == modelBool.TRUE
 
     def change_email(self) -> bool:
         """

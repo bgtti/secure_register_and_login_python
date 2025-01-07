@@ -178,69 +178,6 @@ change_name_schema = {
     "required": ["new_name"]
 }
 
-req_auth_change_schema = {
-    "type": "object",
-    "title": "Request a change of user password or email. First step of 2-step process.", 
-    "properties": {
-        "type": {
-            "description": "Request type can be either 'email' or 'password'. ",
-            "type": "string",
-            "enum": ["email", "password"],
-            },
-        "new_email": {
-            "type": "string", 
-            "minLength": INPUT_LENGTH['email']['minValue'], 
-            "maxLength": INPUT_LENGTH['email']['maxValue'],
-            "pattern": EMAIL_PATTERN
-            },
-        "user_agent": {
-            "type": "string", 
-            "minLength": 0, 
-            "maxLength": 255 #TODO get regex pattern
-            }
-        # "new_password": {
-        #     "type": "string", 
-        #     "minLength":  INPUT_LENGTH['password']['minValue'], 
-        #     "maxLength": INPUT_LENGTH['password']['maxValue'], 
-        #     "pattern": PASSWORD_PATTERN
-        #     },
-    },
-    "additionalProperties": False,
-    "required": ["type"]
-}
-
-req_token_validation_schema = {
-    "type": "object",
-    "title": "Validate a token that leads to password or email change.", 
-    "properties": {
-        "signed_token": {
-            "description": "The signed token",
-            "type": "string",
-            "minLength": INPUT_LENGTH['signed_token']['minValue'],
-            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
-            },
-        "purpose": {
-            "description": "Token purpose can be one of: TokenPurpose enum. This should answer the questions: what is this token validating? ",
-            "type": "string",
-            "enum": token_purpose_values,
-            },
-        "new_password": {
-            "description": "New password only required if the purpose is to change passwords",
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['password']['minValue'], 
-            "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
-            },
-        # "user_agent": {
-        #     "type": "string", 
-        #     "minLength": 0, 
-        #     "maxLength": 255 #TODO get regex pattern
-        #     },
-    },
-    "additionalProperties": False,
-    "required": ["signed_token", "purpose"]
-}
-
 ####################################
 #         RECOVERY SCHEMAS         #
 ####################################
@@ -474,3 +411,64 @@ change_password_schema = {
     "additionalProperties": False,
     "required": ["new_password", "pw_change_reason", "is_first_factor", "honeypot"]
 }
+
+change_email_schema = {
+    "type": "object",
+    "title": "Will change a user's email or start the process by sending email tokens",
+    "properties": {
+        "new_email": {
+            "description": "The email the user wants to change to.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['email']['minValue'], 
+            "maxLength": INPUT_LENGTH['email']['maxValue'], 
+            "pattern": EMAIL_PATTERN},
+        "password": {
+            "description": "Can accept passwords only.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['password']['minValue'], # should be the same as OTP length
+            "maxLength": INPUT_LENGTH['password']['maxValue'], 
+            "pattern": PASSWORD_PATTERN
+            },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. Optional.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            },
+        
+    },
+    "additionalProperties": False,
+    "required": ["new_email", "password"]
+}
+
+change_email_token_validation_schema = {
+    "type": "object",
+    "title": "Will change a user's email or start the process by sending email tokens",
+    "properties": {
+        "signed_token": {
+            "description": "The signed token",
+            "type": "string",
+            "minLength": INPUT_LENGTH['signed_token']['minValue'],
+            "maxLength": INPUT_LENGTH['signed_token']['maxValue'],
+            },
+        "purpose": {
+            "description": "Token purpose can be one of: TokenPurpose enum. This should answer the questions: what is this token validating? ",
+            "type": "string",
+            "enum": token_purpose_values,
+            },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. Optional.",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            },
+        
+    },
+    "additionalProperties": False,
+    "required": ["signed_token", "purpose"]
+}
+
+
+
+
+

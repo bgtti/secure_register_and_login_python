@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { PATH_TO } from "../../../router/routePaths.js"
@@ -7,7 +7,7 @@ import InputToken from "../../../components/Auth/InputToken.jsx";
 /**
  * Component returns Reset Password No Token page
  * 
- * When a password reset is requested, user should get an email with a putton leading to the reset password page and a link to be pasted in the browser in case the button does not redirect.
+ * When a password reset is requested, user should get an email with a button leading to the reset password page and a link to be pasted in the browser in case the button does not redirect.
  * This is the link page, where the user has to input the token manually on the page because the button with the full link including token did not work.
  * 
  * This component will re-direct to the Reset Password page.

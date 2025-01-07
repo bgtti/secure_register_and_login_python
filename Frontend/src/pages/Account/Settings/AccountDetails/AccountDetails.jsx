@@ -1,25 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PropTypes } from "prop-types";
 import Modal from "../../../../components/Modal/Modal";
-import ModalAccountDetailChange from "./ModalAccountDetailChange";
+import ModalChangeEmail from "./ModalChangeEmail";
 import ModalChangeName from "./ModalChangeName";
 import ModalChangePassword from "./ModalChangePassword";
 
-/** 
- * @constant
- * @type {string[]}
- * @default 
- * // Use to define action the modal should take 
- * //(ie: what account credential should be changed)
- * ACCOUNT_ACTIONS =["name","email","password"]
-*/
-const ACCOUNT_ACTIONS = ["name", "email", "password"]
-
-
 /**
- * Component returns section with UI for a user's account deletion
- * 
- * @todo component functionality implementation of change password missing
+ * Component returns section with UI for a user's account details
  * 
  * @param {object} props
  * @param {object} props.user 
@@ -32,78 +19,62 @@ const ACCOUNT_ACTIONS = ["name", "email", "password"]
 function AccountDetails(props) {
     const { user } = props;
 
-    //State of modal that changes account credentials (boolean defines whether or not to show modal)
-    const [modalChangeCreds, setModalChangeAcctCreds] = useState(false)
-
-    //State of modal that changes user's name
-    const [modalChangeName, setModalChangeName] = useState(false)
+    //State of modal that changes user's email
+    const [modalChangeEmail, setModalChangeEmail] = useState(false)
 
     //State of modal that changes user's password
     const [modalChangePassword, setModalChangePassword] = useState(false)
 
-    //Desired modal action of modalChangeCreds (ie: what credential to be changed)
-    const [accountAction, setAccountAction] = useState("")
-
-    //Css class to hide/show modal
-    modalChangeCreds ? document.body.classList.add("Modal-active") : document.body.classList.remove("Modal-active");
-    // TODO: css class for other model..?
-
-    //Modal content
-    const modalChangeCredsContent = modalChangeCreds && accountAction !== "" && (
-        <ModalAccountDetailChange action={accountAction} modalToggler={toggleModalCred} />
-    );
-    const modalChangeNameContent = modalChangeName && (
-        <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
-    );
-    const modalChangePasswordContent = modalChangePassword && (
-        <ModalChangePassword modalToggler={toggleModalChangePassword} user={user} />
-    );
-
-    //Action selection
-    function selectAccountAction(action) {
-        ACCOUNT_ACTIONS.includes(action.toLowerCase()) ? setAccountAction(action) : setAccountAction("");
-    }
+    //State of modal that changes user's name
+    const [modalChangeName, setModalChangeName] = useState(false)
 
     //Modal state toggle
-    function toggleModalCred() {
-        setModalChangeAcctCreds(!modalChangeCreds);
-    }
 
-    function toggleModalChangeName() {
-        setModalChangeName(!modalChangeName);
+    function toggleModalChangeEmail() {
+        setModalChangeEmail(!modalChangeEmail);
     }
 
     function toggleModalChangePassword() {
         setModalChangePassword(!modalChangePassword);
     }
 
+    function toggleModalChangeName() {
+        setModalChangeName(!modalChangeName);
+    }
+
     return (
         <section className="AccountSettings-Section1">
             {
-                modalChangeCreds && accountAction !== "" && (
+                modalChangeEmail && (
                     <Modal
-                        title={`Change ${accountAction}`}
-                        content={modalChangeCredsContent}
-                        modalStatus={modalChangeCreds}
-                        setModalStatus={setModalChangeAcctCreds} />
-                )
-            }
-            {
-                modalChangeName && (
-                    <Modal
-                        title={`Change Name`}
-                        content={modalChangeNameContent}
-                        modalStatus={modalChangeName}
-                        setModalStatus={setModalChangeName} />
+                        title={`Change Email`}
+                        content={
+                            <ModalChangeEmail modalToggler={toggleModalChangeEmail} user={user} />
+                        }
+                        modalStatus={modalChangeEmail}
+                        setModalStatus={setModalChangeEmail} />
                 )
             }
             {
                 modalChangePassword && (
                     <Modal
                         title={`Change Password`}
-                        content={modalChangePasswordContent}
+                        content={
+                            <ModalChangePassword modalToggler={toggleModalChangePassword} user={user} />
+                        }
                         modalStatus={modalChangePassword}
                         setModalStatus={setModalChangePassword} />
+                )
+            }
+            {
+                modalChangeName && (
+                    <Modal
+                        title={`Change Name`}
+                        content={
+                            <ModalChangeName modalToggler={toggleModalChangeName} user={user} />
+                        }
+                        modalStatus={modalChangeName}
+                        setModalStatus={setModalChangeName} />
                 )
             }
 
@@ -111,7 +82,7 @@ function AccountDetails(props) {
             <p><b>Name:</b> {user.name}</p>
 
             <div>
-                <button onClick={() => { toggleModalChangeName() }}>
+                <button aria-label="Change Name Modal" onClick={toggleModalChangeName}>
                     Change name
                 </button>
             </div>
@@ -120,7 +91,7 @@ function AccountDetails(props) {
 
             <p><b>Email:</b> {user.email}</p>
             <div>
-                <button onClick={() => { selectAccountAction("email"); toggleModalCred() }}>
+                <button aria-label="Change Email Modal" onClick={toggleModalChangeEmail}>
                     Change email
                 </button>
             </div>
@@ -129,7 +100,7 @@ function AccountDetails(props) {
 
             <p><b>Password:</b> ********</p>
             <div>
-                <button onClick={toggleModalChangePassword}>
+                <button aria-label="Change Password Modal" onClick={toggleModalChangePassword}>
                     Change password
                 </button>
             </div>

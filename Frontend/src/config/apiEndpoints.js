@@ -19,11 +19,10 @@ export const apiEndpoints = {
     //authentication -- credential change
     resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //OK
     changePassword: `${urlPrefix.auth}/change_password`, //OK
+    changeEmail: `${urlPrefix.auth}/change_email`, //OK (test unvalidated account)
+    changeEmailTokenVerification: `${urlPrefix.auth}/email_change_token_validation`, //OK
     //authentication -- profile
     acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
-    acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //MISSING, CHANGE
-    acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
-    acctChangePassword: `${urlPrefix.auth}/...`, //MISSING, CHANGE
     //authentication -- recovery
     setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
     getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
