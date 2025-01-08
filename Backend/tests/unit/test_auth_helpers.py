@@ -1,4 +1,4 @@
-from app.routes.auth.auth_helpers import anonymize_email, is_good_password
+from app.routes.auth.helpers_general.helpers_auth import anonymize_email, is_good_password
 
 # def split_at_last_at(string):
 #     part1, part2 = string.rsplit('@', 1)

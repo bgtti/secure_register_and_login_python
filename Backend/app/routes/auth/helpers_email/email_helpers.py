@@ -14,8 +14,8 @@ from config.values import EMAIL_CREDENTIALS
 APP_NAME = "[SafeDev]"
 
 # Templates for emails
-BLOCKED_BY_ADMIN_REMINDER = "emails/blocked_by_admin_reminder.html"
-OTP = "emails/otp.html"
+BLOCKED_BY_ADMIN_REMINDER = "emails/auth/blocked_by_admin_reminder.html"
+OTP = "emails/auth/otp.html"
 
 ####################################
 #      ONE-TIME PASSWORD / OTP     #

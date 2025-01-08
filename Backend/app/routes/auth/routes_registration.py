@@ -4,7 +4,7 @@
 auth/routes_registration.py contains routes responsible for the user account's existence.
 Here you will find the following routes:
 - **signup** route creates the user's account
-- **delete_user_acct** route #=> TODO
+- **delete_user_acct** deteles the user's account
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -38,27 +38,27 @@ from app.extensions.extensions import db, limiter, flask_bcrypt
 
 # Database models
 from app.models.user import User
-from app.models.token import Token
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import TokenPurpose, modelBool
+from app.utils.constants.enum_class import modelBool
 from app.utils.detect_html.detect_html import check_for_html
-from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.log_event_utils.log import log_event
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-from app.utils.token_utils.sign_and_verify import verify_signed_token
-from app.utils.token_utils.verification_urls import create_verification_url
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.auth_helpers import get_hashed_pw, get_user_or_none, user_name_is_valid, reset_user_session
-from app.routes.auth.email_helpers_registration import (
+from app.routes.auth.helpers_general.helpers_auth import (
+    get_hashed_pw, 
+    get_user_or_none, 
+    user_name_is_valid, 
+    reset_user_session
+    )
+from app.routes.auth.helpers_email.email_helpers_registration import (
     send_email_acct_exists,
     send_email_acct_created,
     send_email_acct_deleted
-
 )
 from app.routes.auth.schemas import (
     signup_schema,

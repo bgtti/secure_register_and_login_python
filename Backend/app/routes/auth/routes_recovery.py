@@ -2,9 +2,16 @@
 **ABOUT THIS FILE**
 
 auth/routes_recovery.py contains routes responsible for a user's account recovery.
+
 Here you will find the following routes:
-- **set_recovery_email** sets second email in case user looses access to his/her registered email
-- **recover_account** TODO: not implemented
+- **set_recovery_email** sets second email in case user looses access to his/her registered email. Also used to change a recovery email.
+- **get_recovery_status** sends information about whether the user has a recovery email set (and if so, the anonimyzed version of it).
+- **get_recovery_email** sends the full recovery email when requested.
+- **delete_recovery_email** deletes the recovery email stored.
+
+A recovery email is especially important for users who have MFA set in their accounts. The reason is that if those users forget their passwords, the recovery email is the only way to reset their passwords. The front end suggests to the user to contact support otherwise.
+
+TODO: make sure to implement the logic for when a user with MFA to regain access to their account using the recovery email when they lose access to their email address (ie: have no access to their OTP).
 
 The format of data sent by the client is validated using Json Schema. 
 Reoutes receiving client data are decorated with `@validate_schema(name_of_schema)` for this purpose. 
@@ -12,9 +19,7 @@ Reoutes receiving client data are decorated with `@validate_schema(name_of_schem
 ------------------------
 ## More information
 
-This app relies on Flask-Login (see `app/extensions`) to handle authentication. It provides user session management, allowing us to track user logins, manage sessions, and protect routes.
-
-Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
+NOTE: whomever uses this template should make sure to establish guidelines for the support team on how to proceed in case the user has MFA set up but no recovery email - and the user then looses access to their account.
 
 ------------------------
 ## Route testing
@@ -27,34 +32,31 @@ Status:
 
 # Python/Flask libraries
 import logging
-from datetime import datetime, timezone
 from flask import request, jsonify
 
 # Extensions and third-party libs
 from flask_login import (
     current_user,
-    login_user as flask_login_user,
     login_required,
-    logout_user as flask_logout_user,
 )
-from app.extensions.extensions import db, cipher, flask_bcrypt, limiter, login_manager
+from app.extensions.extensions import db, flask_bcrypt, limiter
 
 # Database models
 from app.models.user import User
 
 # Utilities
-from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.log_event_utils.log import log_event
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import anonymize_email
-from app.routes.auth.email_helpers_recovery import send_email_recovery_set, send_email_recovery_deletion, send_email_recovery_change, send_email_change_and_set_recovery
+from app.routes.auth.helpers_general.helpers_auth import anonymize_email
+from app.routes.auth.helpers_email.email_helpers_recovery import (
+    send_email_recovery_set, 
+    send_email_recovery_deletion, 
+    send_email_change_and_set_recovery
+    )
 from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
 
 # Blueprint

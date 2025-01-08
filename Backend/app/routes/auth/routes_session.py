@@ -44,10 +44,7 @@ from flask_login import (
     login_required,
     logout_user as flask_logout_user,
 )
-from app.extensions.extensions import db, flask_bcrypt, limiter, login_manager
-
-# Database models
-# from app.models.user import User
+from app.extensions.extensions import db, flask_bcrypt, limiter
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
@@ -58,8 +55,11 @@ from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import check_if_user_blocked, get_user_or_none, reset_user_session
-from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
+from app.routes.auth.helpers_general.helpers_auth import (
+    check_if_user_blocked, 
+    get_user_or_none, 
+    reset_user_session)
+from app.routes.auth.helpers_email.email_helpers import send_email_admin_blocked, send_otp_email
 from app.routes.auth.schemas import login_schema, get_otp_schema
 
 # Blueprint

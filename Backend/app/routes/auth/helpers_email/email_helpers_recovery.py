@@ -23,7 +23,7 @@ RECOVERY_EMAIL_CHANGE = "emails/auth_recovery/recovery_email_changed.html"
 #       SET RECOVERY EMAIL         #
 ####################################
 
-def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str) -> bool:
+def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str) -> None:
     """
     Sends emails to inform the user about setting a recovery email successfully.
 
@@ -36,8 +36,7 @@ def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str
         recovery_email (str): The user's recovery email address.
 
     **Returns:**
-        - `True` if both emails were sent successfully.
-        - `False` if sending any of the emails failed.
+        The function does not return any value
     
     -----------------------------------------------------------------------------
     **Example usage:**
@@ -46,51 +45,12 @@ def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str
         acct_email = "acct.mail@example.com"
         recovery_email = "recover.acct.mail@example.com"
 
-        success = send_email_change_sucess_emails(user_name, acct_email, recovery_email)
-
-        if success:
-            print("Emails sent successfully!")
-        else:
-            print("Failed to send emails.")
+        send_email_change_sucess_emails(user_name, acct_email, recovery_email)
     """
     if EMAIL_CREDENTIALS["email_set"] == False:
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
         return False
 
-
-    # def send_mail(recipient):
-    #     email_body = render_template(
-    #         RECOVERY_EMAIL_ADDED, # email template name 
-    #         user_name=user_name,
-    #         acct_email=acct_email,
-    #         recovery_email = recovery_email,
-    #     )
-    #     email_message = EmailMessage(
-    #         subject = f"{APP_NAME} Recovery email set ",
-    #         sender = EMAIL_CREDENTIALS["email_address"],
-    #         recipients = [recipient]
-    #     )
-    #     email_message.html = email_body
-
-    #     try:
-    #         with mail.connect() as conn:
-    #             conn.send(email_message)
-    #     except Exception as e:
-    #         logging.error(f"Could not send email to {recipient}. Error: {e}")
-    #         return False
-        
-    #     logging.info(f"Message sent to {recipient}.")
-    #     return True
-    
-    # # Sending email to both old and new accounts
-    # email_1_sent = send_mail(acct_email)
-    # email_2_sent = send_mail(recovery_email)
-    
-    # if email_1_sent and email_2_sent:
-    #     return True
-
-    # return False
-    # Sending email to both email accounts
     with mail.connect() as conn:
         for num in range(2):
             recipient = acct_email if num == 0 else recovery_email
@@ -114,7 +74,7 @@ def send_email_recovery_set(user_name: str, acct_email: str, recovery_email: str
 ####################################
 #      DELETE RECOVERY EMAIL       #
 ####################################
-def send_email_recovery_deletion(user_name: str, acct_email: str, old_recovery_email: str) -> bool:
+def send_email_recovery_deletion(user_name: str, acct_email: str, old_recovery_email: str) -> None:
     """
     Sends emails to inform the user about deleting a recovery email successfully.
 
@@ -127,8 +87,7 @@ def send_email_recovery_deletion(user_name: str, acct_email: str, old_recovery_e
         old_recovery_email (str): The user's recovery email address.
 
     **Returns:**
-        - `True` if both emails were sent successfully.
-        - `False` if sending any of the emails failed.
+        The function does not return any value
     
     -----------------------------------------------------------------------------
     **Example usage:**
@@ -137,49 +96,12 @@ def send_email_recovery_deletion(user_name: str, acct_email: str, old_recovery_e
         acct_email = "acct.mail@example.com"
         old_recovery_email = "recover.acct.mail@example.com"
 
-        success = send_email_recovery_deletion(user_name, acct_email, old_recovery_email)
-
-        if success:
-            print("Emails sent successfully!")
-        else:
-            print("Failed to send emails.")
+        send_email_recovery_deletion(user_name, acct_email, old_recovery_email)
     """
     if EMAIL_CREDENTIALS["email_set"] == False:
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
         return False
 
-
-    # def send_mail(recipient):
-    #     email_body = render_template(
-    #         RECOVERY_EMAIL_DELETED, # email template name 
-    #         user_name=user_name,
-    #         acct_email=acct_email,
-    #         old_recovery_email = old_recovery_email,
-    #     )
-    #     email_message = EmailMessage(
-    #         subject = f"{APP_NAME} Recovery email address removed ",
-    #         sender = EMAIL_CREDENTIALS["email_address"],
-    #         recipients = [recipient]
-    #     )
-    #     email_message.html = email_body
-
-    #     try:
-    #         mail.send(email_message)
-    #     except Exception as e:
-    #         logging.error(f"Could not send email to {recipient}. Error: {e}")
-    #         return False
-        
-    #     logging.info(f"Message sent to {recipient}.")
-    #     return True
-    
-    # # Sending email to both old and new accounts
-    # email_1_sent = send_mail(acct_email)
-    # email_2_sent = send_mail(old_recovery_email)
-    
-    # if email_1_sent and email_2_sent:
-    #     return True
-
-    # return False
     # Sending email to both email accounts
     with mail.connect() as conn:
         for num in range(2):
@@ -204,7 +126,7 @@ def send_email_recovery_deletion(user_name: str, acct_email: str, old_recovery_e
 ####################################
 #      CHANGE RECOVERY EMAIL       #
 ####################################
-def send_email_recovery_change(user_name: str, acct_email: str, old_recovery_email: str) -> bool:
+def send_email_recovery_change(user_name: str, acct_email: str, old_recovery_email: str) -> None:
     """
     Sends emails to inform the user about changing a recovery email successfully.
 
@@ -218,8 +140,7 @@ def send_email_recovery_change(user_name: str, acct_email: str, old_recovery_ema
         old_recovery_email (str): The user's recovery email address.
 
     **Returns:**
-        - `True` if both emails were sent successfully.
-        - `False` if sending any of the emails failed.
+        The function does not return any value
     
     -----------------------------------------------------------------------------
     **Example usage:**
@@ -228,42 +149,12 @@ def send_email_recovery_change(user_name: str, acct_email: str, old_recovery_ema
         acct_email = "acct.mail@example.com"
         old_recovery_email = "recover.acct.mail@example.com"
 
-        success = send_email_recovery_change(user_name, acct_email, old_recovery_email)
-
-        if success:
-            print("Emails sent successfully!")
-        else:
-            print("Failed to send emails.")
+        send_email_recovery_change(user_name, acct_email, old_recovery_email)
     """
     if EMAIL_CREDENTIALS["email_set"] == False:
         print_to_terminal("Email credentials not set up. Could not send email.", "RED")
         return False
 
-
-    # def send_mail(recipient):
-    #     email_body = render_template(
-    #         RECOVERY_EMAIL_CHANGE, # email template name 
-    #         user_name=user_name,
-    #         acct_email=acct_email,
-    #         old_recovery_email = old_recovery_email,
-    #     )
-    #     email_message = EmailMessage(
-    #         subject = f"{APP_NAME} Recovery email address changed ",
-    #         sender = EMAIL_CREDENTIALS["email_address"],
-    #         recipients = [recipient]
-    #     )
-    #     email_message.html = email_body
-
-    #     try:
-    #         with mail.connect() as conn:
-    #             conn.send(email_message)
-    #     except Exception as e:
-    #         logging.error(f"Could not send email to {recipient}. Error: {e}")
-    #         return False
-        
-    #     logging.info(f"Message sent to {recipient}.")
-    #     return True
-        # Sending email to both email accounts
     with mail.connect() as conn:
         for num in range(2):
             recipient = acct_email if num == 0 else old_recovery_email
@@ -283,15 +174,6 @@ def send_email_recovery_change(user_name: str, acct_email: str, old_recovery_ema
                 logging.debug(f"Email sent to: {recipient}")
             except Exception as e:
                 logging.error(f"Could not send email to {recipient}. Error: {e}")
-    
-    # Sending email to both old and new accounts
-    # email_1_sent = send_mail(acct_email)
-    # email_2_sent = send_mail(old_recovery_email)
-    
-    # if email_1_sent and email_2_sent:
-    #     return True
-
-    # return False
 
 
 ####################################

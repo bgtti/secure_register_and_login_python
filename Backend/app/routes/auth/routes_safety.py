@@ -12,9 +12,7 @@ Reoutes receiving client data are decorated with `@validate_schema(name_of_schem
 ------------------------
 ## More information
 
-This app relies on Flask-Login (see `app/extensions`) to handle authentication. It provides user session management, allowing us to track user logins, manage sessions, and protect routes.
-
-Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
+Setting MFA does not require the user to have a recovery email address. If the user looses access to their email or password that user will be locked out. The user is informed of this per email. Consider making MFA status dependent on having a recovery method. Alternatively, instruct support on how to verify the user and allow access to the account.
 
 """
 ############# IMPORTS ##############
@@ -40,7 +38,7 @@ from app.utils.salt_and_pepper.helpers import get_pepper
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.email_helpers_safety import (
+from app.routes.auth.helpers_email.email_helpers_safety import (
     send_acct_verification_sucess_email,
     send_email_mfa_set
 )
@@ -138,7 +136,7 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
 @login_required
 @validate_schema(set_mfa_schema)
 @limiter.limit("5/day")
-def set_mfa(): # TODO --> Add to logs so user actions can show in history
+def set_mfa(): 
     """
     **set_mfa() -> JsonType**
 
@@ -207,4 +205,3 @@ def set_mfa(): # TODO --> Add to logs so user actions can show in history
         }
     return jsonify(response_data)
 
-#TODO: consider one function to enable and disable mfa (combine both functions)

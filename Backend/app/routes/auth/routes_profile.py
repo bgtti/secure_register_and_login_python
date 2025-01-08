@@ -2,6 +2,7 @@
 **ABOUT THIS FILE**
 
 auth/routes_profile.py contains routes responsible for profile management functionalities.
+
 Here you will find the following routes:
 - **change_user_name** route changes the user's name in the db
 
@@ -11,7 +12,7 @@ Reoutes receiving client data are decorated with `@validate_schema(name_of_schem
 ------------------------
 ## More information
 
-Email verification relies on token management. For more information about how tokens are used, please refer to the Token db model at app/models/token.py
+In this simple app template, the Name feature functions more as a profile attribute than a core authentication feature. However, since users could potentially set their name to impersonate an administrator or another role, it has been placed in the auth section to maintain control and prevent misuse.
 """
 ############# IMPORTS ##############
 
@@ -35,7 +36,7 @@ from app.utils.detect_html.detect_html import check_for_html
 from app.utils.profanity_check.profanity_check import has_profanity
 
 # Auth helpers
-from app.routes.auth.auth_helpers import user_name_is_valid
+from app.routes.auth.helpers_general.helpers_auth import user_name_is_valid
 from app.routes.auth.schemas import (
     change_name_schema
 )
