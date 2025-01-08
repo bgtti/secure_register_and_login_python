@@ -113,9 +113,11 @@ function ModalSetRecoveryEmail(props) {
             <form onSubmit={handleSubmit} className="ModalAccountDetailChange MAIN-form">
                 <div>
                     <p><i>Two-step verification required: OTP and password</i></p>
-                    <p>You will receive an OTP in the recovery email.</p>
+                    <p>First, input the desired recovery email and request an OTP.</p>
+                    <p>You will then receive the OTP in the recovery email.</p>
                     <p>Please copy and paste it bellow within 30 minutes.</p>
-                    <p>Confirm the password you use to log into your account.</p>
+                    <p>Last, confirm the password you use to log into your account.</p>
+                    <p>Click 'Save' to set the recovery email.</p>
                 </div>
                 <InputEmail
                     autocomplete="email"

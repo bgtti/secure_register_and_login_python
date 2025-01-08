@@ -138,14 +138,9 @@ def set_recovery_email():
     # Send confirmation emails that new recovery has been added 
     if old_recovery_email:
         #TODO: SSL issue not resolved
-        mail_sent = send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
+        send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
     else:
-        try:
-            mail_sent = send_email_recovery_set(user.name, user.email, recovery_email)
-            if not mail_sent:
-                logging.error(f"Failed to send confirmation emails of set account recovery email.")
-        except Exception as e:
-            logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+        send_email_recovery_set(user.name, user.email, recovery_email)
 
     # Anonymize recovery email
     anonymized_recovery_email = anonymize_email(recovery_email)
@@ -321,12 +316,13 @@ def delete_recovery_email():
         return {"response": "Failed to delete recovery email."}, 500
     
     # Send confirmation emails that recovery has been removed
-    try:
-        mail_sent = send_email_recovery_deletion(user.name, user.email, old_recovery_email)
-        if not mail_sent:
-            logging.error(f"Failed to send confirmation emails of set account recovery email.")
-    except Exception as e:
-        logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+    send_email_recovery_deletion(user.name, user.email, old_recovery_email)
+    # try:
+    #     mail_sent = send_email_recovery_deletion(user.name, user.email, old_recovery_email)
+    #     if not mail_sent:
+    #         logging.error(f"Failed to send confirmation emails of set account recovery email.")
+    # except Exception as e:
+    #     logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
 
     response_data = {
             "response":"Recovery email deleted sucessfully!",

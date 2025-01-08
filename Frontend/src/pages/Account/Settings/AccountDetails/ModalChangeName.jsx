@@ -6,7 +6,6 @@ import { setLoader } from "../../../../redux/loader/loaderSlice.js"
 import { acctNameChange } from "../../../../config/apiHandler/authProfile/changeName.js"
 import InputName from "../../../../components/Auth/InputName.jsx"
 import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage.jsx"
-import "./modalAccountDetailChange.css"
 
 /**
  * This component is a modal used to change the user's name.
@@ -83,7 +82,7 @@ function ModalChangeName(props) {
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="ModalChangeName MAIN-form">
+            <form onSubmit={handleSubmit} className="MAIN-form">
 
                 <p >
                     Current name: {user.name}

@@ -9,7 +9,6 @@ import ErrorMessage from "../../../../components/ErrorMessage/ErrorMessage.jsx"
 import HiddenUsername from "../../../../components/Auth/HiddenUsername.jsx";
 import InputPassword from "../../../../components/Auth/InputPassword";
 import InputOtp from "../../../../components/Auth/InputOtp.jsx";
-import "./modalAccountDetailChange.css"
 
 /**
  * This component is a modal used to change the user's password.
