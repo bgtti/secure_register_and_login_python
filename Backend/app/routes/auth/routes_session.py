@@ -33,6 +33,8 @@ Status:
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
+import random
+import time
 from flask import request, jsonify
 
 # Extensions
@@ -42,22 +44,22 @@ from flask_login import (
     login_required,
     logout_user as flask_logout_user,
 )
-from app.extensions.extensions import db, flask_bcrypt, limiter, login_manager
-
-# Database models
-# from app.models.user import User
+from app.extensions.extensions import db, flask_bcrypt, limiter
 
 # Utilities
 from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import LoginMethods,modelBool
+from app.utils.constants.enum_class import AuthMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.auth_helpers import check_if_user_blocked, get_user_or_none, reset_user_session
-from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
+from app.routes.auth.helpers_general.helpers_auth import (
+    check_if_user_blocked, 
+    get_user_or_none, 
+    reset_user_session)
+from app.routes.auth.helpers_email.email_helpers import send_email_admin_blocked, send_otp_email
 from app.routes.auth.schemas import login_schema, get_otp_schema
 
 # Blueprint
@@ -115,7 +117,10 @@ def get_otp():
         return jsonify(error_response), 418
 
     # Check if user exists
-    user = get_user_or_none(email, "get_otp")
+    if current_user.is_anonymous:
+        user = get_user_or_none(email, "get_otp")
+    else:
+        user = get_user_or_none(current_user.email, "get_otp")
 
     # Return success even if user does not exist (to avoid information leakage)
     if user is None:
@@ -124,7 +129,7 @@ def get_otp():
     # Create OTP
     try:
         otp = user.generate_otp()
-        send_otp_email(user.name, otp, user.email)
+        send_otp_email(user.name, otp, email) # not using user.email because otp can be used to confirm recovery email address
     except Exception as e:
         logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
         return jsonify(error_response), 500
@@ -164,10 +169,10 @@ def login_user():
                     "name": "John", 
                     "email": "john@email.com",
                     "access": "user",
-                    "email_is_verified": False
+                    "email_is_verified": False,
+                    "mfa_enabled": False,
                     },
                 "preferences":{
-                    "mfa_enabled": False,
                     "in_mailing_list": False,
                     "night_mode_enabled": True,
                 } 
@@ -189,6 +194,8 @@ def login_user():
     password = json_data["password"]
     method =json_data["method"] # login method can be "otp" or "password"
     honeypot = json_data["honeypot"]
+    is_first_factor = json_data["is_first_factor"]
+    user_agent = json_data.get("user_agent", "") #TODO log this in event
 
     # Filter out bots
     if len(honeypot) > 0:
@@ -196,54 +203,60 @@ def login_user():
         return jsonify(error_response), 418
     
     # Check if user exists
-    invalid_email = False
-    invalid_pw = False
-    user_is_blocked = False
 
     user = get_user_or_none(email, "login")
 
+    # Delay response in case user does not exist
+    # Reason: mitigating timing attacks by introducing randomized delay
     if user is None:
-        invalid_email = True
+        delay = random.uniform(1, 6)
+        time.sleep(delay)
+        return jsonify(error_response), 401
+
+    # Set control variables
+    invalid_pw = False
+    user_is_blocked = False
 
     # Check password or otp accordingly
-    if not invalid_email:
-        if method == LoginMethods.PASSWORD.value:
-            salted_password = user.salt + password + get_pepper(user.created_at)
-            if not flask_bcrypt.check_password_hash(user.password, salted_password):
-                invalid_pw = True
-        elif method == LoginMethods.OTP.value:
-            if user.check_otp(password) is False:
-                print("HHHHERE")
-                invalid_pw = True
     
-        if invalid_pw:
-            # Increment login attempts and block if necessary
-                try:
-                    user.increment_login_attempts()
-                    db.session.commit()
-                except Exception as e:
-                    logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+    if method == AuthMethods.PASSWORD.value:
+        salted_password = user.salt + password + get_pepper(user.created_at)
+        if not flask_bcrypt.check_password_hash(user.password, salted_password):
+            invalid_pw = True
+    elif method == AuthMethods.OTP.value:
+        if user.check_otp(password) is False:
+            invalid_pw = True
+    else:
+        logging.error("Invalid AuthMethods value passed to login function")
+        invalid_pw = True
 
-        blocked_status = check_if_user_blocked(user, get_client_ip(request))
-        user_is_blocked = blocked_status["blocked"]
+    if invalid_pw:
+        # Increment login attempts and block if necessary
+        try:
+            user.increment_login_attempts()
+            db.session.commit()
+        except Exception as e:
+            logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+    blocked_status = check_if_user_blocked(user, get_client_ip(request))
+    user_is_blocked = blocked_status["blocked"]
 
     if user_is_blocked:
         if blocked_status["temporary_block"] is False:
             send_email_admin_blocked(user.name, user.email)
-        return jsonify(blocked_status["message"]), 403
+        return jsonify(blocked_status["message"]), 401 #should be 403, but do not want to give clues
 
-    # If either email and pw/otp are invalid, return
-    if invalid_pw or invalid_email:
+    # If pw/otp is invalid, return
+    if invalid_pw:
         return jsonify(error_response), 401
     
     # MFA: if enabled, handle the step the user is in now
     mfa_enabled = user.mfa_enabled == modelBool.TRUE
 
     if mfa_enabled:
-        is_first_factor = user.first_factor_used == modelBool.FALSE
         if is_first_factor:
-            user.mfa_first_factor_used(LoginMethods(method).name)
-            if method == LoginMethods.PASSWORD.value:
+            user.mfa_first_factor_used(AuthMethods(method).name)
+            db.session.commit()
+            if method == AuthMethods.PASSWORD.value:
                 msg = "Please confirm the OTP sent to your email address."
                 try:
                     otp = user.generate_otp()
@@ -259,7 +272,11 @@ def login_user():
                 }
             return jsonify(res), 202
         else:
-            second_factor_success = user.mfa_second_factor_check(LoginMethods(method).name)
+            # confirm that first factor has indeed been used
+            is_really_first = user.first_factor_used == modelBool.TRUE
+            if is_really_first is False:
+                return jsonify({"response": "First MFA factor was not completed or the request is out of sequence."} ), 422
+            second_factor_success = user.mfa_second_factor_check(AuthMethods(method).name)
             if second_factor_success is False:
                 # Likely the user failed to submit the second factor within a specific time frame
                 res = {"response": "Request Timeout (process abandoned) . Please re-start login process."}
@@ -296,10 +313,10 @@ def login_user():
                 "access": user.access_level.value,
                 "name": user.name, 
                 "email": user.email,
-                "email_is_verified": user.email_is_verified.value
+                "email_is_verified": user.email_is_verified.value,
+                "mfa_enabled": user.mfa_enabled.value
                 },
             "preferences":{
-                "mfa_enabled": user.mfa_enabled.value,
                 "in_mailing_list": user.in_mailing_list.value,
                 "night_mode_enabled": user.night_mode_enabled.value,
             } 
@@ -337,7 +354,7 @@ def logout_user():
     return jsonify({"response":"success"})
 
 ####################################
-#  GET CURRENT USER FROM COOKIE    #
+#   GET CURRENT USER FROM COOKIE   #
 ####################################
 
 @auth.route("/@me")
@@ -363,10 +380,10 @@ def get_current_user():
                     "name": "John", 
                     "email": "john@email.com",
                     "access": "user",
-                    "email_is_verified": False
+                    "email_is_verified": False,
+                    "mfa_enabled": False,
                     }, 
                 "preferences":{
-                    "mfa_enabled": False,
                     "in_mailing_list": True,
                     "night_mode_enabled": False,
                 }
@@ -382,10 +399,10 @@ def get_current_user():
                 "access": user.access_level.value, 
                 "name": user.name, 
                 "email": user.email,
-                "email_is_verified": user.email_is_verified.value
+                "email_is_verified": user.email_is_verified.value,
+                "mfa_enabled": user.mfa_enabled.value,
                 },
             "preferences":{
-                "mfa_enabled": user.mfa_enabled.value,
                 "in_mailing_list": user.in_mailing_list.value,
                 "night_mode_enabled": user.night_mode_enabled.value,
             }

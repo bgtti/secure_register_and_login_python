@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { PATH_TO } from "../../../router/routePaths.js"
 import { setLoader } from "../../../redux/loader/loaderSlice"
-import { loginUser } from "../../../config/apiHandler/authMain/login"
+import { loginUser } from "../../../config/apiHandler/authSession/login"
 import { getOTP } from "../../../config/apiHandler/authSession/otp.js";
 import useIsComponentMounted from "../../../hooks/useIsComponentMounted.js";
 import Honeypot from "../../../components/Honeypot/Honeypot";
 import ErrorMessage from "../../../components/ErrorMessage/ErrorMessage";
-import AuthErrorHint from "../authComponents/AuthErrorHint.jsx";
-import InputEmail from "../authComponents/InputEmail";
-import InputOtp from "../authComponents/InputOtp.jsx";
-import InputPassword from "../authComponents/InputPassword";
+import AuthErrorHint from "../../../components/Auth/AuthErrorHint.jsx";
+import InputEmail from "../../../components/Auth/InputEmail.jsx";
+import InputPassword from "../../../components/Auth/InputPassword";
+import InputOtp from "../../../components/Auth/InputOtp.jsx";
 import "./login.css"
 
 /**
@@ -21,16 +22,16 @@ import "./login.css"
  * Successfull user authentication will re-direct the user to the dashboard.
  * Unsuccessful authentication will lead to error. Some errors will have feedback shown in this component, while others will lead to a re-direct to the error page. Check the axios configurations in the config folder to learn more about this behaviour.
  * 
- * @visibleName LogIn
  * @returns {React.ReactElement}
  * 
- * @todo When user inputs the wrong credentials 3+ times, a timer should be shown to reflect the temporary login block time. Check the login route( user model in the backend to confirm the temporary block time).
  */
 function Login() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const isComponentMounted = useIsComponentMounted();
+
+    const userAgent = navigator.userAgent; //info to be passed on to BE
 
     // Used for honeypot
     const [honeypotValue, setHoneypotValue] = useState("");
@@ -65,6 +66,18 @@ function Login() {
         }
     }, [email, password, otp]);
 
+    //CONSIDER: allow user to click on 'resend' OTP again only 10 seconds after clicking it
+    // useEffect(() => {
+    //     if (otpWasSent) {
+    //         const timer = setTimeout(() => {
+    //             setOtpWasSent(false); // Reset otpWasSent to false after 10 seconds
+    //         }, 10000); // 10000ms = 10 seconds
+
+    //         // Cleanup function to clear the timer if the component unmounts
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [otpWasSent]);
+
     const sendOtp = (e) => {
         e.preventDefault();
         // get rid of previous error messages
@@ -97,7 +110,7 @@ function Login() {
             })
     };
 
-    // TODO review this function after adapting login function in BE
+    // TODO test this component with mfa
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formIsValid) {
@@ -107,20 +120,22 @@ function Login() {
             else { if (otpActive) { method = "otp" } else { method = "password" } }
             const requestData = {
                 email: email,
-                password: otpActive ? otp : password,
+                password: method === "otp" ? otp : password,
                 method: method,
-                honeyPot: honeypotValue
+                honeyPot: honeypotValue,
+                isFirstFactor: !mfaStep2,
+                userAgent: userAgent,
             }
             dispatch(setLoader(true))
             loginUser(requestData)
                 .then(res => {
                     if (isComponentMounted()) {
                         if (res.response) {
-                            if (res.response.status === 202) {
+                            if (res.status === 202) {
                                 setMfaStep2(true)
-                                setMfaMessage(res.response.message)
+                                setMfaMessage(res.message)
                             } else {
-                                navigate("/userAccount");
+                                navigate(PATH_TO.userAccount);
                             }
                         } else {
                             setLoginFailed(res.response);
@@ -141,6 +156,7 @@ function Login() {
     const passwordComponent = (
         <InputPassword
             autocomplete="current-password"
+            cssClass={"MAIN-form-display-table"}
             password={password}
             setPassword={setPassword}
             setPasswordIsValid={setPasswordIsValid}
@@ -149,6 +165,7 @@ function Login() {
 
     const otpComponent = (
         <InputOtp
+            cssClass={"MAIN-form-display-table"}
             otp={otp}
             setOtp={setOtp}
             setOtpIsValid={setOtpIsValid}
@@ -189,6 +206,7 @@ function Login() {
                     email={email}
                     setEmail={setEmail}
                     setEmailIsValid={setEmailIsValid}
+                    cssClass={"MAIN-form-display-table"}
                 />
 
                 {!otpActive && passwordComponent}
@@ -246,8 +264,8 @@ function Login() {
                     </div>
                 ) : (
                     <div className="LogIn-ExtraOpts">
-                        <p>Forgot your password? <a href="/resetPassword">Reset password</a>.</p>
-                        <p>Don't have an account yet? <a href="/signup">Sign up</a>.</p>
+                        <p>Forgot your password? <a href={PATH_TO.forgotPassword}>Reset password</a>.</p>
+                        <p>Don't have an account yet? <a href={PATH_TO.signup}>Sign up</a>.</p>
                     </div>
                 )
             }

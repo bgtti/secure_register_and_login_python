@@ -43,6 +43,24 @@ export const MOST_COMMON_PASSWORDS = [
 ];
 
 /**
+ * Array of reserved names
+ * @readonly
+ * @enum {string[]}
+ * 
+ * Note: The name of the app should also not be used as a name
+ * @todo Substitute the first value of the array with the name of your app if you are using this template.
+ * 
+ * @note When addid/editing this array: Use lower case letters only, as a string will be compared to a value in this list in lower case.
+ * 
+ */
+export const RESERVED_NAMES = [
+    "safedev",
+    "admin",
+    "administrator",
+    "moderator",
+];
+
+/**
  * Input length requirements
  * @readonly
  * @enum {object}
@@ -87,17 +105,6 @@ export const INPUT_LENGTH = Object.freeze({
         maxValue: 300
     }
 })
-
-/**
- * Acct verification status
- * @readonly
- * @enum {Array<boolean|string>}
- */
-export const ACCT_VERIFICATION_STATUS = [
-    true,
-    false,
-    "pending"
-]
 
 /**
  * User access types

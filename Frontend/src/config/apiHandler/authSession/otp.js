@@ -14,19 +14,13 @@ import { emailValidation } from "../../../utils/validation.js";
  * 
  * @param {string} data.email
  * @param {string} data.honeypot
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Input example:
  * const data = {
  *     email: "josy@example.com",
  *     honeypot: ""
- * }
- * 
- * //Original API response:
- * {
- *  "response": "success"
- *   }
  * }
  * 
  * // Response from getOTP:
@@ -56,13 +50,13 @@ export function getOTP(data) {
     };
 
     if (!email) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     };
     // double-checking the data
     const emailIsValid = emailValidation(email);
 
     if (!emailIsValid) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     let requestData = {

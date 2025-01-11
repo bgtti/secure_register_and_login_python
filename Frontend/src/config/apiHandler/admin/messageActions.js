@@ -4,11 +4,6 @@ import { emailValidation } from "../../../utils/validation"
 import { INPUT_LENGTH, FLAG_TYPES } from "../../../utils/constants"
 import { getUTCString, validateDate, dateToYYYYMMDD } from "../../../utils/helpers"
 
-//=> TODO: all api handlers: instead of returning an object when there is a failure, return a promise instead:
-// return Promise.resolve({ success: false }) INSTEAD OF return { success: false };
-// reason: not to throw an error and avoid .finally to be called in the requesting function.
-
-
 /**
  * Function makes api call to set the status of a message (whether an answer is needed or if it is spam) and whether the sender should be marked as a spammer.
  * 
@@ -18,7 +13,7 @@ import { getUTCString, validateDate, dateToYYYYMMDD } from "../../../utils/helpe
  * @param {bool} answerNeeded (true to mark as reply needed)
  * @param {bool} [isSpam] (optional: true to mark message as spam) //= false
  * @param {bool} [senderIsSpammer] (optional:true to mark sender as a spammer) //= false
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Usage:
@@ -42,7 +37,7 @@ export function markMessageAs(messageId, answerNeeded, isSpam = false, senderIsS
 
     if (theId === "" || theAnsNeed === "" || theIsSpam === "" || theIsSpammer === "") {
         console.warn("Improper arguments provided to markMessageAs function.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -55,14 +50,14 @@ export function markMessageAs(messageId, answerNeeded, isSpam = false, senderIsS
         try {
             const response = await apiHandle404.post(apiEndpoints.adminMessageMarkAs, requestData)
             if (response.status === 200) {
-                return { success: true }
+                return Promise.resolve({ success: true })
             } else {
-                return { success: false }
+                return Promise.resolve({ success: false })
             }
         }
         catch (error) {
             console.error("Error marking message as no answer needed:", error);
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 

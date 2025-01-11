@@ -17,44 +17,11 @@ import { MESSAGES_TABLE_REQUEST } from "../../../utils/constants";
  * @param {string} [data.orderSort = "descending"] enum: ["descending", "ascending"]
  * @param {string} [data.filterBy = "all"] enum: ["answer_needed", "answer_not_needed", "all"]
  * @param {boolean} [data.includeSpam = false] 
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Usage:
  * getAllMessages({pageNr: 1, itemsPerPage: 25})
- * 
- * //Original API response:
- * {
- *    "current_page": 1,
- *    "messages": [
- *        {
- *            "id": 1,
- *            "date": "Tue, 09 Jan 2024 21:07:38 GMT",
- *            "sender_name": "John",
- *            "sender_email": "john@example.com",
- *            "sender_is_user": true,
- *            "subject": "Login issue",
- *            "message": "Hi, I have a problem logging in.",
- *            "flagged": "blue",
- *            "is_spam": false,
- *            "answer_needed": "true",
- *            "was_answered": "false",
- *            "answered_by": "",
- *            "answer_date": "",
- *            "answer": ""
- *        },
- *        ...
- *    ],
- *    "query": {
- *        "items_per_page": 25,
- *        "order_sort": "descending",
- *        "filter_by": "answer_needed",
- *        "page_nr": 1
- *    },
- *    "response": "success",
- *    "total_pages": 1,
- *    "current_page": 1,
- * }
  * 
  * //Response from getUserMessages:
  * {
@@ -149,12 +116,12 @@ export function getAllMessages(data = {}) {
                     data: true,
                 }
             } else {
-                return emptyObj
+                return Promise.resolve(emptyObj)
             }
         }
         catch (error) {
             console.error('Error fetching messages:', error);
-            return emptyObj
+            return Promise.resolve(emptyObj)
         }
     }
 

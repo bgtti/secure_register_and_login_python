@@ -9,7 +9,7 @@ import { FLAG_TYPES, USER_TYPE_REQUEST } from "../../../utils/constants";
  * 
  * @param { number } userId
  * @param {string} flagColour enum: ["red", "yellow", "purple", "blue"]
- * @returns { object } success as a boolean
+ * @returns { Promise<object> } success as a boolean
  * @example
  * Example return if response 200:
  * { success: true }
@@ -22,7 +22,7 @@ export function changeUserFlag(userId, flagColour) {
 
     if (theId === "" || theFlag === "") {
         console.warn("Invalid input. Cannot change user flag.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -34,14 +34,14 @@ export function changeUserFlag(userId, flagColour) {
         try {
             const response = await api.post(apiEndpoints.adminChangeUserFlag, requestData)
             if (response.status === 200) {
-                return { success: true }
+                return Promise.resolve({ success: true })
             } else {
-                return { success: false }
+                return Promise.resolve({ success: false })
             }
         }
         catch (error) {
             console.error("Error changing user flag:", error);
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 
@@ -53,7 +53,7 @@ export function changeUserFlag(userId, flagColour) {
  * 
  * @param { number } userId
  * @param {string} accessType enum: ["user", "admin"]
- * @returns { object } success as a boolean
+ * @returns { Promise<object> } success as a boolean
  * @example
  * Example return if response 200:
  * { success: true }
@@ -67,7 +67,7 @@ export function changeUserType(userId, accessType) {
 
     if (the_id === "" || the_type === "") {
         console.warn("Invalid input. Cannot change user access type.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -79,14 +79,14 @@ export function changeUserType(userId, accessType) {
         try {
             const response = await api.post(apiEndpoints.adminChangeUserAccessType, requestData)
             if (response.status === 200) {
-                return { success: true }
+                return Promise.resolve({ success: true })
             } else {
-                return { success: false }
+                return Promise.resolve({ success: false })
             }
         }
         catch (error) {
             console.error("Error changing user access type:", error);
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 
@@ -98,7 +98,7 @@ export function changeUserType(userId, accessType) {
  * 
  * @param { number } userId
  * @param { boolean } block false to unblock & true to block
- * @returns { object } success as a boolean
+ * @returns { Promise<object> } success as a boolean
  * @example
  * Example return if response 200:
  * { success: true }
@@ -111,7 +111,7 @@ export function blockOrUnblockUser(userId, block) {
 
     if (the_id === "" || is_block === "") {
         console.warn("Invalid input. Cannot block or unblock user.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -123,14 +123,14 @@ export function blockOrUnblockUser(userId, block) {
         try {
             const response = await api.post(apiEndpoints.adminBlockUnblockUser, requestData)
             if (response.status === 200) {
-                return { success: true }
+                return Promise.resolve({ success: true })
             } else {
-                return { success: false }
+                return Promise.resolve({ success: false })
             }
         }
         catch (error) {
             console.error("Error blocking/unblocking user:", error);
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 
@@ -141,7 +141,7 @@ export function blockOrUnblockUser(userId, block) {
  * Function makes api call to delete a particular user.
  * 
  * @param {number} userId 
- * @returns {object} success as a boolean
+ * @returns {Promise<object>} success as a boolean
  * @example
  * Example return if response 200:
  * {success: true}
@@ -153,7 +153,7 @@ export function deleteUser(userId) {
 
     if (the_id === "") {
         console.warn("Invalid input. Cannot delete user.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -164,14 +164,14 @@ export function deleteUser(userId) {
         try {
             const response = await api.post(apiEndpoints.adminDeleteUser, requestData)
             if (response.status === 200) {
-                return { success: true }
+                return Promise.resolve({ success: true })
             } else {
-                return { success: false }
+                return Promise.resolve({ success: false })
             }
         }
         catch (error) {
             console.error('Error deleting user:', error);
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 

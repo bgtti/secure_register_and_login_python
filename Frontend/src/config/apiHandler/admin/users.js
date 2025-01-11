@@ -23,33 +23,13 @@ import { getLastMonthDate } from "../../../utils/helpers";
  * @param {string} [data.filterByLastSeen = ""] date format YYYY-MM-DD
  * @param {string} [data.searchBy = "none"] enum: ["none", "name", "email"]
  * @param {string} [data.searchWord  = ""] no longer than maximum email length
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Input example:
  * const data = {
  *     page_nr: 1,
  *     order_by: "name"
- * }
- * 
- * //Original API response:
- * {
- *  "response": "success"
- *  "users": [
-                {
-                "id": 10
-                "name": "Frank Torres",
-                "email": "frank.torres@fakemail.com",
-                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
-                "access": "user",
-                "flagged": "blue",
-                "is_blocked": "false"
-                }, 
-                ...
- *  ]
- *  "total_pages": 3,
- *  "current_page": 1,
- *  "query": {...}
  * }
  * 
  * // Response from getAllUsers:
@@ -139,12 +119,12 @@ export function getAllUsers(data = {}) {
                     data: true,
                 }
             } else {
-                return emptyObj
+                return Promise.resolve(emptyObj)
             }
         }
         catch (error) {
             console.error('Error fetching users:', error);
-            return emptyObj
+            return Promise.resolve(emptyObj)
         }
     }
 

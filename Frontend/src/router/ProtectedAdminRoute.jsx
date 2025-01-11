@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from 'react-router-dom';
 import { setLoader } from "../redux/loader/loaderSlice";
-import { getUserData } from "../config/apiHandler/authMain/getUser";
+import { getUserData } from "../config/apiHandler/authSession/getUser";
 
 /**
  * Component returns a wrapper for protected routes only logged in users of access level "admin" may access

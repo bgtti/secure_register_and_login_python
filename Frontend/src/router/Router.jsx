@@ -8,12 +8,15 @@ import Footer from "../layout/Footer";
 //Pages: open website pages
 import Home from '../pages/Home/Home';
 import Login from "../pages/Auth/Login/Login";
-import SignUp from "../pages/SignUp/SignUp";
-import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
+import SignUp from "../pages/Auth//SignUp/SignUp";
+import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 import Contact from "../pages/Contact/Contact";
 //Pages: unprotected but no-follow
-import VerifyEmail from "../pages/Auth/VerifyEmail/VerifyEmail";
+import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
+import ResetPasswordNoToken from "../pages/Auth/ResetPassword/ResetPasswordNoToken"
 import ChangeEmail from "../pages/Auth/ChangeEmail/ChangeEmail"
+import ChangeEmailNoToken from "../pages/Auth/ChangeEmail/ChangeEmailNoToken"
+import AccountDeleted from "../pages/AccountDeleted/AccountDeleted";
 //Pages: protected route (registered users)
 import UserAccount from "../pages/Account/AccountMain"
 import UserDashboard from "../pages/Account/Dashboard/Dashboard";
@@ -35,14 +38,10 @@ import ProtectedUserRoute from "./ProtectedUserRoute";
 import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
 //include about page
-//include contact page
 //include privacy policy page
 //include terms and conditions page
 //include cookie policy page
 //include FAQ page
-
-// TODO: confirm email page
-// TODO: change password page
 
 // TODO: separation of user and admin logic
 // TODO: urls and relative urls in shared files with BE
@@ -59,18 +58,25 @@ const Router = () => {
             {loaderDisplay ? <Loader></Loader> : ""}
             <NavBar />
             <Routes>
+                {/* Unprotected routes */}
                 <Route index element={<Home />} />
                 <Route exact path="/" element={<Home />} />
                 <Route exact path="login" element={<Login />} />
                 <Route exact path="signup" element={<SignUp />} />
-                <Route exact path="resetPassword" element={<ResetPassword />} />
+                <Route exact path="forgotPassword" element={<ForgotPassword />} />
+                <Route exact path="resetPassword" element={<ResetPasswordNoToken />} />
+                <Route exact path="resetPassword/:token" element={<ResetPassword />} />
                 <Route exact path="contact" element={<Contact />} />
-                <Route exact path="verifyEmail/:token" element={<VerifyEmail />} />
+                <Route exact path="confirmEmailChange" element={<ChangeEmailNoToken />} />
+                <Route exact path="confirmNewEmail" element={<ChangeEmailNoToken />} />
                 <Route exact path="confirmEmailChange/:token" element={<ChangeEmail />} />
                 <Route exact path="confirmNewEmail/:token" element={<ChangeEmail />} />
+                <Route exact path="accountDeleted" element={<AccountDeleted />} />
+                {/* Error routes */}
                 <Route exact path="errorPage" element={<ErrorPage />} />
                 <Route exact path="botError" element={<BotError />} />
                 <Route exact path="*" element={<ErrorPage errorNum="404" />} />
+                {/* Protected routes */}
                 <Route element={<ProtectedUserRoute />}>
                     <Route path="userAccount" element={<UserAccount />}>
                         <Route index element={<Navigate to="userdashboard" replace />} />
@@ -78,6 +84,7 @@ const Router = () => {
                         <Route path="acctSettings" element={<AcctSettings />} />
                     </Route>
                 </Route>
+                {/* Admin routes */}
                 <Route element={<ProtectedAdminRoute />}>
                     <Route path="adminArea" element={<AdminArea />}>
                         <Route index element={<Navigate to="adminDashboard" replace />} />

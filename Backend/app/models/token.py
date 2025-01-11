@@ -47,6 +47,7 @@ from datetime import datetime, timedelta, timezone
 from flask_login import UserMixin
 from app.utils.constants.enum_class import TokenPurpose
 from app.extensions.extensions import db
+from app.extensions.sqlalchemy_config import EncryptedType, UTCDateTime
 from app.utils.constants.enum_class import modelBool
 
 # TODO consider keeping functions inside the models itself and using the model boolean:
@@ -153,8 +154,8 @@ class Token(db.Model, UserMixin):
     # token status
     token_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) # user used the token 
     # token creation extra info
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
-    expiry_date = db.Column(db.DateTime, default=expiration_date, nullable=False)
+    created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc), nullable=False)
+    expiry_date = db.Column(UTCDateTime, default=expiration_date, nullable=False)
     ip_address = db.Column(db.String(250), nullable=True) # ip address of the request
     user_agent = db.Column(db.String(255), nullable=True) # some device information
     # token belonging info
@@ -178,29 +179,56 @@ class Token(db.Model, UserMixin):
             raise ValueError(f"group_id is required for purpose '{self.purpose.value}' but was not provided.")
         return value
     
-    
-    def validate_token(self):
+    def validate_token(self, mark_as_used: bool = False) -> bool:
         """
-        validate_token()-> bool
-        -----------------------------
-        Will return true if the token is valid and false otherwise.
-        Will mark the token as used by setting token_verified to true.
+        Validates the token's validity.
+
+        This method checks if the token is valid based on its creation and expiration dates,
+        and whether it has been used. Optionally, the token can be marked as 'used'.
+
+        Returns:
+            bool: True if the token is valid, False otherwise.
+
+        Note:
+            - Ensure this token is marked as 'used' when appropriate (e.g., after successful MFA).
+            - The caller must handle database session commits if `mark_as_used` is True.
         """
         now = datetime.now(timezone.utc)
-        # Normalize created_at and expiry_date to offset-aware datetimes
-        # The normalization is due to the "TypeError: can't compare offset-naive and offset-aware datetimes" received in the console...
-        created_at_aware = self.created_at.replace(tzinfo=timezone.utc) if self.created_at.tzinfo is None else self.created_at
-        expiry_date_aware = self.expiry_date.replace(tzinfo=timezone.utc) if self.expiry_date.tzinfo is None else self.expiry_date
 
         # Perform comparison using aware datetimes
-        token_is_valid = created_at_aware < now <= expiry_date_aware
+        token_is_valid = self.created_at < now <= self.expiry_date
         token_was_not_used = self.token_verified == modelBool.FALSE
 
         if token_is_valid and token_was_not_used:
-            self.token_verified = modelBool.TRUE
+            if mark_as_used:
+                self.token_verified = modelBool.TRUE
             return True
         else:
             return False
+    
+    
+    # def validate_token(self):
+    #     """
+    #     validate_token()-> bool
+    #     -----------------------------
+    #     Will return true if the token is valid and false otherwise.
+    #     Will mark the token as used by setting token_verified to true.
+    #     """
+    #     now = datetime.now(timezone.utc)
+    #     # Normalize created_at and expiry_date to offset-aware datetimes
+    #     # The normalization is due to the "TypeError: can't compare offset-naive and offset-aware datetimes" received in the console...
+    #     created_at_aware = self.created_at.replace(tzinfo=timezone.utc) if self.created_at.tzinfo is None else self.created_at
+    #     expiry_date_aware = self.expiry_date.replace(tzinfo=timezone.utc) if self.expiry_date.tzinfo is None else self.expiry_date
+
+    #     # Perform comparison using aware datetimes
+    #     token_is_valid = created_at_aware < now <= expiry_date_aware
+    #     token_was_not_used = self.token_verified == modelBool.FALSE
+
+    #     if token_is_valid and token_was_not_used:
+    #         self.token_verified = modelBool.TRUE
+    #         return True
+    #     else:
+    #         return False
     
     # def validate_email_token(self):
     #     """

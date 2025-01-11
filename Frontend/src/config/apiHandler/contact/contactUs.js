@@ -16,7 +16,7 @@ import { INPUT_LENGTH } from "../../../utils/constants.js"
  * @param {string} data.message
  * @param {boolean} data.is_user
  * @param {string} data.honeypot
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Input example:
@@ -51,7 +51,7 @@ export function sendContactMessage(data = {}) {
     }
 
     if (!data.name || !data.email || !data.message) {
-        return res
+        return Promise.resolve(res)
     }
 
     // double-checking the data
@@ -61,7 +61,7 @@ export function sendContactMessage(data = {}) {
     const dataIsValid = emailIsValid.response && nameIsValid.response && messageIsValid;
 
     if (!dataIsValid) {
-        return res
+        return Promise.resolve(res)
     }
 
     let requestData = {

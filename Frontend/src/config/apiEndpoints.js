@@ -15,23 +15,31 @@ const adminUrl = {
 
 export const apiEndpoints = {
     baseURL: "https://127.0.0.1:5000",
-    //contact
-    contactUs: `${urlPrefix.contact}/contact_form`, //OK
+    //AUTH
+    //authentication -- credential change
+    resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //OK
+    changePassword: `${urlPrefix.auth}/change_password`, //OK
+    changeEmail: `${urlPrefix.auth}/change_email`, //OK (test unvalidated account)
+    changeEmailTokenVerification: `${urlPrefix.auth}/email_change_token_validation`, //OK
+    //authentication -- profile
+    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
+    //authentication -- recovery
+    setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
+    getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
+    getRecoveryEmail: `${urlPrefix.auth}/get_recovery_email`, //OK
+    deleteRecoveryEmail: `${urlPrefix.auth}/delete_recovery_email`, //OK
+    //authentication -- registration
+    userSignUp: `${urlPrefix.auth}/signup`, //OK
+    acctDeleteOwnAccount: `${urlPrefix.auth}/delete_user`, //OK
     //authentication -- session
     getOTP: `${urlPrefix.auth}/get_otp`, //OK
-    //authentication -- main
-    userSignUp: `${urlPrefix.auth}/signup`, //OK
-    userLogIn: `${urlPrefix.auth}/login`, //OK (test mfa)
+    userLogIn: `${urlPrefix.auth}/login`, //OK
     userLogOut: `${urlPrefix.auth}/logout`, //OK
     userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
-    //authentication -- account
-    acctRequestVerifyEmail: `${urlPrefix.auth}/request_email_verification`, //OK
-    acctVerifyEmail: `${urlPrefix.auth}/verify_acct_email`, //OK
-    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
-    acctChangeEmail: `${urlPrefix.auth}/request_auth_change`, //--test
-    acctChangeTokenVerify: `${urlPrefix.auth}/request_token_validation`, //--working on for email (password uses same route)
-    acctChangePassword: `${urlPrefix.auth}/...`, //MISSING 2-step
-    acctDeleteOwnAccount: `${urlPrefix.auth}/delete`, //MISSING
+    //authentication -- security
+    setMfa: `${urlPrefix.auth}/set_mfa`, //OK
+    verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
+    //ADMIN
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING
     //admin - users
@@ -50,6 +58,8 @@ export const apiEndpoints = {
     adminMessageAnswer: `${adminUrl.messageAction}/answer_message`, //OK
     adminMessageFlagChange: `${adminUrl.messageAction}/flag_change`, //OK
     adminMessageDelete: `${adminUrl.messageAction}/delete_message`, //MISSING
+    //contact
+    contactUs: `${urlPrefix.contact}/contact_form`, //OK
 };
 
 export default apiEndpoints;

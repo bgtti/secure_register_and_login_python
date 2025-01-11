@@ -1,0 +1,32 @@
+.AuthErrorHint>* {
+    color: var(--FontColorSecondary);
+}
+
+.AuthErrorHint>p {
+    margin: 5px 0;
+}
+
+/* If input component is disabled */
+.Auth-InputDisabled {
+    color: var(--FontColorSecondary);
+}
+
+/* Use in Label/Input field container */
+.Auth-displayTable {
+    width: 100%;
+    grid-template-columns: minmax(min-content, 2fr) minmax(150px, 8fr) !important;
+}
+
+/* Token input default */
+.AuthToken-displayTable {
+    grid-template-columns: minmax(min-content, 2fr) minmax(150px, 8fr) !important;
+}
+
+/* on big screens */
+@media only screen and (min-width:600px) {
+
+    /* Token input default */
+    .AuthToken-displayTable {
+        grid-template-columns: minmax(min-content, 1fr) minmax(150px, 8fr) !important;
+    }
+}

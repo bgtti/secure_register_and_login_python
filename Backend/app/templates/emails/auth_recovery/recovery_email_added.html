@@ -1,0 +1,41 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Recovery email added successfully
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>The email address {{ recovery_email }} was added as the recovery email for the following account: {{ acct_email
+        }}.</p>
+</div>
+
+<div class="p_block">
+    <p>The recovery email can be used re-gain access to an account in case you ever lose access.</p>
+</div>
+
+<div class="p_block">
+    <p>In case you did not make this change, contact support immediatelly.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}

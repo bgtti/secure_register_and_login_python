@@ -25,6 +25,7 @@ Files throughout the application make use of the extensions here.
 The database Object Relational Mapper SQLAlchemy, for instance, is declared here as `db = SQLAlchemy()`, and could be imported into other files like so: `from app.extensions.extensions import db`
 
 """
+from cryptography.fernet import Fernet
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -37,13 +38,16 @@ from flask_sqlalchemy import SQLAlchemy
 from faker import Faker
 from itsdangerous import URLSafeTimedSerializer
 from sqids import Sqids
-from config.values import SERIALIZER_SECRET_KEY
+from config.values import SERIALIZER_SECRET_KEY, ENCRYPTION_KEY
 
 db = SQLAlchemy()
 """`db` refers to the extension `SQLAlchemy`, a toolkit and ORM that allows devs to access and manage SQL databases."""
 
 # db_migrate = Migrate() ==> TODO: implementation missing
 """`db_migrate` refers to the extension `Flask-Migrate`, which handles SQLAlchemy database migrations for Flask applications using Alembic."""
+
+cipher = Fernet(ENCRYPTION_KEY)
+"""`cipher` refers to the extension `cryptography`, where `Fernet` (symmetric encryption) is used to encrypt strings."""
 
 cors = CORS()
 """`cors` refers to the extension `Flask-CORS`, which handles Cross-Origin Resource Sharing (CORS) to allow or restrict resource sharing between different domains."""

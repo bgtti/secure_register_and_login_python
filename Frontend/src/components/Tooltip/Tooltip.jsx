@@ -9,6 +9,7 @@ import "./tooltip.css";
  * @param {object} props 
  * @param {string} props.text // the word(s) that preceeds the tooltip info icon
  * @param {string} props.message // the message that should be displayed when the info icon is hovered
+ * @param {string} [props.cssClass] // optional: add a class for text styling (eg: Tooltip-text-bold will make text bold)
  * @returns {React.ReactElement}
  * 
  * @example 
@@ -20,10 +21,10 @@ import "./tooltip.css";
  *
  */
 function Tooltip(props) {
-    const { text, message } = props;
+    const { text, message, cssClass = "" } = props;
     return (
         <span className="Tooltip-wrapper">
-            <span className="Tooltip-text">{text}</span>
+            <span className={`Tooltip-text ${cssClass}`}>{text}</span>
             <span className="Tooltip-info-icon">i</span>
             <span className="Tooltip-message">{message}</span>
         </span>

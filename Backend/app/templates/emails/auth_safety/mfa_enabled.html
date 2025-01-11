@@ -1,0 +1,45 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Successfully enabled MFA
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>Your have successfully enabled multi-factor authentication (MFA) in your account.</p>
+</div>
+
+<div class="p_block">
+    <p><b>What does this mean?</b></p>
+    <p>You will be prompted to provide a one-time-password (OTP) along with your account password when signing in or
+        when making changes to your account's credentials (such as changing your password or account's email address).
+    </p>
+    <p>This increases the safety of your account by protecting you from phishing attempts or brute-force attacks.</p>
+</div>
+
+<div class="p_block">
+    <p>We <b>highly recommend setting a recovery email address</b> in your account, in case you have not already done
+        so. This can be done under "Account Settings".</p>
+    <p>A recovery email can help you re-gain access to your account in the case you forget your password or if you lose
+        access to your primary email account.</p>
+</div>
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+{% endblock %}

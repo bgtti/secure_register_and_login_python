@@ -3,7 +3,7 @@ import { Outlet, NavLink } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setLoader } from "../redux/loader/loaderSlice";
-import { logoutUser } from "../config/apiHandler/authMain/logout";
+import { logoutUser } from "../config/apiHandler/authSession/logout";
 import MenuIcon from "../assets/icon_menu.svg"
 import "./navbar.css"
 

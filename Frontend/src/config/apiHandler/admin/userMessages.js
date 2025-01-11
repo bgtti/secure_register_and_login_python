@@ -12,39 +12,14 @@ import apiEndpoints from "../../apiEndpoints";
  * 
  * @param {number} PageNr integer, must be positive
  * @param {number} userId 
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Usage:
  * getUserLogs(1, 1234)
- * 
- * //Original API response:
- * {
- *    "current_page": 1,
- *    "messages": [
- *        {
- *            "date": "Tue, 09 Jan 2024 21:07:38 GMT",
- *            "sender_name": "John",
- *            "sender_email": "john@example.com",
- *            "message": "Hi, I have a problem logging in.",
- *            "flagged": "blue",
- *            "answer_needed": "true",
- *            "was_answered": "false",
- *            "answered_by": "",
- *            "answer_date": "",
- *            "answer": ""
- *        },
- *        ...
- *    ],
- *    "query": {
- *        "items_per_page": 25,
- *        "order_sort": "descending",
- *        "ordered_by": "date",
- *        "page_nr": 1
- *    },
- *    "response": "success",
- *    "total_pages": 1
- * }
+ *     .then(response => {
+ *         console.log(response);
+ *     });
  * 
  * //Response from getUserMessages:
  * {
@@ -83,7 +58,7 @@ export function getUserMessages(pageNr, userId) {
 
     if (theId === "") {
         console.warn("No user id provided to get user messages.")
-        return emptyObj
+        return Promise.resolve(emptyObj)
     }
 
     let requestData = {
@@ -126,12 +101,12 @@ export function getUserMessages(pageNr, userId) {
                     data: true,
                 }
             } else {
-                return emptyObj
+                return Promise.resolve(emptyObj)
             }
         }
         catch (error) {
             console.error('Error fetching messages:', error);
-            return emptyObj
+            return Promise.resolve(emptyObj)
         }
     }
 

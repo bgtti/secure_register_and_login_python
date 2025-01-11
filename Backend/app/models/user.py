@@ -25,11 +25,11 @@ from sqlalchemy import Enum
 from utils.print_to_terminal import print_to_terminal
 from config.values import SUPER_USER
 from app.extensions.extensions import db
-from app.extensions.sqlalchemy_config import UTCDateTime
+from app.extensions.sqlalchemy_config import EncryptedType, UTCDateTime
 
 # Utilities
 from app.utils.constants.account_constants import INPUT_LENGTH, OTP_PATTERN
-from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, LoginMethods
+from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag, AuthMethods
 from app.utils.constants.enum_helpers import map_string_to_enum
 
 ############ CONSTANTS #############
@@ -132,13 +132,13 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=False, unique=True)
     password = db.Column(db.String(60), nullable=False)
     salt = db.Column(db.String(8), nullable=False)
-    recovery_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)#consider encrypting
+    recovery_email = db.Column(EncryptedType, nullable=True)
     # one time password (otp):
     otp_token = db.Column(db.String(8), nullable=True)
     otp_token_creation = db.Column(UTCDateTime, nullable=True)
     # acct:
     created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
-    email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
+    email_is_verified = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     # access:
     access_level = db.Column(db.Enum(UserAccessLevel), default=UserAccessLevel.USER, nullable=False)
     is_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
@@ -149,17 +149,18 @@ class User(db.Model, UserMixin):
     last_login_attempt = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
     login_blocked = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     login_blocked_until = db.Column(UTCDateTime, default=datetime.now(timezone.utc))
-    # auth credential change or verification:
-    new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
-    token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     # preferences
-    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     in_mailing_list = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False) 
     night_mode_enabled = db.Column(db.Enum(modelBool), default=modelBool.TRUE, nullable=False) 
     # multi-factor authentication (mfa)
+    mfa_enabled = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used = db.Column(db.Enum(modelBool), default=modelBool.FALSE, nullable=False)
     first_factor_used_date = db.Column(UTCDateTime, default=datetime.now(timezone.utc), nullable=True)
-    first_factor_type = db.Column(db.Enum(LoginMethods), nullable=True)
+    first_factor_type = db.Column(db.Enum(AuthMethods), nullable=True)
+    # auth credential change or verification:
+    new_email = db.Column(db.String(INPUT_LENGTH['email']['maxValue']), nullable=True, unique=True)
+    new_password = db.Column(db.String(60), nullable=True)
+    token = db.relationship("Token", backref="user", lazy="select", cascade="all, delete-orphan")
     
     # METHODS
     def __init__(self, name, email, password, salt, created_at, **kwargs):
@@ -282,12 +283,31 @@ class User(db.Model, UserMixin):
         return True
 
     # MFA methods
-    def mfa_first_factor_used(self, method: LoginMethods) -> None:
+    def set_mfa(self, enable_mfa: bool) -> bool:
+        """
+        Sets mfa_enable to true, meaning user has enabled multi-factor auth in their account.
+
+        This method sets the user's `mfa_enable` attribute to `modelBool.TRUE`, indicating that
+        MFA is required for login and similar operations. 
+
+        Parameters:
+            enable_mfa: boolean indicating whether or enable (True) or disable (False) MFA
+
+        Returns:
+            bool: True if mfa was enabled, False otherwise.
+        """
+        if enable_mfa:
+            self.mfa_enabled = modelBool.TRUE
+        else: 
+            self.mfa_enabled = modelBool.FALSE
+            return True
+    
+    def mfa_first_factor_used(self, method: AuthMethods) -> None:
         """
         Logs the successfull first factor of a multi-factor authentication process.
 
         Args:
-            method (LoginMethods): Method belonging to enum LoginMethods.
+            method (AuthMethods): Method belonging to enum AuthMethods.
         
         user.first_factor_used will be set to true
         user.first_factor_type will be set to the method authenticated
@@ -311,13 +331,13 @@ class User(db.Model, UserMixin):
             logging.error(f"Failed to reset MFA for user {self.id}: {e}")
             raise
 
-    def mfa_second_factor_check(self, method: LoginMethods) -> bool:
+    def mfa_second_factor_check(self, method: AuthMethods) -> bool:
         """
         Checks if the second authentication step in mfa is valid.
         If second method is valid or time constraint overlapsed, first step data will be reset.
         
         Args:
-            method (LoginMethods): Method belonging to enum LoginMethods.
+            method (AuthMethods): Method belonging to enum AuthMethods.
         Returns:
             bool: True if the second factor is valid, False otherwise.
         """
@@ -326,11 +346,12 @@ class User(db.Model, UserMixin):
             return False
         
         # Reset the first mfa step because it is either too old or the second step is approved
+        date = self.first_factor_used_date
         self.mfa_first_factor_reset()
 
         # Check if time for MFA elapsed
         now = datetime.now(timezone.utc)
-        time_difference = (now - self.first_factor_used_date).total_seconds() / 60  # Calculate time in minutes
+        time_difference = (now - date).total_seconds() / 60  # Calculate time in minutes
         if time_difference > 30:  
             return False
         return True
@@ -518,6 +539,15 @@ class User(db.Model, UserMixin):
         else:
             logging.error(f"User account could not be verified. It is possible the account has been verified before. email_is_verified = {self.email_is_verified}. Check User model.")
             return False
+    
+    def check_if_account_is_verified(self) -> bool:
+        """
+        Checks if the user has a verified account.
+
+        Returns:
+            bool: True if the email has been verified, False otherwise.
+        """
+        return self.email_is_verified == modelBool.TRUE
 
     def change_email(self) -> bool:
         """

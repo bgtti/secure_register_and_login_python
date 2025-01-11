@@ -1,4 +1,4 @@
-import { MOST_COMMON_PASSWORDS, INPUT_LENGTH } from "./constants"
+import { MOST_COMMON_PASSWORDS, RESERVED_NAMES, INPUT_LENGTH } from "./constants"
 
 /**
  * Function that validates a user's name input
@@ -15,12 +15,33 @@ import { MOST_COMMON_PASSWORDS, INPUT_LENGTH } from "./constants"
  */
 export function nameValidation(name) {
     if (typeof name !== "string") {
-        return { response: false, message: "Name must be a string." }
-    } else if (name.trim().length < INPUT_LENGTH.name.minValue || name.trim().length > INPUT_LENGTH.name.maxValue) {
-        return { response: false, message: `Name must have between ${INPUT_LENGTH.name.minValue} and ${INPUT_LENGTH.name.maxValue} characters.` }
-    } else {
-        return { response: true, message: "" }
+        return { response: false, message: "Name must be a string." };
     }
+
+    const trimmedName = name.trim();
+
+    if (
+        trimmedName.length < INPUT_LENGTH.name.minValue ||
+        trimmedName.length > INPUT_LENGTH.name.maxValue
+    ) {
+        return {
+            response: false,
+            message: `Name must have between ${INPUT_LENGTH.name.minValue} and ${INPUT_LENGTH.name.maxValue} characters.`
+        };
+    }
+
+    const lowerCaseName = trimmedName.toLowerCase();
+
+    for (const reserved of RESERVED_NAMES) {
+        if (lowerCaseName.includes(reserved.toLowerCase())) {
+            return {
+                response: false,
+                message: `Name must not contain '${reserved}' because this is a reserved word.`
+            };
+        }
+    }
+
+    return { response: true, message: "" };
 }
 
 /**
@@ -197,7 +218,7 @@ export function sanitizedUserAgent(userAgent = "") {
     if (sanitizedUA.length > maxLength) {
         sanitizedUA = sanitizedUA.substring(0, maxLength);
     }
-    return { sanitizedUA }
+    return sanitizedUA
 }
 
 /**
