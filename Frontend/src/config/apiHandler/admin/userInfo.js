@@ -1,5 +1,5 @@
 import { apiHandle404 } from "../../axios";
-import apiEndpoints from "../../apiEndPoints";
+import apiEndpoints from "../../apiEndpoints";
 
 /**
  * Function makes api call to retrieve base information for a particular user.
@@ -11,26 +11,14 @@ import apiEndpoints from "../../apiEndPoints";
  * Sends the key 'data' as a boolean to indicate whether there is response data or not.
  * 
  * @param {number} userId integer, must be positive greater than 0
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Usage:
  * getUserInfo(1234)
- * 
- * //Original API response:
- * {
- *    "response": "success",
- *    "user":{
-                "id": 1234
-                "name": "Frank Torres",
-                "email": "frank.torres@fakemail.com",
-                "created_at": "Thu, 25 Jan 2024 00:00:00 GMT",
-                "last_seen": "Thu, 25 Jan 2024 00:00:00 GMT",
-                "access": "user",
-                "flagged": "blue",
-                "is_blocked": "false"
-                }, 
- * }
+ *     .then(response => {
+ *         console.log(response);
+ *     });
  * 
  * //Response from getUserInfo:
  * {
@@ -58,7 +46,7 @@ export function getUserInfo(userId) {
 
     if (theId === "") {
         console.warn("No user id provided to get user logs.")
-        return emptyObj
+        return Promise.resolve(emptyObj)
     }
 
     let requestData = {
@@ -88,12 +76,12 @@ export function getUserInfo(userId) {
                     data: true,
                 }
             } else {
-                return emptyObj
+                Promise.resolve(emptyObj)
             }
         }
         catch (error) {
             console.error('Error fetching logs:', error);
-            return emptyObj
+            Promise.resolve(emptyObj)
         }
     }
 

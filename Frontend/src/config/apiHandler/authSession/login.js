@@ -75,7 +75,7 @@ export function loginUser(data) {
     };
 
     if (!email || !password || !method || (typeof data.isFirstFactor !== "boolean")) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     };
     // double-checking the data
     const passwordIsValid = passwordValidationSimplified(password);
@@ -84,7 +84,7 @@ export function loginUser(data) {
     const dataIsValid = emailIsValid.response && passwordIsValid.response && methodIsValid;
 
     if (!dataIsValid) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     let requestData = {

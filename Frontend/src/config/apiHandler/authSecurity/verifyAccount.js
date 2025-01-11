@@ -9,7 +9,7 @@ import { sanitizedUserAgent, passwordValidationSimplified } from "../../../utils
  * 
  * @param {string} otp
  * @param {string} userAgent
- * @returns {object}
+ * @returns {Promise<object>}
  * The return will always contain a boolean "success".
  * 
  * @example
@@ -41,7 +41,7 @@ export function verifyAccount(otp, userAgent = "") {
     };
 
     if (!oneTimePassword || !oneTimePassword.response) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     let requestData = {

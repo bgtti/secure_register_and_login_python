@@ -11,7 +11,7 @@ import { emailValidation, passwordValidationSimplified, otpValidation, sanitized
  * @param {string} data.password # the password provided by user
  * @param {string} data.otp # the otp provided by user
  * @param {string} [data.userAgent]
- * @returns {object} # with boolean "response",  and string "message"
+ * @returns {Promise<object>} # with boolean "response",  and string "message"
  * 
  * @example
  * //Input example:
@@ -51,7 +51,7 @@ export function setRecoveryEmail(data) {
     };
 
     if (!email || !password || !otp) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     };
     // double-checking the data
     const passwordIsValid = passwordValidationSimplified(password);
@@ -60,7 +60,7 @@ export function setRecoveryEmail(data) {
     const dataIsValid = emailIsValid.response && passwordIsValid.response && otpIsValid.response;
 
     if (!dataIsValid) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     let requestData = {

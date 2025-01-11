@@ -9,7 +9,7 @@ import { passwordValidationSimplified, sanitizedUserAgent } from "../../../utils
  * @param {object} data 
  * @param {string} data.password # the password provided by user
  * @param {string} [data.userAgent]
- * @returns {object} # with boolean "response",  and string "message"
+ * @returns {Promise<object>} # with boolean "response",  and string "message"
  * 
  * @example
  * //Input example:
@@ -44,12 +44,12 @@ export function deleteRecoveryEmail(data) {
         message: "Error: Invalid input."
     };
 
-    if (!password) { return errorResponse };
+    if (!password) { return Promise.resolve(errorResponse) };
 
     // double-checking the data
     const passwordIsValid = passwordValidationSimplified(password)
 
-    if (!passwordIsValid.response) { return errorResponse }
+    if (!passwordIsValid.response) { return Promise.resolve(errorResponse) }
 
     let requestData = {
         "password": password,

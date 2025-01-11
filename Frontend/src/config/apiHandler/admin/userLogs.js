@@ -12,34 +12,14 @@ import apiEndpoints from "../../apiEndpoints.js";
  * 
  * @param {number} PageNr integer, must be positive
  * @param {number} userId 
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Usage:
  * getUserLogs(1, 1234)
- * 
- * //Original API response:
- * {
- *    "current_page": 1,
- *    "logs": [
- *        {
- *            "activity": "signup",
- *            "created_at": "Tue, 09 Jan 2024 21:07:38 GMT",
- *            "message": "successful signup.",
- *            "type": "INFO",
- *            "user_id": 1234
- *        },
- *        ...
- *    ],
- *    "query": {
- *        "items_per_page": 25,
- *        "order_sort": "descending",
- *        "ordered_by": "created_at",
- *        "page_nr": 1
- *    },
- *    "response": "success",
- *    "total_pages": 1
- * }
+ *     .then(response => {
+ *         console.log(response);
+ *     });
  * 
  * //Response from getUserLogs:
  * {
@@ -73,7 +53,7 @@ export function getUserLogs(pageNr, userId) {
 
     if (theId === "") {
         console.warn("No user id provided to get user logs.")
-        return emptyObj
+        return Promise.resolve(emptyObj)
     }
 
     let requestData = {
@@ -106,12 +86,12 @@ export function getUserLogs(pageNr, userId) {
                     data: true,
                 }
             } else {
-                return emptyObj
+                Promise.resolve(emptyObj)
             }
         }
         catch (error) {
             console.error('Error fetching logs:', error);
-            return emptyObj
+            Promise.resolve(emptyObj)
         }
     }
 

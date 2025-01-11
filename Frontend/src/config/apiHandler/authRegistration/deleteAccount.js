@@ -44,9 +44,9 @@ export function deleteOwnAccount(data = {}) {
     };
 
     // Check password
-    if (!data.password) { return errorResponse }
+    if (!data.password) { return Promise.resolve(errorResponse) }
     const passwordIsValid = passwordValidation(data.password);
-    if (!passwordIsValid.response) { return errorResponse }
+    if (!passwordIsValid.response) { return Promise.resolve(errorResponse) }
 
     // If user agent in data, sanitize it
     const userAgent = data.userAgent ? data.userAgent : "";
@@ -61,7 +61,7 @@ export function deleteOwnAccount(data = {}) {
     //If OTP provided (in case user has MFA it will be required), add to payload
     if (data.otp && data.otp !== "") {
         const otpIsValid = otpValidation(data.otp);
-        if (!otpIsValid.response) { return errorResponse }
+        if (!otpIsValid.response) { return Promise.resolve(errorResponse) }
         requestData.otp = data.otp;
     }
 

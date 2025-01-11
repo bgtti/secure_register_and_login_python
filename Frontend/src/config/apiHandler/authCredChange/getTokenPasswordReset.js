@@ -53,11 +53,11 @@ export function getTokenPasswordReset(data) {
         message: "Error: Invalid input."
     };
 
-    if (!email) { return errorResponse };
+    if (!email) { return Promise.resolve(errorResponse) };
     // double-checking the data
     const emailIsValid = emailValidation(email);
 
-    if (!emailIsValid) { return errorResponse }
+    if (!emailIsValid) { return Promise.resolve(errorResponse) }
 
     let requestData = {
         "email": email,

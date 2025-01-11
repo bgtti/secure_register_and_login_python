@@ -15,7 +15,7 @@ import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.j
  * @param {string} data.email 
  * @param {string} data.password
  * @param {string} data.honeypot
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Input example:
@@ -24,16 +24,6 @@ import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.j
  *     email: "josy@example.comm",
  *     password: "3f61108854cd4b58",
  *     honeypot: ""
- * }
- * 
- * //Original API response:
- * {
- *  "response": "success"
- *  "user": {
- *        access: "user",
- *        name: "Josy",
- *        email: "josy@example.com",
- *  }
  * }
  * 
  * // Response from signupUser:
@@ -65,7 +55,7 @@ export function signupUser(data = {}) {
     };
 
     if (!data.name || !data.email || !data.password) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     // double-checking the data
@@ -75,7 +65,7 @@ export function signupUser(data = {}) {
     const dataIsValid = emailIsValid.response && passwordIsValid.response && nameIsValid.response;
 
     if (!dataIsValid) {
-        return errorResponse
+        return Promise.resolve(errorResponse)
     }
 
     let requestData = {

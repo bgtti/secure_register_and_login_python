@@ -9,7 +9,7 @@ import { setReduxUserName } from "../../../redux/utilsRedux/setReduxUserState.js
  * 
  * @param {string} name // the new desired name
  * @param {string} userAgent // browser being used
- * @returns {object}
+ * @returns {Promise<object>}
  * 
  * @example
  * //Input example:
@@ -31,7 +31,7 @@ export function acctNameChange(newName, userAgent = "") {
 
     if (!newName) {
         console.error("Error: no input to change.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     // double-checking the input
@@ -39,7 +39,7 @@ export function acctNameChange(newName, userAgent = "") {
 
     if (!nameIsValid.response) {
         console.error("Error: input invalid.")
-        return { success: false }
+        return Promise.resolve({ success: false })
     }
 
     let requestData = {
@@ -70,7 +70,7 @@ export function acctNameChange(newName, userAgent = "") {
         }
         catch (error) {
             console.error(`Api handler to change name encountered an error: ${error}`)
-            return { success: false }
+            return Promise.resolve({ success: false })
         }
     }
 
