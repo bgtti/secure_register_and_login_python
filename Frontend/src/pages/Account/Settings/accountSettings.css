@@ -45,6 +45,10 @@
 
 }
 
+.AccountSettings-Preferences-InfoMessage {
+    grid-template-columns: 100% !important;
+}
+
 /* copied from userInfo.css */
 .AccountSettings-hr {
     border: 1px solid var(--BackgroudTertiary);

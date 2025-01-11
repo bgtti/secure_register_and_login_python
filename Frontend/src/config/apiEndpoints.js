@@ -3,6 +3,7 @@ const urlPrefix = {
     auth: "/api/auth",
     admin: "/api/admin",
     contact: "/api/contact",
+    userSettings: "/api/user_settings"
 }
 
 const adminUrl = {
@@ -39,6 +40,9 @@ export const apiEndpoints = {
     //authentication -- security
     setMfa: `${urlPrefix.auth}/set_mfa`, //OK
     verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
+    //user_settings (preferences)
+    setMailingList: `${urlPrefix.userSettings}/set_mailing_list`, //OK
+    setNightMode: `${urlPrefix.userSettings}/set_night_mode`, //OK
     //ADMIN
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING

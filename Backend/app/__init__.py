@@ -74,12 +74,14 @@ def create_app(config_class):
     # Note admin has nested blueprits: check admin routes file
     from app.routes.auth import auth
     from app.routes.admin.routes import admin
-    from app.routes.stats.routes import stats
     from app.routes.contact.routes import contact
+    from app.routes.user_settings.routes import user_settings
+    from app.routes.stats.routes import stats
     app.register_blueprint(auth, url_prefix='/api/auth')
     app.register_blueprint(admin, url_prefix='/api/admin')
-    app.register_blueprint(stats, url_prefix='/api/stats')
     app.register_blueprint(contact, url_prefix='/api/contact')
+    app.register_blueprint(stats, url_prefix='/api/stats')
+    app.register_blueprint(user_settings, url_prefix='/api/user_settings')
 
     # TODO remove test route in production
     @app.route('/test/')
