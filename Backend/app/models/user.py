@@ -573,3 +573,36 @@ class User(db.Model, UserMixin):
             logging.info("Admin account email change.")
 
         return True
+    
+    # Preferences methods
+    def set_mailing_list(self, enable_mailing: bool) -> bool:
+        """
+        Sets in_mailing_list to true or false, defining whether user wants to receive app news per email (True) nor not (False).
+
+        Parameters:
+            enable_mailing: boolean indicating whether to place (True) or not (False) user in mailing list
+
+        Returns:
+            bool: True if user in mailing list, False otherwise.
+        """
+        if enable_mailing:
+            self.in_mailing_list = modelBool.TRUE
+        else: 
+            self.in_mailing_list = modelBool.FALSE
+            return True
+        
+    def set_night_mode(self, enable_night_mode: bool) -> bool:
+        """
+        Sets night_mode_enabled according to whether user wants night mode (True) or not (False).
+
+        Parameters:
+            enable_night_mode: boolean indicating whether night mode should be enabled (True) or not (False).
+
+        Returns:
+            bool: True if user in mailing list, False otherwise.
+        """
+        if enable_night_mode:
+            self.night_mode_enabled = modelBool.TRUE
+        else: 
+            self.night_mode_enabled = modelBool.FALSE
+            return True
