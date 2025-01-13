@@ -54,7 +54,7 @@ user_settings = Blueprint("user_settings", __name__)
 @user_settings.route("/set_mailing_list", methods=["POST"])
 @login_required
 @validate_schema(set_mailing_list_schema)
-@limiter.limit("10/day")
+@limiter.limit("2/minute;10/day")
 def set_mailing_list():
     """
     set_mailing_list() -> JsonType
@@ -110,7 +110,7 @@ def set_mailing_list():
 @user_settings.route("/set_night_mode", methods=["POST"])
 @login_required
 @validate_schema(set_night_mode_schema)
-@limiter.limit("10/day")
+@limiter.limit("2/minute;10/day")
 def set_night_mode():
     """
     set_night_mode() -> JsonType

@@ -166,5 +166,7 @@ RESERVED_NAMES = [
     "admin",
     "administrator",
     "moderator",
+    "customer",
+    "service"
 ]
 """`RESERVED_NAMES` is a list of reserved names that should not be used when users attempt to create an account or change their names."""

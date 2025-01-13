@@ -24,11 +24,90 @@
 <hr>
 <br>
 
-# secure_register_and_login_python
-Flask-React software template for secure registration and login of users.
+<div align="center">
+  <br>
+  <h1><b>secure_register_and_login_python</b></h1>
+  <strong>Flask-React software template for user registration and admin portal</strong>
+</div>
+<br>
 
-### Feature table:
+## Table of Contents
 
+- [Overview](#overview)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
+    - [Objectives](#objectives)
+- [Features](#features)
+    - [Features table](#features-table)
+    - [Todo list](#todo-list)
+- [About](#about)
+    - [Recommended Resources](#recomended-resources)
+    - [Sources used](#sources-used)
+
+## Overview
+This app can be used as a template for React/Flask softwares that require the following features:
+- Base webpage with:
+    - Homepage
+    - Contact page
+    - Signup/Login pages for users
+    - User dashboard
+    - User settings (with options for account management and recovery)
+- Authentication features such as:
+    - Account registration and deletion
+    - Credential changes (password and email)
+    - Account recovery (resetting passwords, changing emails)
+    - Safety features: account verification and multi-factor authentication
+    - Password and OTP login options
+- Admin portal including
+    - Admin dashboard
+    - User management
+    - Admin account management
+    - Contact form management
+
+The project contains two base folders:
+- **Backend**: contains the Flask application that manages server, cookies, email templates, and routes
+- **Frontend**: containing the React app that manages client routes
+
+### Backend
+The Flask application makes use of:
+- SQLAlchemy ORM to interact with SQLite
+- Flask-Limiter adds rate limiting to the routes
+- Flask-Mail is used to facilitate email sending
+- Flask-Login manages user sessions
+- Redis used for session storage
+- Json Schema is used to check data consistency and validity
+- Pytest was chosen for testing
+
+...and other useful extensions to Flask.
+
+It relies on server-side cookies to ease authentication, and has custom decorators for easy data validation and resource authorization.
+
+When running the project for the first time, the database will be created and seeded to enable the testing of core functionalities. A super admin should also be created.
+
+
+### Frontend
+The react app uses:
+- Redux to manage storage
+- React router to manage paths and navigation
+
+No CSS library is used, a CSS reset file was created, and only basic styling was applied. This way, it can be easily adapted to use whichever CSS framework is prefered for your project.
+
+The application communicates with the backend through api handlers, separating api calls from the UI.
+
+### Objectives
+The main objective of this project is to be a safe base template to be used to quickly build a proof of concept software project - to reduce the time to market and development of basic features required by many projects out there.
+
+Whenever possible, [OWASP (Open Source Foundation for Application Security)](https://owasp.org/) guides were used when developing the project and follow best practices, especially when auth features were being designed.
+
+
+## Features
+
+The frontend features can be summarized under the following categories:
+- Website pages: are unprotected and could be accessed by any person. Example: Home page, contact page, error page.
+- User pages: are protected, and only registered users have access. Example: Dashboard, Account settings.
+- Admin pages: are the admin dashboard, and only admin users are authorized access. Admins can see and manage users, see incomming messages from the contact form and respond to them, and have basic information about usage.
+
+### Features Table
 
 <table style="border-collapse:separate;">
     <tr>
@@ -51,27 +130,51 @@ Flask-React software template for secure registration and login of users.
   </tr>
   <tr>
     <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px"><small>Page: Signup</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px"><small>Page: Login</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ login using OTP</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ login using password</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ login using MFA</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
     <td style="background: #344955; border-radius:20px"><small>Page: Contact</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
   <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
     <td style="background: #344955; border-radius:20px"><small> ↪ contact form</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>small adjustments needed</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px"><small>Page: Reset password</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
-  </tr>
-  <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>Page: User Dashboard</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center; color: red;"><small>✘</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center"><small>placeholder only</small></td>
-  </tr>
-  <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>Page: Admin Dashboard</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center; color: red;"><small>✘</small></td>
-    <td style="background: #344955; border-radius:20px; text-align: center"><small>mostly placeholder</small></td>
   </tr>
   <tr>
     <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
@@ -80,37 +183,85 @@ Flask-React software template for secure registration and login of users.
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
   <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent"><small><b>User actions</b></small></td>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent"><small><b>User pages</b></small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
   </tr>
   <tr>
     <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>sign up</small></td>
+    <td style="background: #344955; border-radius:20px"><small>Page: Dashboard</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
   <tr>
     <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>log in</small></td>
+    <td style="background: #344955; border-radius:20px"><small>Settings</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
    <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>log out</small></td>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Credential change (name/email/password)</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
   <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
-    <td style="background: #344955; border-radius:20px"><small>log out</small></td>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Account verification</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
   </tr>
   <tr>
-    <td style="background: #344955; border-radius:20px; border: 5px solid transparent"><small><b>Admin actions</b></small></td>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Recovery email settings</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Multi-factor Auth enabling</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Account deletion</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Account preferences: Mailing list sbscription</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small> ↪ Account preferences: Night mode</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>CSS adaptation required</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center"></td>
+    <td style="background: #344955; border-radius:20px"><small>↪ Account activity: view activity logs</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center; color: red;"><small>✘</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>missing</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px"><small>Page: Messages</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center; color: red;"><small>✘</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>missing: should view support messages</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent; text-align: center">↪</td>
+    <td style="background: #344955; border-radius:20px"><small>Log out</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>✔</small></td>
+    <td style="background: #344955; border-radius:20px; text-align: center"><small>-</small></td>
+  </tr>
+  <tr>
+    <td style="background: #344955; border-radius:20px; border: 5px solid transparent"><small><b>Admin pages</b></small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
     <td style="background: #344955; border-radius:20px; text-align: center"><small>⤵</small></td>
@@ -171,12 +322,57 @@ Flask-React software template for secure registration and login of users.
   </tr>
 </table>
 
-### Todo:
-→ BE: Unit Testing<br>
+### TODO list
+
+#### Backend
+→ Unit and functional testing<br>
+→ Cleaning up and improving Config files<br>
+→ Certificates and HTTPS usage proper configuration<br>
+→ User roles should be placed in a db table and proper access management introduced<br>
+
+#### Frontend
 → Messages table - pagination and filter improvement<br>
-→ FE: Api handlers substitute returning object by returning promise<br>
-→ BE: Cleaning up and improving Config files<br>
-→ User should be able to change email<br>
+→ Jest testing implementation<br>
+
+#### Both
+→ Improved messaging and customer support functionality<br>
+→ User activity logs and history<br>
+
+
+## About
+This template was idealized while the author was taking the course [CS50's Introduction to Cybersecurity](https://pll.harvard.edu/course/cs50s-introduction-cybersecurity) from Hardvard University offered through [EdX](https://www.edx.org/learn/cybersecurity/harvard-university-cs50-s-introduction-to-cybersecurity). The idea was to translate the course teachings to code, and make use of best practices. 
+
+The author tried her best to follow [OWASP (Open Source Foundation for Application Security)](https://owasp.org/) recommendations when developing this project whenever possible. OWASP publishes yearly the Top 10 Web Appication Security Risks which should be the start of a process of acknowledging security risks and implementing necessary processes to write better and more secure code. The organization also offers numerous guidelines and information sheets of various topics to educate developers and guide them to build better software.
+
+**No guarantees** are made as to the functioning, quality, or security of it's app and code by the author. You are welcome to use this template as you see fit - at your own risk.
+
+### Recomended resources
+- [OWASP's top 10] (https://wiki.owasp.org/index.php/Top_10_2013-Top_10)
+- [Cloudfare article](https://www.cloudflare.com/en-gb/learning/security/threats/owasp-top-10/) about OWASP top 10
+
+How to...
+- Testing in flask youtube video from [Pretty Printed](https://www.youtube.com/watch?v=RLKW7ZMJOf4&t=184s)
+- Implement sessions youtube video from [DevGuyAhnaf](https://www.youtube.com/watch?v=sBw0O5YTT4Q)
+
+Useful to know...
+- Access-Control-Allow-Credentials header / CORS from a [Stackflow answer](https://stackoverflow.com/a/24689738)
+- Using HTTPS for local development is an article from [Maud Nalpas in web.dev](https://web.dev/articles/how-to-use-local-https) talking about third-party cookies and local host issues
+
+Great cheat-sheets...
+- VS Code users will find this ["Keyboard reference sheet"](https://code.visualstudio.com/docs/getstarted/tips-and-tricks) useful
+
+### Sources used
+- This app's UI's design was inspired by [kukuhaldy in 99designs](https://en.99designs.ch/profiles/kukuhaldy/designs/1290791)
+
+
+<br>
+<hr>
+Messy part ahead
+<hr>
+<br>
+
+
+
 
 ### Conventions & stuff to keep in mind while developing:
 → Seed: Seeding in the context of web development and databases refers to the process of populating a database with initial data. Used for initial setup, make testing easier, and demo purposes<br>
@@ -187,16 +383,10 @@ check out:
 https://github.com/realpython/flask-by-example/blob/master/config.py
 
 
-## Design and other useful links for inspiration:
 
-Design for inspiration: https://en.99designs.ch/profiles/kukuhaldy/designs/1290791
 
 ## How this template attempts to comply with OWASP top 10
 
-Link: https://wiki.owasp.org/index.php/Top_10_2013-Top_10
-
-Cloudflare article about OWAST top 10:
-https://www.cloudflare.com/en-gb/learning/security/threats/owasp-top-10/
 
 ### 1. Injection
 Injection attacks can be prevented by validating and/or sanitizing user-submitted data. SQL injection attack prevention includes sanitizing string inputs.
@@ -276,18 +466,3 @@ https://snyk.io/plans/
 
 
 
-
-implementing session:
-https://www.youtube.com/watch?v=sBw0O5YTT4Q
-
-testing in flask:
-https://www.youtube.com/watch?v=RLKW7ZMJOf4&t=184s
-
-CORS and access control:
-https://stackoverflow.com/a/24689738
-
-Third-party cookies and local host issue:
-https://web.dev/articles/how-to-use-local-https
-
-tips:
-vs code shortcuts and "Keyboard reference sheet" available at https://code.visualstudio.com/docs/getstarted/tips-and-tricks
