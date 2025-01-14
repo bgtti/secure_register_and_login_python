@@ -24,10 +24,10 @@ def validate_schema(schema_name):
                 jsonschema.validate(instance=json_data, schema=schema_name)
             except jsonschema.exceptions.ValidationError as e:
                 logging.info(f"Json schema validation error: {e}")
-                return jsonify({"response": "Invalid JSON data.", "error": str(e)}), 400
+                return jsonify({"response": "Invalid JSON data.", "error": "Invalid JSON data."}), 400
             except Exception as e:
                 logging.info(f"Request rejected by schema validation: {e}")
-                return jsonify({"response": "Request should be a valid JSON.", "error": str(e)}), 400
+                return jsonify({"response": "Request should be a valid JSON.", "error": "An internal error has occurred."}), 400
             return f(*args, **kw)
         return wrapper
     return decorator
