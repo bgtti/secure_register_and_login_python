@@ -19,7 +19,6 @@ from scripts.setup import initial_setup
 
 # When "local" or "development" environments are set, this file will run an extra script:
 # - Dummie data will populate the database using the content from "seed"
-# - SSL certificates will be generated (and used)
 # - It will be checked whether redis is running
 # When "development" environment is set, this file will run an extra script:
 # - Check whether there is a .env file and warn in case the data in this file is incorrect
@@ -53,23 +52,8 @@ with app.app_context():
 if __name__ == "__main__":
     if ENVIRONMENT == "local" or ENVIRONMENT == "development":
         from utils.print_to_terminal import print_to_terminal
-        # If an SSL certificate and key are available in the specified folder, they will be used to build an HTTP connection. This is recommended.
-        if os.path.exists(os.path.join(os.getcwd(), "certs")) and os.listdir(os.path.join(os.getcwd(), "certs")):
-            # print_to_terminal(f"App running in HTTPS: be sure to check front end path.", "BLUE")
-            app.run(ssl_context=("certs/cert.pem", "certs/key.pem"), debug=True)
-        else:
-            # print_to_terminal(f"App running in HTTP: be sure to check front end path.", "BLUE")
-            app.run(debug=True)
+        print_to_terminal(f"App running in HTTP: {ENVIRONMENT} environment", "BLUE")
+        app.run(debug=True)
     else:
         app.run() # set accordingly for production. 
         #Eg: if using waitress something like: serve(app, host='0.0.0.0', port=5000, threads=4)
-
-# HTTP versus HTTPS:
-#    The code above will try to create SSL certificates with create_ssl_certificate() using OpenSSL. (This will only work if you have OpenSSL installed, and you probably will have to change the path inside the mentioned function). If it fails, you may also generate the certificate in another way to run the server as HTTPS. 
-#   Even if you do this, it is no guarantee the browser will accept the self-generated certificate. It might still block the session cookies, which in turn will not allow authentication to happen.
-#    
-#   If you have the SSL certificate and key file, and cookies are being blocked by the browser when you try to log in: 
-#   Get your browser to accept third-party cookies from https://127.0.0.1:5000/ (or whichever port you are runnning this application with)
-
-#   If you do not have the SSL certificate:
-#   The app will automatically run HTTP: Get your browser to accept third-party cookies from http://127.0.0.1:5000/ (or whichever port you are runnning this application with). You may have to adjust a couple of things in the Config file according to your browser's feedback. Don't forget to adjust the URL in the React application.

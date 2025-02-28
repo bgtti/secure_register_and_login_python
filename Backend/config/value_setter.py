@@ -37,8 +37,10 @@ DEFAULT = {
 
 DEFAULT_URL = {
     "FRONTEND":"http://localhost:5173",
-    "BACKEND":"https://localhost:5000"
+    "BACKEND":"http://localhost:5000"
 }
+
+CORS_ACCEPT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 ENVIRONMENT_OPTIONS: List[str] = ["local", "development", "production"]
 """Available environment options: `["local", "development", "production"]`

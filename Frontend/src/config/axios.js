@@ -32,12 +32,13 @@ const urlBase = apiEndpoints.baseURL
  */
 export const api = axios.create({
     baseURL: urlBase,
+    // baseURL: "http://127.0.0.1:5000",
     timeout: 5000,
     withCredentials: true,
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': urlBase,
+        // 'Access-Control-Allow-Origin': urlBase,
     }
 });
 
