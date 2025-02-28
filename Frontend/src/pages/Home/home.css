@@ -10,11 +10,25 @@
     background-size: cover;
 }
 
+.light-mode .Home-Section1 {
+    background-image: linear-gradient(270deg, rgba(228, 231, 237, 0) 0%, rgba(228, 231, 237, 0.7712563052564776) 78%, rgba(228, 231, 237, 1) 87%), radial-gradient(circle, rgba(228, 231, 237, 0.42111624923406865) 0%, rgba(228, 231, 237, 0.8440854369091386) 87%, rgba(228, 231, 237, 1) 96%), url("../../assets/image_hacker_inverted.jpg");
+}
+
+/* Light Mode on*/
+
 @media (min-width: 1000px) {
     .Home-Section1 {
         background-image: linear-gradient(270deg, rgba(13, 22, 24, 0) 32%, rgba(13, 22, 24, 0.6900238122592788) 59%, rgba(13, 22, 24, 1) 74%, rgba(13, 22, 24, 1) 100%), radial-gradient(circle, rgba(13, 22, 24, 0.42111624923406865) 0%, rgba(13, 22, 24, 0.8440854369091386) 87%, rgba(13, 22, 24, 1) 96%), url("../../assets/image_hacker.jpg");
         background-size: contain;
         background-position-x: right;
+    }
+
+    /* Light Mode on*/
+    .light-mode .Home-Section1 {
+        background-image: linear-gradient(270deg, rgba(228, 231, 237, 0) 32%, rgba(228,
+                    231, 237, 0.69) 59%, rgb(228, 231, 237) 74%, rgb(228, 231, 237) 100%),
+            radial-gradient(circle, rgba(228, 237, 255, 0.421) 0%, rgba(228, 231, 237, 0.844) 87%, rgb(228, 231, 237) 96%),
+            url("../../assets/image_hacker_inverted.jpg");
     }
 }
 
@@ -36,6 +50,7 @@
     color: var(--FontColorDarker);
 }
 
+
 .Home-Section1-triangleStyle {
     position: absolute;
     bottom: 0;
@@ -47,4 +62,9 @@
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: right, left;
+}
+
+.light-mode .Home-Section1-triangleStyle {
+    background-image:
+        linear-gradient(to bottom right, transparent 50%, var(--Greycolour) 0);
 }

@@ -19,6 +19,7 @@ from flask import Flask
 import logging
 from logging.config import dictConfig
 from colorama import init
+from config.values import CORS_ORIGINS
 import app.extensions.extensions as extensions
 
 def create_app(config_class):
@@ -52,7 +53,7 @@ def create_app(config_class):
     # TODO: a script may still be missing to get rid of old log files
 
     # Initialization of app extensions
-    extensions.cors.init_app(app, supports_credentials=True, resources=r"/api/*", origins=["http://localhost:5173"]) # consider adding allowed origin from requests: https://flask-cors.corydolphin.com/en/latest/api.html#extension TODO: hardcoding the origin is not a good idea --- change this so as to allow for production-specific stuff as well
+    extensions.cors.init_app(app, supports_credentials=True, resources={r"/api/*": {"origins": CORS_ORIGINS}}) 
     extensions.db.init_app(app)
     # extensions.db_migrate(app, extensions.db) ==> TODO: implementation missing
     extensions.flask_bcrypt.init_app(app)

@@ -6,6 +6,10 @@
     color: var(--FontColorSecondary);
 }
 
+.light-mode .AdminDashboard>h3 {
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--Greycolour)) 2;
+}
+
 .AdminDashboard>section {
     margin: 0 0 20px 0;
 }
@@ -29,15 +33,28 @@
     text-align: center;
 }
 
+.light-mode .AdminDashboard-Analytics>div {
+    background-color: var(--Greycolour);
+    border: 1px solid var(--DarkerGreyColour);
+}
+
 .AdminDashboard-Analytics>div p:first-child {
     font-weight: bold;
     font-size: 1.8em;
     color: var(--FontColorPrimary);
 }
 
+.light-mode .AdminDashboard-Analytics>div p:first-child {
+    color: var(--FontColorDark);
+}
+
 .AdminDashboard-Analytics>div p:not(:first-child) {
     font-size: 0.8em;
     color: var(--FontColorSecondary);
+}
+
+.light-mode .AdminDashboard-Analytics>div p:not(:first-child) {
+    color: var(--FontColorDarker);
 }
 
 /* Section: Attention */
@@ -58,6 +75,11 @@
     padding: 0 7px 0 0;
     border-radius: 5px;
     background-color: var(--BackgroudTertiary);
+}
+
+.light-mode .AdminDashboard-Alerts>div {
+    background-color: var(--Greycolour);
+    border: 1px solid var(--DarkerGreyColour);
 }
 
 .AdminDashboard-Alerts>div>* {

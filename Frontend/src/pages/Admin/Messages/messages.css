@@ -6,6 +6,10 @@
     color: var(--FontColorSecondary);
 }
 
+.light-mode .Messages>h3 {
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--Greycolour)) 2;
+}
+
 .Messages>section,
 .Messages-MessageBoxSection>* {
     margin-bottom: 10px;

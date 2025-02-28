@@ -27,7 +27,7 @@
 <div align="center">
   <br>
   <h1><b>secure_register_and_login_python</b></h1>
-  <strong>Flask-React software template for user registration and admin portal</strong>
+  <strong>Flask+React software template for user registration and admin portal</strong>
 </div>
 <br>
 

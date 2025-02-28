@@ -21,6 +21,10 @@
     background-color: var(--BackgroudSecondary);
 }
 
+.light-mode .Modal-Container {
+    background-color: var(--Greycolour);
+}
+
 .Modal-Heading {
     display: flex;
     justify-content: space-between;

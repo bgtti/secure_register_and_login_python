@@ -26,3 +26,7 @@
     border-radius: 5px 5px 0 0;
     background-color: var(--BackgroudPrimary);
 }
+
+.light-mode .AccountMain>nav>ul>li>a.active {
+    background-color: var(--Greycolour);
+}

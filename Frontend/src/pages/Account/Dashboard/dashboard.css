@@ -6,6 +6,10 @@
     color: var(--FontColorSecondary);
 }
 
+.light-mode .Dashboard>h3 {
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--Greycolour)) 2;
+}
+
 .Dashboard>section {
     margin: 0 0 20px 0;
 }

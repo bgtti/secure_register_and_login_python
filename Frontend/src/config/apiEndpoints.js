@@ -15,7 +15,7 @@ const adminUrl = {
 }
 
 export const apiEndpoints = {
-    baseURL: "https://127.0.0.1:5000",
+    baseURL: "http://127.0.0.1:5000",
     //AUTH
     //authentication -- credential change
     resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //OK

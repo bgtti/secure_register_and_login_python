@@ -5,7 +5,7 @@ values.py centralizes all important constants needed in config files, manage.py,
 
 These values are derived from an .env file if it exist, if it does't, from .env.default if it exists, and it case it also does not, default values will be assigned. 
 """
-from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SERIALIZER_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS, BASE_URLS, CRYPTO_KEY
+from config.value_setter import ENVIRONMENT_OPTIONS, CURRENT_ENVIRONMENT, CURRENT_PEPPER, CURRENT_KEY, CURRENT_SERIALIZER_KEY, CURRENT_SUPER_USER, CURRENT_EMAIL_CREDS, BASE_URLS, CORS_ACCEPT_ORIGINS, CRYPTO_KEY
 
 ENVIRONMENT_OPTIONS = ENVIRONMENT_OPTIONS
 """`ENVIRONMENT_OPTIONS = ["local", "development", "production"]`"""
@@ -101,6 +101,17 @@ These values are required for running the app. You can define url for local deve
 - `PROD_URL_FRONTEND="https:..."`
 - `PROD_URL_BACKEND="https:..."`
 """ 
+
+CORS_ORIGINS = CORS_ACCEPT_ORIGINS
+"""`CORS_ORIGINS` is an array containing strings. This should be used to accept requests from URLs that are allowed to use the api.
+
+In local development, these are: ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+--------------------
+**INFO:**
+This should be used when initiating the flask cors extension in app > __init__.py
+
+"""
 
 # NOTE it would be best to set the base (and any) url in a shared env or json file -- along with the relative paths for both FE and BE apps -- so as to keep one source of truth. hardcoding links is a bad idea.
 
