@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AxiosApiInterceptor from "../config/AxiosApiInterceptor";
@@ -51,7 +52,20 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
 
 const Router = () => {
+    //Loader
     const loaderDisplay = useSelector((state) => state.loader.display);
+
+    //Night mode settings: getting stored at redux
+    const nightModeStatus = useSelector((state) => state.preferences.nightMode);
+
+    useEffect(() => {
+        if (!nightModeStatus) {
+            document.body.classList.add("light-mode");
+        } else {
+            document.body.classList.remove("light-mode");
+        }
+    }, [nightModeStatus]);
+
     return (
         <BrowserRouter>
             {<AxiosApiInterceptor />}

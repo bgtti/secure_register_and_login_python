@@ -18,7 +18,7 @@ import { sanitizedUserAgent } from "../../../utils/validation.js";
  *     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
  * }
  * 
- * // Response from disableMfa:
+ * // Response from setNightMode:
  * setNightMode(requestData)
  *      .then(response => {
  *          console.log (response)
@@ -85,4 +85,51 @@ export function setNightMode(data) {
         return Promise.resolve(res);
     }
     return editNightMode();
+}
+
+/**
+ * Function sets the user's night mode preferences in redux only (when a user is not logged in).
+ * This function does not make any API call.
+ * 
+ * @param {bool} trueOrFalse # indicates whether user wants the night mode styles (true) or not (false)
+ * @returns {Promise<object>} # with boolean "response",  and string "message"
+ * 
+ * @example
+ * //Input example:
+ * 
+ * // Response from disableMfa:
+ * setNightModeFrontEnd(true)
+ *      .then(response => {
+ *          console.log (response)
+ * })
+ * // a successfull response will yield:
+ * {
+        response: true,
+        message: "Night mode sucessfully set!"
+    }
+ *  // an error response might yield:
+    {
+        response: false,
+        message: "An error occurred, please try again."
+    }
+ */
+export function setNightModeFrontEnd(trueOrFalse) {
+    // standard error response
+    const res = {
+        response: false,
+        message: "Error: Invalid input."
+    };
+
+    //checking required data
+    if (typeof trueOrFalse !== "boolean") { return Promise.resolve(res) };
+
+    //set in redux store
+    setReduxNightMode(trueOrFalse)
+
+    //setting response
+    res.response = true
+    res.message = trueOrFalse ? "Night mode sucessfully set!" : "Light mode sucessfully set!"
+
+    //returning
+    return Promise.resolve(res);
 }

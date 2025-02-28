@@ -5,3 +5,7 @@
     padding: 10px 0 10px 7px;
     color: var(--FontColorSecondary);
 }
+
+.light-mode .Users>h3 {
+    border-image: linear-gradient(180deg, var(--BlueColour), #4b83e3b9, var(--Greycolour)) 2;
+}

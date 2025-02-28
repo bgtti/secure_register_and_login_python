@@ -66,6 +66,9 @@
     --FontColorDarkerFilter: invert(24%) sepia(40%) saturate(326%) hue-rotate(157deg) brightness(102%) contrast(85%);
     --FontColorDark: #0d1618;
     --BlueColour: #4B83E3;
+    --Greycolour: #e4e7ed;
+    --DarkerGreyColour: #bcbfc7;
+    --DarkGreyColour: #999ca4;
     --MiddleBlueColour: #376073;
     --YellowColor: #DB9A02;
     --RedColor: #aa0000;
@@ -86,6 +89,11 @@ body {
     min-width: 320px;
     min-height: 100vh;
     line-height: 1.4;
+}
+
+body.light-mode {
+    background-color: var(--Greycolour);
+    color: var(--BackgroudPrimary)
 }
 
 #root {
@@ -117,7 +125,13 @@ h4 {
     font-size: 1.4em;
     font-weight: bold;
     margin: 10px 0;
-    color: var(--FontColorSecondary)
+    color: var(--FontColorSecondary);
+}
+
+.light-mode h2,
+.light-mode h3,
+.light-mode h4 {
+    color: var(--FontColorDarker);
 }
 
 p,
@@ -128,6 +142,10 @@ input,
 textarea {
     font-family: 'Inter', sans-serif;
     font-size: 1em;
+}
+
+.light-mode p {
+    color: var(--FontColorDark);
 }
 
 a {
@@ -175,6 +193,13 @@ textarea {
     padding: 5px 10px;
     background-color: var(--BackgroundInput);
     color: var(--FontColorInput);
+}
+
+.light-mode input,
+.light-mode select,
+.light-mode textarea {
+    background-color: var(--DarkerGreyColour);
+    color: var(--FontColorDark);
 }
 
 
@@ -302,9 +327,17 @@ textarea {
     background-color: var(--BackgroudSecondary);
 }
 
+.light-mode .MAIN-table>tbody>tr:nth-of-type(even) {
+    background-color: var(--DarkerGreyColour);
+}
+
 @media (hover: hover) {
     .MAIN-table>tbody>tr:hover {
         background-color: var(--BackgroudTertiary);
+    }
+
+    .light-mode .MAIN-table>tbody>tr:hover {
+        background-color: var(--DarkGreyColour);
     }
 }
 
@@ -396,6 +429,10 @@ textarea {
 
     .MAIN-table>thead>tr {
         background-color: var(--BackgroundInput);
+    }
+
+    .light-mode .MAIN-table>thead>tr {
+        background-color: var(--DarkGreyColour);
     }
 
     .MAIN-table>thead>tr>th {
