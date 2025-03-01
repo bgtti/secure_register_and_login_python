@@ -25,6 +25,7 @@ import "./userInfo.css"
 function UserInfo() {
     const location = useLocation();
     const userId = location.state;
+    if (userId === 0 || !userId) { console.error("No user id provided to getInfo in UserInfo component.") }
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -102,18 +103,13 @@ function UserInfo() {
      * @returns {void} 
      */
     function getInfo(id = userId) {
-        if (id === 0) {
-            return
-        }
+        if (id === 0 || !id) { return }
         dispatch(setLoader(true))
         getUserInfo(userId)
             .then(response => {
                 if (isComponentMounted()) {
-                    if (response.data) {
-                        setUser(response.user)
-                    } else {
-                        setUser({})
-                    }
+                    if (response.data) { setUser(response.user) }
+                    else { setUser({}) }
                 }
             })
             .catch(error => {
