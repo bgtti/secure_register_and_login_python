@@ -41,11 +41,9 @@ first delete the file named icon_lock.svg in the public folder and place the fil
 
 then, in index.html you will see a link tag. Replace the name in the href with that of the svg of your desired favicon. If you are using another file format, you might want to change the type as well (eg: for a .ico file: type="image/png" href="/favicon.ico")
 
-<pre>
 ```
 <link rel="icon" type="image/svg+xml" href="/icon_lock.svg" />
 ```
-</pre>
 
 2. change the app name 
 `layout` contains the navbar where you may change the app's name to the name of your liking
