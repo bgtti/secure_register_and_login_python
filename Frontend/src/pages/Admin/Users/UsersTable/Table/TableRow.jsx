@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { USER_ACCESS_TYPES, FLAG_TYPES, IS_BLOCKED_TYPES } from "../../../../../utils/constants.js";
+import { PATH_TO } from "../../../../../router/routePaths.js";
 import Flag from "../../../../../components/Flag/Flag.jsx"
 import iconUserIsBlocked from "../../../../../assets/icon_user_status_blocked.svg";
 import iconUserIsNotBlocked from "../../../../../assets/icon_user_status_unblocked.svg";
@@ -86,7 +87,7 @@ function TableRow(props) {
                         role="button"
                         title="User information"
                         src={iconUserMore}
-                        onClick={() => { navigate("userInfo", { state: id }) }}
+                        onClick={() => { navigate(PATH_TO.adminArea_userInfo, { state: id }) }}
                     />
                     <img
                         alt="Block user"
