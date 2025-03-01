@@ -37,7 +37,7 @@ function AccountSettings() {
     //Load recovery: recovery status and if recovery email, then, it...
 
     return (
-        <div className="AccountSettings">
+        <div className="MAIN-subNav-page AccountSettings">
 
             <h3>Account Settings</h3>
 

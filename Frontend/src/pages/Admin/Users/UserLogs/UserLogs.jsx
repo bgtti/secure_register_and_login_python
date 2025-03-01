@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import useIsComponentMounted from "../../../../hooks/useIsComponentMounted.js";
 import { setLoader } from "../../../../redux/loader/loaderSlice";
+import { PATH_TO } from "../../../../router/routePaths.js";
 import { getUserLogs } from "../../../../config/apiHandler/admin/userLogs.js"
 import UserLogRow from "./UserLogRow.jsx"
 import Pagination from "../../../../components/Pagination/Pagination.jsx";
@@ -82,12 +83,12 @@ function UserLogs() {
 
 
     return (
-        <div className="Users UserLogs">
+        <div className="MAIN-subNav-page UserLogs">
             <h3>User Logs</h3>
 
             <div className="UserLogs-btnContainer">
-                <button onClick={() => { navigate("/adminArea/users/userInfo", { state: id }) }}>Back to User's Info</button>
-                <button onClick={() => { navigate("/adminArea/users/usersTable") }}>Back to Users Table</button>
+                <button onClick={() => { navigate(PATH_TO.adminArea_userInfo, { state: id }) }}>Back to User's Info</button>
+                <button onClick={() => { navigate(PATH_TO.adminArea_usersTable) }}>Back to Users Table</button>
             </div>
 
             <h4 >User</h4>

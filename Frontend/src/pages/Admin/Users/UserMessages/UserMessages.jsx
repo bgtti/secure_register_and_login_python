@@ -91,7 +91,7 @@ function UserMessages() {
     }
 
     return (
-        <div className="Users UserMessages">
+        <div className="MAIN-subNav-page UserMessages">
             <h3>User Messages</h3>
 
             <div className="UserMessages-btnContainer">

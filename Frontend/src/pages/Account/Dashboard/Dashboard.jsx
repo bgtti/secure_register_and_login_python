@@ -1,5 +1,4 @@
 import { useSelector } from "react-redux";
-import "./dashboard.css"
 
 /**
  * Component for the User's Dashboard
@@ -13,7 +12,7 @@ function Dashboard() {
     const user = useSelector((state) => state.user);
 
     return (
-        <div className="Dashboard">
+        <div className="MAIN-subNav-page">
             <h3>{user.name}'s Dashboard</h3>
             <section>
                 <p><b>Welcome back, {user.name}!</b></p>

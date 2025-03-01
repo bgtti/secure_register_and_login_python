@@ -175,7 +175,7 @@ function UsersTable() {
     let usersMightExist = (users && users.length >= 0) || ((!users || users.length === 0) && (filterActive || searchActive))
 
     return (
-        <div className="Users UsersTable">
+        <div className="MAIN-subNav-page UsersTable">
             {
                 displayModal && userAction !== "" && (
                     <Modal

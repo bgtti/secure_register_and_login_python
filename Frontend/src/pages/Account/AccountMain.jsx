@@ -1,17 +1,16 @@
 import { Outlet, NavLink } from "react-router-dom"
 import { Helmet } from "react-helmet-async";
-import "./accountMain.css"
 
 function AccountMain() {
 
     return (
-        <div className="AccountMain">
+        <div>
             <Helmet>
                 <title>Account</title>
                 <meta name="robots" content="noindex, nofollow" />
             </Helmet>
             <h2>Account</h2>
-            <nav role="navigation" aria-labelledby="secondLabel" aria-label="Secondary">
+            <nav aria-label="Secondary" aria-labelledby="secondLabel" className="MAIN-subNavigation" role="navigation">
                 <ul>
                     <li>
                         <NavLink to="userdashboard" >Dashboard</NavLink>
