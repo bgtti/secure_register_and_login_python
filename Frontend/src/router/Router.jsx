@@ -49,8 +49,6 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 
 // FIXME: error occurs, page reloads, sends user to login but if I write the address on the browser, it will log the user in again. Not only annoying, but dangerous as user may thing its logged out...
 
-
-
 const Router = () => {
     //Loader
     const loaderDisplay = useSelector((state) => state.loader.display);

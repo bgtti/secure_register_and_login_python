@@ -17,8 +17,8 @@ function Home() {
                 </div>
             </section>
             <section>
-                <h2>Security basics</h2>
-                <p>some more content</p>
+                <h2>Replace this content</h2>
+                <p>include information here about what your app does</p>
             </section>
         </div>
     )

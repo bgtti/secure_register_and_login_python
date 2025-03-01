@@ -23,7 +23,7 @@ function AdminDashboard() {
     }
 
     return (
-        <div className="AdminDashboard">
+        <div className="MAIN-subNav-page AdminDashboard">
             <h3>Admin Dashboard</h3>
             {
                 !showLogs && (

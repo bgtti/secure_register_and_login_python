@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { setLoader } from "../redux/loader/loaderSlice";
 import { logoutUser } from "../config/apiHandler/authSession/logout";
 import { setNightModeFrontEnd } from "../config/apiHandler/userSettings/setNightMode";
-import MenuIcon from "../assets/icon_menu.svg"
-import IconDarkMode from "../assets/icon_mode_dark.svg"
-import IconLightMode from "../assets/icon_mode_light.svg"
+import MenuIcon from "../assets/icons/icon_menu.svg"
+import IconDarkMode from "../assets/icons/icon_mode_dark.svg"
+import IconLightMode from "../assets/icons/icon_mode_light.svg"
 import "./navbar.css"
 
 function NavBar() {

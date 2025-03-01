@@ -126,7 +126,7 @@ function UserInfo() {
 
 
     return (
-        <div className="Users UserInfo">
+        <div className="MAIN-subNav-page UserInfo">
             {
                 displayModal && userAction !== "" && (
                     <Modal

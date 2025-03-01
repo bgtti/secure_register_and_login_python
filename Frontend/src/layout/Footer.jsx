@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import GithubIcon from "../assets/github.png";
+import GithubIcon from "../assets/icons/github.png";
 import "./footer.css"
 
 function Footer() {
