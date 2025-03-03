@@ -4,7 +4,7 @@ from flask_login import login_required
 from app.extensions.extensions import limiter
 import logging
 from app.models.user import User
-from app.models.log_event import LogEvent
+# from app.models.log_event import LogEvent
 from app.models.message import Message
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum

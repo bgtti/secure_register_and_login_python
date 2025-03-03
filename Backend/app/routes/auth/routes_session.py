@@ -51,7 +51,7 @@ from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import AuthMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
@@ -291,10 +291,10 @@ def login_user():
     except Exception as e:
         logging.error(f"Login attempt counter could not be reset, function will continue. Error: {e}")
 
-    try:
-        log_event("ACCOUNT_LOGIN", "login successful", user.id)
-    except Exception as e:
-        logging.error(f"Failed to create event log. Error: {e}")
+    # try:
+    #     log_event("ACCOUNT_LOGIN", "login successful", user.id)
+    # except Exception as e:
+    #     logging.error(f"Failed to create event log. Error: {e}")
 
     # TODO: consider the bellow if user does not want to be remembered:
     # user.new_session() 

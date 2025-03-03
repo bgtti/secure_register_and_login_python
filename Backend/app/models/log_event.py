@@ -1,7 +1,13 @@
-from sqlalchemy.ext.hybrid import hybrid_property
+#DELETE
+
+
+# Python/Flask libraries
+from sqlalchemy.ext.hybrid import hybrid_property #DELETE
+from datetime import datetime, timezone #DELETE
+# Extensions and configurations
 from flask_login import UserMixin
-from datetime import datetime, timezone
 from app.extensions.extensions import db
+from app.extensions.sqlalchemy_config import EncryptedType, UTCDateTime
 
 # TODO: create function to delete old logs on a schedule
 
@@ -21,44 +27,47 @@ from app.extensions.extensions import db
 # Sensitive information should not be logged, and logs on their ow
 # A system to standardize db logs was created and resides in utils>log_event_utils. log_event is the function that should be used to log into the db. Constants.py contain the terminology used in the different log-type files (eg: log_event_login), each file defining possible outcomes in a route and assigning a code to it. A summary of all activities triggering logs are in log_event_activities_all.py. This was not only created for standardtization and diminishing the possibility for human error when logging - but the organization also helps to create a mental model of what outcomes to expect from an event as it relates to the user. 
 
-class LogEvent(UserMixin, db.Model):
-    """
-    Use LogEvent to log user activity that would be relevant for debugging a problem the user might have encountered.
-    Important: only log events using the log_event function available at utils>log_event_utils>log.py to keep log format standartized!
-    ----------------------------------------------------
-    Difference between type and level:
-    level refers to the level as it would be in the logging module (INFO, CRITICAL, ETC)
-    types are defined in utils>log_event_utils>constanty.py to define the log's importance as would be relevant to an admin. In this way, type is a self-defined log level that can be changed in the LOG_EVENT_TYPE 'enum'.
-    ----------------------------------------------------
-    Example usage for adding to this db:
-    from app.utils.log_event_utils.log import log_event
-    log_event("LOG_EVENT_LOGIN", "LEL_02")
-    """
-    __tablename__ = "log_event"
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    level = db.Column(db.Integer, default=20)
-    type = db.Column(db.String(50), nullable=False)
-    activity = db.Column(db.String(50), nullable=False)
-    message = db.Column(db.String(200), nullable=False)
-    user_uuid = db.Column(db.String(32), nullable=False, default="none", index=True) # DELETE
-    user_id = db.Column(db.Integer, nullable=True, index=True, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), index=True)
+# class LogEvent(UserMixin, db.Model):
+#     """
+#     Use LogEvent to log user activity that would be relevant for debugging a problem the user might have encountered.
+#     Important: only log events using the log_event function available at utils>log_event_utils>log.py to keep log format standartized!
+#     ----------------------------------------------------
+#     Difference between type and level:
+#     level refers to the level as it would be in the logging module (INFO, CRITICAL, ETC)
+#     types are defined in utils>log_event_utils>constanty.py to define the log's importance as would be relevant to an admin. In this way, type is a self-defined log level that can be changed in the LOG_EVENT_TYPE 'enum'.
+#     ----------------------------------------------------
+#     Example usage for adding to this db:
+#     from app.utils.log_event_utils.log import log_event
+#     log_event("LOG_EVENT_LOGIN", "LEL_02")
+#     """
+#     __tablename__ = "log_event"
+#     id = db.Column(db.Integer, primary_key=True, unique=True)
+#     level = db.Column(db.Integer, default=20)
+#     type = db.Column(db.String(50), nullable=False)
+#     activity = db.Column(db.String(50), nullable=False)
+#     message = db.Column(db.String(200), nullable=False)
+#     user_uuid = db.Column(db.String(32), nullable=False, default="none", index=True) # DELETE
+#     user_id = db.Column(db.Integer, nullable=True, index=True, default=0)
+#     # anonymized_ip = db.Column(EncryptedType, nullable=True)
+#     # country = db.Column(EncryptedType, nullable=True)
+#     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), index=True) # DELETE
+#     # created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc), index=True)
     
-    def __init__(self, level, type, activity, message, user_id=0, **kwargs):
-        self.level = level
-        self.type = type
-        self.activity = activity
-        self.message = message
-        self.user_id = user_id
+#     def __init__(self, level, type, activity, message, user_id=0, **kwargs):
+#         self.level = level
+#         self.type = type
+#         self.activity = activity
+#         self.message = message
+#         self.user_id = user_id
     
-    def __repr__(self):
-        return f"<Log: {self.id} {self.type} {self.message}>"
+#     def __repr__(self):
+#         return f"<Log: {self.id} {self.type} {self.message}>"
     
-    def serialize_user_logs(self):
-        return {
-            "user_id": self.user_id,
-            "created_at": self.created_at,
-            "type": self.type,
-            "activity": self.activity,
-            "message": self.message,
-        }
+#     def serialize_user_logs(self):
+#         return {
+#             "user_id": self.user_id,
+#             "created_at": self.created_at,
+#             "type": self.type,
+#             "activity": self.activity,
+#             "message": self.message,
+#         }

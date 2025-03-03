@@ -1,23 +1,27 @@
 import logging
 import requests
 
-def geolocate_ip(client_ip):
+def geolocate_ip(client_ip=""):
     """
     geolocate_ip(ip_address: str) -> obj
+
     ------------------------------------------------------------
-    Returns:
-        An object with the following keys: continent, country, country_code, and city.
-        Should geolocation fail, the value assigned to the keys will be "N/A".
+
+    **Returns**
+    - An object with the following keys: continent, country, country_code, and city.
+    - Should geolocation fail, the value assigned to the keys will be "N/A".
+
     ------------------------------------------------------------
-    Example usage:
-    
+    **Example usage**
+    ```
     geo_location = geolocate_ip("127.0.0.1")
     geo_location ->  {
             "continent": "N/A",
             "country": "N/A",
             "country_code": "N/A",
             "city": "N/A"
-        }
+            }
+    ```
     """
     res = {
         "continent": "N/A",
@@ -25,6 +29,8 @@ def geolocate_ip(client_ip):
         "country_code": "N/A",
         "city": "N/A"
     }
+    if client_ip == "":
+        return res
     
     # Localhost may use 127.0.0.0–127.255.255.255
     # Other reserved ranges: https://en.wikipedia.org/wiki/Reserved_IP_addresses

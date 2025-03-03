@@ -43,7 +43,8 @@ from app.models.user import User
 from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import modelBool
 from app.utils.detect_html.detect_html import check_for_html
-from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event
+from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.custom_decorators.json_schema_validator import validate_schema
@@ -59,6 +60,10 @@ from app.routes.auth.helpers_email.email_helpers_registration import (
     send_email_acct_exists,
     send_email_acct_created,
     send_email_acct_deleted
+)
+from app.routes.auth.helpers_log_events.log_registration import(
+    log_signup_user,
+    log_delete_user
 )
 from app.routes.auth.schemas import (
     signup_schema,
@@ -125,9 +130,13 @@ def signup_user():
     email = json_data["email"]
     password = json_data["password"]
     honeypot = json_data["honeypot"]
+    #TODO: User agent needed!
+    user_agent = "here"
+    client_ip = get_client_ip(request.remote_adrr) or ""
 
     if len(honeypot) > 0:
         bot_caught(request, "signup")
+        log_signup_user(418, "", user_agent, client_ip, 0)
         return jsonify(error_response), 418
 
     # Check if user already exists 
@@ -141,7 +150,8 @@ def signup_user():
         try:
             send_email_acct_exists(user_if_exists.name, user_if_exists.email)
             logging.info(f"User already in db (error 409 in reality): {email}")
-            log_event("ACCOUNT_SIGNUP", "user exists", user_if_exists.id)
+            log_signup_user(409, f"Email:{email}", user_agent, client_ip, user_if_exists.id)
+            # log_event("ACCOUNT_SIGNUP", "user exists", user_if_exists.id)
         except Exception as e:
             logging.error(f"Could not log event in signup: {e}")
     
@@ -149,11 +159,16 @@ def signup_user():
     date = datetime.now(timezone.utc) # date is required to get apropriate Pepper value
     salt = generate_salt()
     hashed_password = get_hashed_pw(password, date, salt) # will be null if password does not meet criteria
+
+    if not hashed_password:
+        log_signup_user(400, f"Password does not meet criteria. Email: {email}", user_agent, client_ip, 0)
     
     # Determine if the new user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
     flag = False
 
     name_is_valid = user_name_is_valid(name)
+    if name_is_valid is False:
+        log_signup_user(400, f"Name does not meet criteria. Name: {name}", user_agent, client_ip, 0)
 
     html_in_name = check_for_html(name, "signup - name field", email)
     html_in_email = check_for_html(email, "signup - email field", email)
@@ -186,22 +201,26 @@ def signup_user():
     except Exception as e:
         db.session.rollback() 
         logging.error(f"User registration failed. Error: {e}")
-        try:
-            log_event("ACCOUNT_SIGNUP", "signup failed")
-        except Exception as e:
-            logging.error(f"Log event error. Error: {e}")
+        # try:
+        #     log_event("ACCOUNT_SIGNUP", "signup failed")
+        # except Exception as e:
+        #     logging.error(f"Log event error. Error: {e}")
         return jsonify(error_response), 500
 
     # Log event to user and system logs
     try:
         logging.info(f"New user created.")
-        log_event("ACCOUNT_SIGNUP", "signup successful", new_user.id)
+        log_signup_user(200, "", user_agent, client_ip, new_user.id)
+        # log_event("ACCOUNT_SIGNUP", "signup successful", new_user.id)
 
         if flag:
             if html_in_name or html_in_email:
-                log_event("ACCOUNT_SIGNUP", "html detected", new_user.id)
+                # log_event("ACCOUNT_SIGNUP", "html detected", new_user.id)
+                # print("new log needed")
+                log_signup_user(207, "Html detected in name or email.", user_agent, client_ip, new_user.id)
             else:
-                log_event("ACCOUNT_SIGNUP", "profanity", new_user.id)
+                # log_event("ACCOUNT_SIGNUP", "profanity", new_user.id)
+                log_signup_user(207, "Profanity detected in name or email.", user_agent, client_ip, new_user.id)
     except Exception as e:
         logging.error(f"Log event error. Error: {e}")
 
@@ -285,7 +304,7 @@ def delete_user():
         return jsonify(error_response), 404
     
     # Wrong credentials response
-    wrong_creds_res = {"response": "Wrong credentials: password/OTP expired or incorrect."} 
+    # wrong_creds_res = {"response": "Wrong credentials: password/OTP expired or incorrect."} 
 
     # Check password
     salted_password = user.salt + password + get_pepper(user.created_at)

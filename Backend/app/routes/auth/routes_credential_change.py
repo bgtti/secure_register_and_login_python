@@ -121,11 +121,11 @@ def reset_password_token():
 
     # Filter out bots
     if len(honeypot) > 0:
-        bot_caught(request, "login")
+        bot_caught(request, "reset_password_token")
         return jsonify(error_response), 418
     
     # Check if user exists
-    user = get_user_or_none(email, "login")
+    user = get_user_or_none(email, "reset_password_token")
 
     # Delay response in case user does not exist
     # Reason: mitigating timing attacks by introducing randomized delay

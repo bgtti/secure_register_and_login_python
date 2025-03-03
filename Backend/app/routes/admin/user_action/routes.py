@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.stats import UserStats
 from app.utils.constants.enum_class import UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
@@ -73,10 +73,10 @@ def change_user_flag():
             user.flag_change(flag_colour)
             db.session.commit()
 
-            log_event("ADMIN_FLAG_USER","flag changed",user.id, f"Previous flag: {old_flag} New flag: {flag_colour}. Admin action from: {current_user.email}.") 
+            # log_event("ADMIN_FLAG_USER","flag changed",user.id, f"Previous flag: {old_flag} New flag: {flag_colour}. Admin action from: {current_user.email}.") 
             return jsonify({"response": "success"})
         else:
-            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id} lead to 404 not found.")
+            # log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id} lead to 404 not found.")
             logging.info(f"User id={user_id} could not be found, 404 not found.") 
             return jsonify({"response": "User not found"}), 404
         
@@ -84,18 +84,18 @@ def change_user_flag():
         # Handle database integrity error (e.g., foreign key constraint)
         db.session.rollback()
         logging.error(f"DB integrity error prevented user flag change: {e}")
-        try:
-            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, integrity error raised.")
-        except Exception as e:
-            logging.error(f"Error prevented user flag change log to be saved: {e}")
+        # try:
+        #     log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, integrity error raised.")
+        # except Exception as e:
+        #     logging.error(f"Error prevented user flag change log to be saved: {e}")
         return jsonify({"response": "Error changing user flag - integrity error", "error": str(e)}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user flag change: {e}")
-        try:
-            log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, error raised.")
-        except Exception as e:
-            logging.error(f"Error prevented user flag change log to be saved: {e}")
+        # try:
+        #     log_event("ADMIN_FLAG_USER","flag change problem",0, f"User id {user_id}, error raised.")
+        # except Exception as e:
+        #     logging.error(f"Error prevented user flag change log to be saved: {e}")
         return jsonify({"response": "Error changing user flag", "error": str(e)}), 500
     
 # ----- ACTION: CHANGE USER ACCESS TYPE -----
@@ -156,10 +156,10 @@ def change_user_access():
 
             db.session.commit()
 
-            log_event("ADMIN_USER_ACCESS_CHANGE","access changed",user.id, f"Previous access type: {current_type.value} New access type: {user_type.value}. Admin action from: {current_user.email}.")
+            # log_event("ADMIN_USER_ACCESS_CHANGE","access changed",user.id, f"Previous access type: {current_type.value} New access type: {user_type.value}. Admin action from: {current_user.email}.")
             return jsonify({"response": "success"})
         else:
-            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id} lead to 404 not found.")
+            # log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id} lead to 404 not found.")
             logging.info(f"User id={user_id} could not be found, 404 not found.") 
             return jsonify({"response": "User not found"}), 404
         
@@ -167,18 +167,18 @@ def change_user_access():
         # Handle database integrity error (e.g., foreign key constraint)
         db.session.rollback()
         logging.error(f"DB integrity error prevented user type change: {e}")
-        try:
-            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, integrity error raised.")
-        except Exception as e:
-            logging.error(f"Error prevented user access change log to be saved: {e}")
+        # try:
+        #     log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, integrity error raised.")
+        # except Exception as e:
+        #     logging.error(f"Error prevented user access change log to be saved: {e}")
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user type change: {e}")
-        try:
-            log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, error raised.")
-        except Exception as e:
-            logging.error(f"Error prevented user access change log to be saved: {e}")
+        # try:
+        #     log_event("ADMIN_USER_ACCESS_CHANGE","access change problem",0, f"User id {user_id}, error raised.")
+        # except Exception as e:
+        #     logging.error(f"Error prevented user access change log to be saved: {e}")
         return jsonify({"response": "Error changing user type", "error": str(e)}), 500
 
 
@@ -227,10 +227,10 @@ def block_unblock_user():
 
             if block_status:
                 user.block_access()
-                log_event("ADMIN_BLOCK_USER","block user",user.id)
+                # log_event("ADMIN_BLOCK_USER","block user",user.id)
             else:
                 user.unblock_access()
-                log_event("ADMIN_BLOCK_USER","unblock user",user.id, f"Admin action from: {current_user.email}." )
+                # log_event("ADMIN_BLOCK_USER","unblock user",user.id, f"Admin action from: {current_user.email}." )
 
             db.session.commit()
             logging.info(f"User successfully set to blocked={block_status} by admin.") 
@@ -244,17 +244,21 @@ def block_unblock_user():
         db.session.rollback()
         logging.error(f"DB integrity error prevented user block/unblock: {e}")
         if block_status:
-            log_event("ADMIN_BLOCK_USER","block problem",user.id)
+            print("need a log here")
+            # log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
-            log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
+            print("need a log here")
+            # log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
     
     except Exception as e:
         logging.error(f"Error prevented user block/unblock: {e}")
         if block_status:
-            log_event("ADMIN_BLOCK_USER","block problem",user.id)
+            print("need a log here")
+            # log_event("ADMIN_BLOCK_USER","block problem",user.id)
         else:
-            log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
+            print("need a log here")
+            # log_event("ADMIN_BLOCK_USER","unblock problem",user.id)
         return jsonify({"response": "Error blocking/unblocking user", "error": str(e)}), 500
     
 
@@ -309,7 +313,7 @@ def admin_delete_user():
             db.session.delete(user)
             db.session.commit()
             logging.info("User deleted successfully by admin.")
-            log_event("ADMIN_DELETE_USER","deletion successful",user.id, f"Admin action from: {current_user.email}.")
+            # log_event("ADMIN_DELETE_USER","deletion successful",user.id, f"Admin action from: {current_user.email}.")
 
             try:
                 new_user_stats = UserStats(new_user=-1,country="")
@@ -326,10 +330,10 @@ def admin_delete_user():
     except IntegrityError as e:
         db.session.rollback()
         logging.error(f"DB integrity error prevented user deletion: {e}")
-        log_event("ADMIN_DELETE_USER","deletion problem",user.id)
+        # log_event("ADMIN_DELETE_USER","deletion problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500
 
     except Exception as e:
         logging.error(f"Error prevented user deletion: {e}")
-        log_event("ADMIN_DELETE_USER","deletion problem",user.id)
+        # log_event("ADMIN_DELETE_USER","deletion problem",user.id)
         return jsonify({"response": "Error deleting user", "error": str(e)}), 500

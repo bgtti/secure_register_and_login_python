@@ -4,18 +4,23 @@ import logging
 def anonymize_ip(ip_address):
     """
     anonymize_ip(ip_address: str) -> str | None
+
     ------------------------------------------------------------
-    Returns:
-        Anonymized IP as a string if input is a valid IP format.
-        None if IP address is invalid or not v4/v6.
+
+    **Returns**
+    - Anonymized IP as a string if input is a valid IP format.
+    - None if IP address is invalid or not v4/v6.
+
     ------------------------------------------------------------
-    Example usage:
-    
+
+    **Example usage**
+    ```
     anonymous_IPv4 = anonymize_ip("192.168.1.100")
     print("anonymous_IPv4") -> "192.168.1.0"
 
     anonymous_IPv6 = anonymize_ip("2001:db8::1")
     print("anonymous_IPv6") -> "2000000:db8::0000"
+    ```
     """
     try:
         # Parse the IP address

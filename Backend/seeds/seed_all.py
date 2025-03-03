@@ -10,9 +10,6 @@ seed_all.py seeds the database with:
 for the purpose of testing in development.
 It will call the main functions from *seed_logs.py", "seed_messages.py", and "seed_users.py" to acomplish this.
 """
-
-#TODO REPLACE CONSOLE_WARN
-
 import os
 from app.extensions.extensions import db
 from app.models.user import User

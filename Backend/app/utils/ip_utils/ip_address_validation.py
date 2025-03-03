@@ -21,10 +21,10 @@ def get_client_ip(request):
 
     from flask import request
     # ...inside route:
-    get_client_ip(request) -> "192.168.1.100"
+    get_client_ip(request.remote_adrr) -> "192.168.1.100"
 
     # or...
-    get_client_ip(request) -> None
+    get_client_ip(request.remote_adrr) -> None
     """
     # Check if the request is behind a proxy
     if request.headers.getlist("X-Forwarded-For"):
