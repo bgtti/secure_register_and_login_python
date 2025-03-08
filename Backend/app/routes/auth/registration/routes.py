@@ -55,7 +55,7 @@ from app.routes.auth.helpers_auth import (
     reset_user_session
     )
 
-# Auth helpers (this file)
+# AResgistration helpers
 from app.routes.auth.registration.email import (
     send_email_acct_exists,
     send_email_acct_created,

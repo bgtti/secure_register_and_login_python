@@ -62,14 +62,23 @@ from app.routes.auth.email_helpers import (
 )
 
 # Credential change helpers 
-from app.routes.auth.credential_change.helpers import validate_and_verify_signed_token
-
 from app.routes.auth.credential_change.email import (
     send_pw_reset_email,
     send_pw_change_sucess_email,
     send_email_change_token_emails,
     send_email_change_sucess_emails
 )
+
+from app.routes.auth.credential_change.helpers import validate_and_verify_signed_token
+
+from app.routes.auth.credential_change.log import (
+    log_reset_password_token,
+    log_password_change,
+    log_email_change,
+    log_email_token_validation
+)
+
+
 from app.routes.auth.credential_change.schemas import (
     reset_password_token_schema,
     change_password_schema,
@@ -116,7 +125,10 @@ def reset_password_token():
     json_data = request.get_json()
     email = json_data["email"]
     honeypot = json_data["honeypot"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Standard response
     error_response = {"response": "There was an error resetting the user's password."}
@@ -124,6 +136,7 @@ def reset_password_token():
 
     # Filter out bots
     if len(honeypot) > 0:
+        log_reset_password_token(418, f"Email: {email}.", user_agent, client_ip, 0)
         bot_caught(request, "reset_password_token")
         return jsonify(error_response), 418
     
@@ -133,12 +146,10 @@ def reset_password_token():
     # Delay response in case user does not exist
     # Reason: mitigating timing attacks by introducing randomized delay
     if user is None:
+        log_reset_password_token(404, f"Email: {email}.", user_agent, client_ip, 0)
         delay = random.uniform(1, 15)
         time.sleep(delay)
         return jsonify(success_response) # not sending error to create ambiguity
-    
-    # Get the request ip
-    client_ip = get_client_ip(request)
     
     # Check if user is blocked
     user_is_blocked = False
@@ -148,7 +159,10 @@ def reset_password_token():
 
     if user_is_blocked:
         if blocked_status["temporary_block"] is False:
+            log_reset_password_token(403, f"Temporary block.", user_agent,client_ip, user.id)
             send_email_admin_blocked(user.name, user.email)
+        else:
+            log_reset_password_token(403, f"Admin block.", user_agent,client_ip, user.id)
         return jsonify(success_response) # not sending error to create ambiguity
     
     try:
@@ -158,6 +172,7 @@ def reset_password_token():
 
     except Exception as e:
         logging.error(f"Token creation failed. Error: {e}")
+        log_reset_password_token(500, f"Token creation failed. {str(e)}", user_agent,client_ip, user.id)
         return jsonify(error_response), 500
     
     url_data = create_verification_url(token.token, TokenPurpose.PW_RESET)
@@ -166,11 +181,14 @@ def reset_password_token():
         mail_sent = send_pw_reset_email(user.name, user.email, url_data["url"], url_data["token_url"], url_data["signed_token"] )
     except Exception as e:
         logging.error(f"Failed to send token email. Error: {e}")
+        log_reset_password_token(500, f"{str(e)}", user_agent,client_ip, user.id)
         return jsonify(error_response), 500
     
     if not mail_sent:
+        log_reset_password_token(500, f"Email could not be sent.", user_agent,client_ip, user.id)
         return jsonify(error_response), 500
     
+    log_reset_password_token(200, "", user_agent,client_ip, user.id)
     return jsonify(success_response)
 
 ####################################
@@ -232,12 +250,16 @@ def change_password():
     honeypot = json_data["honeypot"]
     user_agent = json_data.get("user_agent", "") #TODO log this in event
 
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
+
     # Standard response
     error_response = {"response": "There was an error changing the user's password."}
 
     # Filter out bots
     if len(honeypot) > 0:
         bot_caught(request, "login")
+        log_password_change(418, "", user_agent, client_ip, 0)
         return jsonify(error_response), 418
     
     #TODO: make MFA required for admins to change password
@@ -251,6 +273,7 @@ def change_password():
         res = validate_and_verify_signed_token(signed_token, TokenPurpose.PW_RESET, "change_password", False)
 
         if res["status"] != 200:
+            log_password_change(401, f"Token validation failed to reset password. Token validation status: {res["status"]}. Message: {res["message"]}", user_agent, client_ip, 0)
             return jsonify({"response": res["message"]}), res["status"]
 
         # Get user from token
@@ -261,22 +284,26 @@ def change_password():
     else:
         if pw_change_reason != PasswordChangeReason.CHANGE.value:
             logging.error("Error in change_password function: PasswordChangeReason not valid.")
+            log_password_change(400, f"Invalid input: password change reason does not meet options. Received: {pw_change_reason}", user_agent, client_ip, 0)
             return jsonify(error_response), 400
 
         # Get the user
         if current_user.is_anonymous:
+            log_password_change(401, "Current user is anonymous. Log-in required for password change.", user_agent, client_ip, 0)
             return jsonify({"response": "Unauthorized: log in to change password."}), 401
         user = get_user_or_none(current_user.email, "change_password")
 
         # Check that old password is correct
         salted_password = user.salt + old_password + get_pepper(user.created_at)
         if not flask_bcrypt.check_password_hash(user.password, salted_password):
+            log_password_change(401, "Wrong password provided.", user_agent, client_ip, user.id)
             return jsonify({"response": "Unauthorized: incorrect credentials."}), 401
         
     # Check new password
     if is_first_factor:
         hashed_password = get_hashed_pw(new_password, user.created_at, user.salt) 
         if not hashed_password:
+            log_password_change(400, "New password does not meet criteria.", user_agent, client_ip, user.id)
             return jsonify({"response": "New password does not meet criteria."}), 400
         try:
             user.new_password = hashed_password
@@ -284,6 +311,7 @@ def change_password():
         except Exception as e:
             db.session.rollback() 
             logging.error(f"User password change failed. Error: {e}") 
+            log_password_change(500, f"Error: {str(e)}", user_agent, client_ip, user.id)
             return jsonify(error_response), 500   
 
     # Check if user has mfa enabled
@@ -295,17 +323,21 @@ def change_password():
             # Send OTP to recovery email so user can proceed to second MFA step
             recovery_email = user.recovery_email
             if recovery_email is None:
+                log_password_change(500, f"Error: {str(e)}", user_agent, client_ip, user.id)
                 return jsonify({"response": "MFA enabled, but no recovery email on record. Contact support."}), 422
             try:
                     otp = user.generate_otp()
                     send_otp_email(user.name, otp, recovery_email)
             except Exception as e:
+                log_password_change(500, f"OTP could not be generated. Error: {str(e)}", user_agent, client_ip, user.id)
                 logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
                 return jsonify(error_response), 500
+            log_password_change(202, f"OTP sent to recovery email: {anonymize_email(recovery_email)}.", user_agent, client_ip, user.id)
             return jsonify({"response": f"OTP sent to recovery email: {anonymize_email(recovery_email)}."}), 202
         # Both PW reset and PW change will check OTP as second MFA step
         else:
             if otp == "" or user.check_otp(otp) is False:
+                log_password_change(401, "OTP invalid or expired.", user_agent, client_ip, user.id)
                 return jsonify({"response": "Unauthorized: OTP invalid or expired."}), 401
 
     try: 
@@ -318,6 +350,7 @@ def change_password():
     except Exception as e:
             db.session.rollback() 
             logging.error(f"User password change failed. Error: {e}") 
+            log_password_change(500, f"Error: {str(e)}", user_agent, client_ip, user.id)
             return jsonify(error_response), 500 
 
     # Send email confirming password changed 
@@ -330,6 +363,8 @@ def change_password():
         flask_login_user(user)
     else:
         reset_user_session(user) 
+
+    log_password_change(200, "", user_agent, client_ip, user.id)
 
     success_response = {"response": "Password changed successfully!"} 
     
@@ -391,27 +426,35 @@ def change_email():
     json_data = request.get_json()
     password = json_data["password"]
     new_email = json_data["new_email"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Get user
     user = get_user_or_none(current_user.email, "change_email")
     if user is None:
+        log_email_change(500, "Session did not return current user.", user_agent, client_ip, 0)
         return jsonify({"response": "Error: user not found."}), 500 #500 instead of 401 because @login_required so current_user should exist
     
     # Check password
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_email_change(401, "Incorrect password.", user_agent, client_ip, user.id)
         return jsonify({"response": "Unauthorized: incorrect password."}), 401
     
     # Check new email to see if its like the recovery email or current email
     if new_email == user.email:
+        log_email_change(400, f"New email must be different to current email. New email: {new_email}", user_agent, client_ip, user.id)
         return jsonify({"response": "Error: new email is the same as current email."}), 400
     if new_email == user.recovery_email:
+        log_email_change(400, "New email must be different to recovery email.", user_agent, client_ip, user.id)
         return jsonify({"response": "Error: new email cannot be the same as the recovery email."}), 400
     
     # Check that new email is not already in DB
     user_exists = get_user_or_none(new_email, "change_email")
     if user_exists is not None:
+        log_email_change(409, f"New email already exists in server. New email: {new_email}", user_agent, client_ip, user.id)
         # Reason for rejection should not be obvious in this case for security reasons
         return jsonify({"response": "There was an error changing email. Please contact support."}), 400 
     
@@ -421,10 +464,12 @@ def change_email():
 
     if html_in_email:
         flag = "YELLOW"
+        log_email_change(207, "HMTL detected in new email.", user_agent, client_ip, user.id)
     else:
         profanity_in_email = has_profanity(new_email)
         if profanity_in_email:
             flag = "PURPLE"
+            log_email_change(207, "Profanity detected in new email.", user_agent, client_ip, user.id)
     
     # General error response
     error_response = {"response": "There was an error changing email. Please try again."}
@@ -438,10 +483,8 @@ def change_email():
     except Exception as e:
         db.session.rollback() 
         logging.error(f"User email change failed. Error: {e}")
+        log_email_change(500, f"Failure in attempt to flag user. {str(e)}", user_agent, client_ip, user.id)
         return jsonify(error_response), 500
-    
-    # Get ip address
-    client_ip = get_client_ip(request)
 
     # Define the emails
     new_email = user.new_email
@@ -464,14 +507,20 @@ def change_email():
                 reset_user_session(user)
                 flask_logout_user()
                 flask_login_user(user)
+
+                # Log change
+                log_email_change(200, f"Email changed from {old_email} to {new_email}.", user_agent, client_ip, user.id)
+
                 # Return
                 return jsonify({"response": "Email changed successfully!"}), 200
             else:
                 logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
+                log_email_change(500, "Failure possibly attributed to the 'new email' missing in the database.", user_agent, client_ip, user.id)
                 return jsonify(error_response), 500
         except Exception as e:
                 db.session.rollback()
                 logging.error(f"Failed to change email. Error: {e}")
+                log_email_change(500, f"Error: {str(e)}", user_agent, client_ip, user.id)
                 return jsonify(error_response), 500
 
     # If user is verified, issue a token to start the verification process
@@ -484,6 +533,7 @@ def change_email():
         db.session.commit()
     except Exception as e:
         logging.error(f"New email/Token could not be added to user. Error: {e}")
+        log_email_change(500, f"New email/Token could not be added to user. Error: {str(e)}", user_agent, client_ip, user.id)
         return jsonify(error_response), 500
     
     # Send tokens per email
@@ -501,7 +551,9 @@ def change_email():
         url_data_old["signed_token"],
         url_data_new["signed_token"]
         )
-        
+    
+    # Log
+    log_email_change(202, f"Tokens sent to current email ({old_email}) and desired new email ({new_email})", user_agent, client_ip, user.id)
 
     
     # Return 202: user will have to verify the tokens to complete email change
@@ -557,6 +609,10 @@ def email_change_token_validation():
     json_data = request.get_json()
     signed_token = json_data["signed_token"]
     purpose = json_data["purpose"]
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Standard error response
     error_response = { "response": "Invalid or expired token." }
@@ -567,6 +623,7 @@ def email_change_token_validation():
     res = validate_and_verify_signed_token(signed_token, token_purpose, "email_change_token_validation", True) 
 
     if res["status"] != 200:
+        log_email_token_validation(500, f"{res["message"]}", user_agent, client_ip, 0)
         return jsonify({"response": res["message"]}), res["status"]
     
     # Token validated, now take appropriate action
@@ -579,13 +636,17 @@ def email_change_token_validation():
     related_tokens = Token.query.filter_by(group_id=token.group_id).all()
 
     if len(related_tokens) != 2:
-        logging.error(f"Invalid number of related tokens for group_id: {token.group_id}. 2 are required for email changes")
+        log_message = f"Invalid number of related tokens for group_id: {token.group_id}. 2 are required for email changes"
+        logging.error(log_message)
+        log_email_token_validation(500, log_message, user_agent, client_ip, user.id)
         return jsonify(error_response), 500
         
     # Check to see if the other token has already been validated
     second_token = next((t for t in related_tokens if t != token), None)
     if not second_token:
-        logging.error(f"Second token not found for group_id: {token.group_id}.")
+        log_message = f"Second token not found for group_id: {token.group_id}."
+        logging.error(log_message)
+        log_email_token_validation(500, log_message, user_agent, client_ip, user.id)
         return jsonify(error_response), 500
     
     if second_token.token_verified == modelBool.TRUE:
@@ -605,19 +666,27 @@ def email_change_token_validation():
                 except Exception as e:
                     logging.warning(f"Failed to send email change success notification. Error: {e}") 
             else:
-                logging.error(f"Email change failed. Possible reason: no new_email stored in User.")
+                log_message = f"Failed to change email possibly because no new email was found in the database."
+                logging.error(log_message)
+                log_email_token_validation(500, log_message, user_agent, client_ip, user.id)
                 return jsonify(error_response), 500
         except Exception as e:
             db.session.rollback()
-            logging.error(f"Failed to change email. Error: {e}")
+            log_message = f"Failed to change email. Error: {str(e)}"
+            logging.error(log_message)
+            log_email_token_validation(500, log_message, user_agent, client_ip, user.id)
             return jsonify(error_response), 500
     else:
+        log_email_token_validation(202, "", user_agent, client_ip, user.id)
         return jsonify({"response": "Token validated. One token validation missing."}), 202
     
     # Reset user sessions and if user is logged in, log out
     reset_user_session(user)
     if not current_user.is_anonymous:
         flask_logout_user()
+
+    # Log
+    log_email_token_validation(200, f"Previous email: {old_email}. New email: {new_email}", user_agent, client_ip, user.id)
 
     response_data ={ "response":"Email was changed successfully!" }
     return jsonify(response_data), 200
