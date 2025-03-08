@@ -1,6 +1,6 @@
 import { apiCredentials } from "../../axios.js";
 import apiEndpoints from "../../apiEndpoints.js";
-import { nameValidation, emailValidation, passwordValidation } from "../../../utils/validation.js"
+import { nameValidation, emailValidation, passwordValidation, sanitizedUserAgent } from "../../../utils/validation.js"
 import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.js";
 
 /**
@@ -15,6 +15,7 @@ import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.j
  * @param {string} data.email 
  * @param {string} data.password
  * @param {string} data.honeypot
+ * @param {string} [data.userAgent]
  * @returns {Promise<object>}
  * 
  * @example
@@ -23,7 +24,8 @@ import { setReduxLogInUser } from "../../../redux/utilsRedux/setReduxUserState.j
  *     name: "Josy",
  *     email: "josy@example.comm",
  *     password: "3f61108854cd4b58",
- *     honeypot: ""
+ *     honeypot: "",
+ *     userAgent: "Mozilla/5.0"
  * }
  * 
  * // Response from signupUser:
@@ -68,11 +70,16 @@ export function signupUser(data = {}) {
         return Promise.resolve(errorResponse)
     }
 
+    // If user agent in data, sanitize it
+    const userAgent = data.userAgent ? data.userAgent : "";
+    const agent = userAgent !== "" ? sanitizedUserAgent(userAgent) : userAgent;
+
     let requestData = {
         "name": name,
         "email": email,
         "password": password,
-        "honeypot": honeypot
+        "honeypot": honeypot,
+        "user_agent": agent
     }
 
     // preparing the returned response

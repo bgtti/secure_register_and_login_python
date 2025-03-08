@@ -2,13 +2,6 @@ import logging
 from app.extensions.extensions import  db
 from app.models.log_activity import LogActivity
 
-# CRED_CHANGE_FUNCTION_DIC = {
-#     "reset_password_token": "password reset token request",
-#     "change_password": "change password request"
-# }
-
-# TODO: other functions for logging
-
 # Use for function: signup_user
 def log_signup_user(http_code: int, text: str="", user_agent: str="", user_ip: str="", user_id: int=0) -> None: 
     """
@@ -94,19 +87,14 @@ def log_delete_user(http_code: int, text: str="", user_agent: str="", user_ip: s
     match http_code:
         case 200:
             message = "User successfully deleted account."
-        case 400:
-            message = "Signup failed: input does not meet criteria."
-            level = "WARNING"
         case 401:
             message = "Deletion failed: wrong credentials."
         case 403: # to be used when trying to delete super admin account
-            message = "Deletion forbidden: this account cannot be deleted." 
+            message = "Deletion forbidden: this account cannot be deleted."
+            level = "CRITICAL" 
         case 404:
             message = "Deletion failed: user not found."
             level = "ERROR"
-        case 418:
-            message = "Bot caught in honeypot."
-            level = "BOT"
         case 500:
             message = "Deletion failed: could not delete user from db."
             level = "ERROR"

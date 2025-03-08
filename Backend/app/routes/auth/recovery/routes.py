@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_recovery.py contains routes responsible for a user's account recovery.
+auth/recovery/routes.py contains routes responsible for a user's account recovery.
 
 Here you will find the following routes:
 - **set_recovery_email** sets second email in case user looses access to his/her registered email. Also used to change a recovery email.
@@ -32,7 +32,7 @@ Status:
 
 # Python/Flask libraries
 import logging
-from flask import request, jsonify
+from flask import Blueprint, request, jsonify
 
 # Extensions and third-party libs
 from flask_login import (
@@ -51,16 +51,18 @@ from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import anonymize_email
-from app.routes.auth.helpers_email.email_helpers_recovery import (
+from app.routes.auth.helpers_auth import anonymize_email
+
+# Recovery helpers 
+from app.routes.auth.recovery.email import (
     send_email_recovery_set, 
     send_email_recovery_deletion, 
     send_email_change_and_set_recovery
     )
-from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
+from app.routes.auth.recovery.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
 
 # Blueprint
-from . import auth
+from . import recovery
 
 
 ############# ROUTES ###############
@@ -69,7 +71,7 @@ from . import auth
 #         SET RECOVERY EMAIL       #
 ####################################
 
-@auth.route("/set_recovery_email", methods=["POST"])
+@recovery.route("/set_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;6/day")
 @validate_schema(set_recovery_email_schema) 
@@ -158,7 +160,7 @@ def set_recovery_email():
 #        GET RECOVERY STATUS       #
 ####################################
 
-@auth.route("/get_recovery_status")
+@recovery.route("/get_recovery_status")
 @login_required
 def get_recovery_status():
     """
@@ -204,7 +206,7 @@ def get_recovery_status():
 #        GET RECOVERY EMAIL        #
 ####################################
 
-@auth.route("/get_recovery_email", methods=["POST"])
+@recovery.route("/get_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;10/day")
 @validate_schema(get_recovery_email_schema) 
@@ -263,7 +265,7 @@ def get_recovery_email():
 #      DELETE RECOVERY EMAIL       #
 ####################################
 
-@auth.route("/delete_recovery_email", methods=["POST"])
+@recovery.route("/delete_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;10/day")
 @validate_schema(delete_recovery_email_schema) 

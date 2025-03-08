@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_session.py contains routes responsible for core authentication and authorization functionalities.
+auth/session/routes.py contains routes responsible for core authentication and authorization functionalities.
 Here you will find the following routes:
 - **get_otp** sends an otp to the registered user's email to enable login (in some cases: not required)
 - **login** route starts the session
@@ -51,19 +51,20 @@ from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import AuthMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-# from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import (
+from app.routes.auth.helpers_auth import (
     check_if_user_blocked, 
     get_user_or_none, 
     reset_user_session)
-from app.routes.auth.helpers_email.email_helpers import send_email_admin_blocked, send_otp_email
-from app.routes.auth.schemas import login_schema, get_otp_schema
+from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
+
+# Session helpers
+from app.routes.auth.session.schemas import login_schema, get_otp_schema
 
 # Blueprint
-from . import auth
+from . import session
 
 
 ############# ROUTES ###############
@@ -72,7 +73,7 @@ from . import auth
 #             GET OTP              #
 ####################################
 
-@auth.route("/get_otp", methods=["POST"])
+@session.route("/get_otp", methods=["POST"])
 @limiter.limit("20/minute;50/day")
 @validate_schema(get_otp_schema)
 def get_otp(): 
@@ -143,7 +144,7 @@ def get_otp():
 #             LOG IN               #
 ####################################
 
-@auth.route("/login", methods=["POST"])
+@session.route("/login", methods=["POST"])
 @limiter.limit("20/minute;50/day")
 @validate_schema(login_schema)
 def login_user():
@@ -328,7 +329,7 @@ def login_user():
 #            LOG OUT               #
 ####################################
 
-@auth.route("/logout", methods=["POST"])
+@session.route("/logout", methods=["POST"])
 @login_required
 def logout_user():
     """
@@ -357,7 +358,7 @@ def logout_user():
 #   GET CURRENT USER FROM COOKIE   #
 ####################################
 
-@auth.route("/@me")
+@session.route("/@me")
 @login_required
 def get_current_user():
     """

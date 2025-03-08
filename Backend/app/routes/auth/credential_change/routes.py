@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_credential_change.py contains routes responsible for authenticating a change of login credentials (ie: email and password).
+auth/credential_change/routes.py contains routes responsible for authenticating a change of login credentials (ie: email and password).
 
 Here you will find the following routes:
 - **reset_password_token** route will send a token to the user email to reset the password
@@ -23,7 +23,6 @@ Email and Password verification relies on token management. For more information
 import logging
 import random
 import time
-# from flask import Blueprint, request, jsonify, session
 from flask import  request, jsonify
 from flask_login import (
     current_user,
@@ -50,24 +49,28 @@ from app.utils.token_utils.verification_urls import create_verification_url
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import (
+from app.routes.auth.helpers_auth import (
     anonymize_email,
     check_if_user_blocked, 
     get_hashed_pw, 
     get_user_or_none,
     reset_user_session)
-from app.routes.auth.helpers_general.helpers_credential_change import validate_and_verify_signed_token
-from app.routes.auth.helpers_email.email_helpers import (
+
+from app.routes.auth.email_helpers import (
     send_email_admin_blocked,
     send_otp_email,
 )
-from app.routes.auth.helpers_email.email_helpers_credential_change import (
+
+# Credential change helpers 
+from app.routes.auth.credential_change.helpers import validate_and_verify_signed_token
+
+from app.routes.auth.credential_change.email import (
     send_pw_reset_email,
     send_pw_change_sucess_email,
     send_email_change_token_emails,
     send_email_change_sucess_emails
 )
-from app.routes.auth.schemas import (
+from app.routes.auth.credential_change.schemas import (
     reset_password_token_schema,
     change_password_schema,
     change_email_schema,
@@ -75,7 +78,7 @@ from app.routes.auth.schemas import (
 )
 
 # Blueprint
-from . import auth
+from . import credential_change
 
 
 ############# ROUTES ###############
@@ -85,7 +88,7 @@ from . import auth
 #       RESET USER'S PASSWORD      #
 ####################################
 
-@auth.route("/reset_password_token", methods=["POST"]) # TODO: proper logging
+@credential_change.route("/reset_password_token", methods=["POST"]) # TODO: proper logging
 @validate_schema(reset_password_token_schema) 
 @limiter.limit("1/minute; 5/day")
 def reset_password_token(): 
@@ -174,7 +177,7 @@ def reset_password_token():
 #      CHANGE USER'S PASSWORD      #
 ####################################
 
-@auth.route("/change_password", methods=["POST"]) # TODO: proper logging
+@credential_change.route("/change_password", methods=["POST"]) # TODO: proper logging
 @validate_schema(change_password_schema)
 @limiter.limit("1/minute; 5/day")
 def change_password(): 
@@ -336,7 +339,7 @@ def change_password():
 #          CHANGE EMAIL            #
 ####################################
 
-@auth.route("/change_email", methods=["POST"])  # TODO: proper logging
+@credential_change.route("/change_email", methods=["POST"])  # TODO: proper logging
 @login_required
 @validate_schema(change_email_schema) 
 @limiter.limit("5/day")
@@ -508,7 +511,7 @@ def change_email():
 #  VALIDATE TOKEN FOR EMAIL CHANGE #
 ####################################
 
-@auth.route('/email_change_token_validation', methods=['POST']) # TODO: proper logging
+@credential_change.route('/email_change_token_validation', methods=['POST']) # TODO: proper logging
 @limiter.limit("5/day")
 @validate_schema(change_email_token_validation_schema)
 def email_change_token_validation():

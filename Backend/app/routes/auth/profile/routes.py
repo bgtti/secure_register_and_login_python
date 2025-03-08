@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_profile.py contains routes responsible for profile management functionalities.
+auth/profile/routes.py contains routes responsible for profile management functionalities.
 
 Here you will find the following routes:
 - **change_user_name** route changes the user's name in the db
@@ -36,13 +36,15 @@ from app.utils.detect_html.detect_html import check_for_html
 from app.utils.profanity_check.profanity_check import has_profanity
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import user_name_is_valid
-from app.routes.auth.schemas import (
+from app.routes.auth.helpers_auth import user_name_is_valid
+
+# Profile helpers
+from app.routes.auth.profile.schemas import (
     change_name_schema
 )
 
 # Blueprint
-from . import auth
+from . import profile
 
 
 ############# ROUTES ###############
@@ -52,7 +54,7 @@ from . import auth
 #         CHANGE USER'S NAME       #
 ####################################
 
-@auth.route("/change_user_name", methods=["POST"])
+@profile.route("/change_user_name", methods=["POST"])
 @login_required
 @validate_schema(change_name_schema)
 @limiter.limit("10/day")

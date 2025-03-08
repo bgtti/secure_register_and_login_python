@@ -19,7 +19,7 @@ from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS, RESERVE
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip
-# from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event User not in DB
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 def reset_user_session(user: User) -> None:
@@ -139,13 +139,13 @@ def get_user_or_none(email: str, route: str) -> Optional[User]:
     try:
         user = User.query.filter_by(email=email).first()
         if not user:
-            logging.info(f"User not in DB. Input email: {email}.")
+            logging.info(f"[helpers_auth.py > get_user_or_none] User not in DB. Email: {email} sent through route: {route}.")
 
             # Check for HTML in the input
             html_in_email = check_for_html(email, f"{route}: email field")
-            html_info = " HTML detected in email field." if html_in_email else ""
-            logging.warning(
-                f"Failed to find user. Email: {email} sent through route: {route}.{html_info}"
+            if html_in_email:
+                logging.warning(
+                f"[helpers_auth.py > get_user_or_none] WARNING: HTML detected in email field. Email: {email} sent through route: {route}."
             )
             #TODO: fix event logging and use it here
             # try:

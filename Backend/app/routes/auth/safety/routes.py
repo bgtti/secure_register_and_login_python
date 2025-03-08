@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_safety.py contains routes responsible for the user account's safety and verification.
+auth/safety/routes.py contains routes responsible for the user account's safety and verification.
 Here you will find the following routes:
 - **verify_acct_email** route is the second step in the email verification process
 - **set_mfa** route enables or disables multi factor authentication
@@ -19,8 +19,6 @@ Setting MFA does not require the user to have a recovery email address. If the u
 
 # Python/Flask libraries
 import logging
-
-# from flask import Blueprint, request, jsonify, session
 from flask import request, jsonify
 from flask_login import (
     current_user,
@@ -38,17 +36,19 @@ from app.utils.salt_and_pepper.helpers import get_pepper
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
 # Auth helpers (this file)
-from app.routes.auth.helpers_email.email_helpers_safety import (
+from app.routes.auth.safety.email import (
     send_acct_verification_sucess_email,
     send_email_mfa_set
 )
-from app.routes.auth.schemas import (
+
+from app.routes.auth.safety.schemas import (
     verify_account_schema,
     set_mfa_schema
 )
 
 # Blueprint
-from . import auth
+# safety = Blueprint('safety', __name__)
+from . import safety
 
 
 ############# ROUTES ###############
@@ -58,7 +58,7 @@ from . import auth
 #            VERIFY ACCT           #
 ####################################
 
-@auth.route("/verify_account", methods=["POST"]) 
+@safety.route("/verify_account", methods=["POST"]) 
 @login_required
 @validate_schema(verify_account_schema)
 @limiter.limit("5/day")
@@ -132,7 +132,7 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
 #             SET MFA              #
 ####################################
 
-@auth.route("/set_mfa", methods=["POST"]) 
+@safety.route("/set_mfa", methods=["POST"]) 
 @login_required
 @validate_schema(set_mfa_schema)
 @limiter.limit("5/day")

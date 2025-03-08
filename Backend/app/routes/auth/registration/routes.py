@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_registration.py contains routes responsible for the user account's existence.
+auth/registration/routes.py contains routes responsible for the user account's existence.
 Here you will find the following routes:
 - **signup** route creates the user's account
 - **delete_user_acct** deteles the user's account
@@ -17,14 +17,13 @@ This app relies on Flask-Login (see `app/extensions`) to handle authentication. 
 Checkout the docs for more information about how Flask-Login works: https://flask-login.readthedocs.io/en/latest/#configuring-your-application
 
 """
-############# IMPORTS ##############
+############# IMPORTS ############## 
 
 # Python/Flask libraries
 import logging
 from datetime import datetime, timezone
 import random
 import time
-# from flask import Blueprint, request, jsonify, session
 from flask import request, jsonify
 from flask_login import (
     current_user,
@@ -39,39 +38,41 @@ from app.extensions.extensions import db, limiter, flask_bcrypt
 # Database models
 from app.models.user import User
 
-# Utilities
+# Utilities: general
 from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import modelBool
 from app.utils.detect_html.detect_html import check_for_html
-# from app.utils.log_event_utils.log import log_event
 from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
-# Auth helpers (this file)
-from app.routes.auth.helpers_general.helpers_auth import (
+# Auth helpers (general)
+from app.routes.auth.helpers_auth import (
     get_hashed_pw, 
     get_user_or_none, 
     user_name_is_valid, 
     reset_user_session
     )
-from app.routes.auth.helpers_email.email_helpers_registration import (
+
+# Auth helpers (this file)
+from app.routes.auth.registration.email import (
     send_email_acct_exists,
     send_email_acct_created,
     send_email_acct_deleted
 )
-from app.routes.auth.helpers_log_events.log_registration import(
+from app.routes.auth.registration.log import(
     log_signup_user,
     log_delete_user
 )
-from app.routes.auth.schemas import (
+
+from app.routes.auth.registration.schemas import (
     signup_schema,
     delete_user_schema
 )
 
 # Blueprint
-from . import auth
+from . import registration
 
 
 ############# ROUTES ###############
@@ -80,7 +81,7 @@ from . import auth
 #             SIGN UP              #
 ####################################
 
-@auth.route("/signup", methods=["POST"])
+@registration.route("/signup", methods=["POST"])
 @limiter.limit("2/minute;5/day")
 @validate_schema(signup_schema)
 def signup_user():
@@ -130,9 +131,8 @@ def signup_user():
     email = json_data["email"]
     password = json_data["password"]
     honeypot = json_data["honeypot"]
-    #TODO: User agent needed!
-    user_agent = "here"
-    client_ip = get_client_ip(request.remote_adrr) or ""
+    user_agent = json_data["honeypot"]#TODO: FRONT END MUST SEND IT: check api call react
+    client_ip = get_client_ip(request) or ""
 
     if len(honeypot) > 0:
         bot_caught(request, "signup")
@@ -151,7 +151,6 @@ def signup_user():
             send_email_acct_exists(user_if_exists.name, user_if_exists.email)
             logging.info(f"User already in db (error 409 in reality): {email}")
             log_signup_user(409, f"Email:{email}", user_agent, client_ip, user_if_exists.id)
-            # log_event("ACCOUNT_SIGNUP", "user exists", user_if_exists.id)
         except Exception as e:
             logging.error(f"Could not log event in signup: {e}")
     
@@ -201,25 +200,18 @@ def signup_user():
     except Exception as e:
         db.session.rollback() 
         logging.error(f"User registration failed. Error: {e}")
-        # try:
-        #     log_event("ACCOUNT_SIGNUP", "signup failed")
-        # except Exception as e:
-        #     logging.error(f"Log event error. Error: {e}")
+        log_signup_user(500, f"Name: {name}, Email: {email}", user_agent, client_ip, 0)
         return jsonify(error_response), 500
 
     # Log event to user and system logs
     try:
         logging.info(f"New user created.")
         log_signup_user(200, "", user_agent, client_ip, new_user.id)
-        # log_event("ACCOUNT_SIGNUP", "signup successful", new_user.id)
 
         if flag:
             if html_in_name or html_in_email:
-                # log_event("ACCOUNT_SIGNUP", "html detected", new_user.id)
-                # print("new log needed")
                 log_signup_user(207, "Html detected in name or email.", user_agent, client_ip, new_user.id)
             else:
-                # log_event("ACCOUNT_SIGNUP", "profanity", new_user.id)
                 log_signup_user(207, "Profanity detected in name or email.", user_agent, client_ip, new_user.id)
     except Exception as e:
         logging.error(f"Log event error. Error: {e}")
@@ -252,7 +244,7 @@ def signup_user():
 #       DELETE USER ACCOUNT        #
 ####################################
 
-@auth.route("/delete_user", methods=["POST"])
+@registration.route("/delete_user", methods=["POST"])
 @login_required
 @limiter.limit("2/minute; 10/day")
 @validate_schema(delete_user_schema)
@@ -289,17 +281,22 @@ def delete_user():
     user_agent = json_data.get("user_agent", "") #TODO log this in event
     
     # Check if user exists
-
     user = get_user_or_none(current_user.email, "delete_user")
+    client_ip = get_client_ip(request) or ""
 
-    print(current_user)
 
     # Delay response in case of wrong credentials to mitigate attacks by introducing randomized delay
     def delay_response():
         delay = random.uniform(1, 10)
         time.sleep(delay)
 
-    if user is None:
+    # Do not allow deletion of super user
+    # TODO: do not allow the deletion of super user by role instead of by id!
+    if user is None or user.id == 1:
+        if user is None:
+            log_delete_user(404, "", user_agent, client_ip, 0)
+        else:
+            log_delete_user(403, "", user_agent, client_ip, user.id)
         delay_response()
         return jsonify(error_response), 404
     
@@ -309,6 +306,7 @@ def delete_user():
     # Check password
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_delete_user(401, "Wrong password.", user_agent, client_ip, user.id)
         delay_response()
         return jsonify({"response": "Wrong credentials: password incorrect."} ), 401
     
@@ -316,17 +314,20 @@ def delete_user():
     mfa_enabled = user.mfa_enabled == modelBool.TRUE
     if mfa_enabled:
         if user.check_otp(otp) is False:
+            log_delete_user(401, "Incorrect OTP.", user_agent, client_ip, user.id)
             delay_response()
             return jsonify({"response": "Wrong credentials: OTP incorrect or expired."}), 401
         
     # Credentials correct: delete user
     try:
+        user_id = user.id
         name=user.name
         email=user.email
         db.session.delete(user)
         db.session.commit()
         send_email_acct_deleted(name, email)
         logging.info("User deleted account.")
+        log_delete_user(200, "", user_agent, client_ip, user_id)
 
         #logout user
         reset_user_session(current_user) # invalidate old auth sessions
@@ -336,4 +337,5 @@ def delete_user():
     except Exception as e:
         db.session.rollback() 
         logging.error(f"Failed to delete user. Details: {str(e)}")
+        log_delete_user(500, f"{str(e)}", user_agent, client_ip, user.id)
         return jsonify(error_response), 500

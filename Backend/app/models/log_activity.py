@@ -68,8 +68,8 @@ def get_log_level(level_name: str) -> dict:
     """
     name_upper = level_name.upper()
     res = {
-        "level":name_upper if name_upper in LOG_LEVEL else "NOTSET",
-        "level_id": LOG_LEVEL.get(name_upper (), LOG_LEVEL["NOTSET"])
+        "level": name_upper if name_upper in LOG_LEVEL else "NOTSET",
+        "level_id": LOG_LEVEL.get(name_upper, LOG_LEVEL["NOTSET"])
     }
     return res
 
