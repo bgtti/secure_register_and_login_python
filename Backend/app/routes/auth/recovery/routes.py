@@ -62,7 +62,9 @@ from app.routes.auth.recovery.email import (
     )
 
 from app.routes.auth.recovery.log import (
-    log_set_recovery_email
+    log_set_recovery_email,
+    log_get_recovery_email,
+    log_delete_recovery_email
 )
 
 from app.routes.auth.recovery.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
@@ -253,26 +255,34 @@ def get_recovery_email():
     # Get the JSON data from the request body 
     json_data = request.get_json()
     password = json_data["password"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+    
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie --- try to call method directly on current_user to see if it works!
+    # Get the user from cookie
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Database query failed: {e}")
+        log_message = f"Database query failed: {str(e)}"
+        logging.error(log_message)
+        log_get_recovery_email(500, log_message, user_agent, client_ip, 0)
         return jsonify({"response": "An error occurred while fetching the user."}), 500
 
     # Check password     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_get_recovery_email(500, "Wrong password input.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
 
     # Get the recovery email (it may be None or a string)
     recovery_email = user.recovery_email
 
     if not recovery_email:
+        log_get_recovery_email(404, "", user_agent, client_ip, user.id)
         return jsonify({"response": "No recovery email found."} ), 404
     
+    log_get_recovery_email(100, "", user_agent, client_ip, user.id)
 
     response_data = {
             "response":"success",
@@ -314,18 +324,24 @@ def delete_recovery_email():
     # Get the JSON data from the request body 
     json_data = request.get_json()
     password = json_data["password"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+    
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Get the user from cookie 
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Database query failed: {e}")
+        log_message = f"Database query failed: {str(e)}"
+        logging.error(log_message)
+        log_delete_recovery_email(500, log_message, user_agent, client_ip, 0)
         return jsonify({"response": "An error occurred while fetching the user."}), 500
 
     # Check password     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_delete_recovery_email(500, "Incorrect password input.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
 
     # Delete the recovery email
@@ -335,7 +351,9 @@ def delete_recovery_email():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to delete recovery email: {e}")
+        log_message = f"Failed to delete recovery email: {str(e)}"
+        logging.error(log_message)
+        log_delete_recovery_email(500, log_message, user_agent, client_ip, user.id)
         return {"response": "Failed to delete recovery email."}, 500
     
     # Send confirmation emails that recovery has been removed
@@ -346,6 +364,8 @@ def delete_recovery_email():
     #         logging.error(f"Failed to send confirmation emails of set account recovery email.")
     # except Exception as e:
     #     logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+
+    log_delete_recovery_email(200, "", user_agent, client_ip, user.id)
 
     response_data = {
             "response":"Recovery email deleted sucessfully!",
