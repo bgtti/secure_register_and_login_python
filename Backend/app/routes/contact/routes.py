@@ -8,7 +8,7 @@ from app.routes.contact.helpers import contact_form_email_forwarding
 from app.models.message import Message
 from app.models.user import User
 from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.bot_detection.bot_detection import bot_caught
@@ -73,10 +73,11 @@ def contactForm():  #---------------------> name not in python standard TODO
     if html_in_email or html_in_name or html_in_subject or html_in_message:
         flag = "YELLOW"
         if is_user:
-            log_event("CONTACT_FORM_MESSAGE", "html detected", the_user.id)
+            # log_event("CONTACT_FORM_MESSAGE", "html detected", the_user.id)
             the_user.flag_change(flag)
         else:
-            log_event("CONTACT_FORM_MESSAGE", "html detected")
+            print("need new log event here")
+            # log_event("CONTACT_FORM_MESSAGE", "html detected")
     else:
         profanity_in_name = has_profanity(name) 
         profanity_in_email = has_profanity(email)
@@ -85,10 +86,11 @@ def contactForm():  #---------------------> name not in python standard TODO
         if profanity_in_name or profanity_in_email or profanity_in_subject or profanity_in_message:
             flag = "PURPLE"
             if is_user:
-                log_event("CONTACT_FORM_MESSAGE", "profanity", the_user.id)
+                # log_event("CONTACT_FORM_MESSAGE", "profanity", the_user.id)
                 the_user.flag_change(flag)
             else:
-                log_event("CONTACT_FORM_MESSAGE", "profanity")
+                # log_event("CONTACT_FORM_MESSAGE", "profanity")
+                print("need new log event here")
 
     # Create message
     try:
@@ -102,16 +104,16 @@ def contactForm():  #---------------------> name not in python standard TODO
 
     except Exception as e:
         logging.error(f"Failed to save message. Error: {e}")
-        try:
-            log_event("CONTACT_FORM_MESSAGE", "message failed")
-        except Exception as e:
-            logging.error(f"Log event error for failed message. Error: {e}")
+        # try:
+        #     log_event("CONTACT_FORM_MESSAGE", "message failed")
+        # except Exception as e:
+        #     logging.error(f"Log event error for failed message. Error: {e}")
         return jsonify(error_response), 500
 
     # Log event to user and system logs
     try:
         logging.info(f"New message received.")
-        log_event("CONTACT_FORM_MESSAGE", "message successful")
+        # log_event("CONTACT_FORM_MESSAGE", "message successful")
     except Exception as e:
         logging.error(f"Log event error for sucessful message. Error: {e}")
 

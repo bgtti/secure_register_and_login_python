@@ -4,7 +4,8 @@ from flask_login import login_required
 import logging
 from app.extensions.extensions import limiter
 from app.models.user import User
-from app.models.log_event import LogEvent
+from app.models.log_activity import LogActivity
+# from app.models.log_event import LogEvent
 from app.models.message import Message
 from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
 from app.utils.constants.enum_helpers import map_string_to_enum
@@ -273,7 +274,8 @@ def admin_user_logs():
     page_nr = json_data["page_nr"]
 
     try:
-        user_logs = LogEvent.query.filter_by(user_id=user_id).order_by(LogEvent.created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
+        user_logs = LogActivity.query.filter_by(user_id=user_id).order_by(LogActivity.created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
+        # user_logs = LogEvent.query.filter_by(user_id=user_id).order_by(LogEvent.created_at.desc()).paginate(page=page_nr, per_page=25, error_out=False)
         if not user_logs.items:
             return jsonify({"response": "Requested page out of range"}), 404
     except Exception as e:

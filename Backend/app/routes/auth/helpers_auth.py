@@ -19,7 +19,7 @@ from app.utils.constants.account_constants import MOST_COMMON_PASSWORDS, RESERVE
 from app.utils.detect_html.detect_html import check_for_html
 from app.utils.ip_utils.ip_anonymization import anonymize_ip
 from app.utils.ip_utils.ip_geolocation import geolocate_ip
-from app.utils.log_event_utils.log import log_event
+# from app.utils.log_event_utils.log import log_event User not in DB
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 def reset_user_session(user: User) -> None:
@@ -139,13 +139,13 @@ def get_user_or_none(email: str, route: str) -> Optional[User]:
     try:
         user = User.query.filter_by(email=email).first()
         if not user:
-            logging.info(f"User not in DB. Input email: {email}.")
+            logging.info(f"[helpers_auth.py > get_user_or_none] User not in DB. Email: {email} sent through route: {route}.")
 
             # Check for HTML in the input
             html_in_email = check_for_html(email, f"{route}: email field")
-            html_info = " HTML detected in email field." if html_in_email else ""
-            logging.warning(
-                f"Failed to find user. Email: {email} sent through route: {route}.{html_info}"
+            if html_in_email:
+                logging.warning(
+                f"[helpers_auth.py > get_user_or_none] WARNING: HTML detected in email field. Email: {email} sent through route: {route}."
             )
             #TODO: fix event logging and use it here
             # try:
@@ -188,10 +188,10 @@ def check_if_user_blocked(user: User, client_ip: str | None) -> dict:
         status["blocked"] = True
         status["message"] = "Account blocked, contact us for more information."
         logging.info(f"User blocked. Input email: {user.email}. (typically error code: 403)")
-        try:
-            log_event("ACCOUNT_LOGIN", "user blocked", user.id)
-        except Exception as e:
-            logging.error(f"Failed to log event. Error: {e}")
+        # try:
+        #     log_event("ACCOUNT_LOGIN", "user blocked", user.id)
+        # except Exception as e:
+        #     logging.error(f"Failed to log event. Error: {e}")
         return status
 
     user_is_login_blocked = user.is_login_blocked()
@@ -212,13 +212,13 @@ def check_if_user_blocked(user: User, client_ip: str | None) -> dict:
         # Log levels according to nr of failed attempts
         log_level = logging.warning if user.login_attempts >= 6 else logging.info
         log_level(info)
-        try:
-            event_message = (
-                "wrong credentials 5x" if user.login_attempts >= 6 else "wrong credentials 3x"
-            )
-            log_event("ACCOUNT_LOGIN", event_message, user.id, geo_info)
-        except Exception as e:
-            logging.error(f"Failed to log event for login-blocked user. Error: {e}")
+        # try:
+        #     event_message = (
+        #         "wrong credentials 5x" if user.login_attempts >= 6 else "wrong credentials 3x"
+        #     )
+        #     log_event("ACCOUNT_LOGIN", event_message, user.id, geo_info)
+        # except Exception as e:
+        #     logging.error(f"Failed to log event for login-blocked user. Error: {e}")
     return status
 
 def user_name_is_valid(name):

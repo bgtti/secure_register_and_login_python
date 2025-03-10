@@ -106,7 +106,7 @@ function UserLogs() {
                         <thead role="rowgroup">
                             <tr role="row">
                                 <th role="columnheader">Date</th>
-                                <th role="columnheader">Type</th>
+                                <th role="columnheader">Level</th>
                                 <th role="columnheader">Activity</th>
                                 <th role="columnheader">Log message</th>
                             </tr>

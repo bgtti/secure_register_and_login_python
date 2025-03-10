@@ -29,6 +29,9 @@ function SignUp() {
 
     const isComponentMounted = useIsComponentMounted();
 
+    //info to be passed on to BE
+    const userAgent = navigator.userAgent;
+
     // Used for honeypot
     const [honeypotValue, setHoneypotValue] = useState("");
 
@@ -75,7 +78,8 @@ function SignUp() {
                 name: name,
                 email: email,
                 password: password,
-                honeypot: honeypotValue
+                honeypot: honeypotValue,
+                userAgent: userAgent
             }
             dispatch(setLoader(true))
             signupUser(requestData)

@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_recovery.py contains routes responsible for a user's account recovery.
+auth/recovery/routes.py contains routes responsible for a user's account recovery.
 
 Here you will find the following routes:
 - **set_recovery_email** sets second email in case user looses access to his/her registered email. Also used to change a recovery email.
@@ -32,7 +32,7 @@ Status:
 
 # Python/Flask libraries
 import logging
-from flask import request, jsonify
+from flask import Blueprint, request, jsonify
 
 # Extensions and third-party libs
 from flask_login import (
@@ -47,20 +47,30 @@ from app.models.user import User
 # Utilities
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.detect_html.detect_html import check_for_html
+from app.utils.ip_utils.ip_address_validation import get_client_ip
 from app.utils.profanity_check.profanity_check import has_profanity
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import anonymize_email
-from app.routes.auth.helpers_email.email_helpers_recovery import (
+from app.routes.auth.helpers_auth import anonymize_email
+
+# Recovery helpers 
+from app.routes.auth.recovery.email import (
     send_email_recovery_set, 
     send_email_recovery_deletion, 
     send_email_change_and_set_recovery
     )
-from app.routes.auth.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
+
+from app.routes.auth.recovery.log import (
+    log_set_recovery_email,
+    log_get_recovery_email,
+    log_delete_recovery_email
+)
+
+from app.routes.auth.recovery.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
 
 # Blueprint
-from . import auth
+from . import recovery
 
 
 ############# ROUTES ###############
@@ -69,7 +79,7 @@ from . import auth
 #         SET RECOVERY EMAIL       #
 ####################################
 
-@auth.route("/set_recovery_email", methods=["POST"])
+@recovery.route("/set_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;6/day")
 @validate_schema(set_recovery_email_schema) 
@@ -101,48 +111,61 @@ def set_recovery_email():
     recovery_email = json_data["recovery_email"]
     password = json_data["password"]
     otp = json_data["otp"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Get the user from cookie 
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Failed to get user. Error: {e}")
+        log_message = f"Failed to retrieve user from database. Error: {str(e)}"
+        logging.error(log_message)
+        log_set_recovery_email(500, log_message, user_agent, client_ip, 0)
         return jsonify(error_response), 500
     
     # Recovery email should not be the same as email
     if user.email == recovery_email:
         user.otp_reset()
         db.session.commit()
+        log_set_recovery_email(400, "", user_agent, client_ip, user.id)
         return jsonify({"response": "Recovery must be different than account email."} ), 400
 
     # Check password and OTP
     if user.check_otp(otp) is False:
+        log_set_recovery_email(401, "Provided OTP is wrong or expired.", user_agent, client_ip, user.id)
         return jsonify({"response": "Provided OTP is wrong or expired."} ), 401
     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_set_recovery_email(401, "Incorrect password.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
 
     try:
         if check_for_html(recovery_email, "set recovery email", recovery_email):
             user.flag = "YELLOW"
-        elif has_profanity(recovery_email):
-                user.flag = "PURPLE"
+            log_set_recovery_email(207, f"Recovery set to: {recovery_email}", user_agent, client_ip, user.id)
         old_recovery_email = user.recovery_email
         user.recovery_email = recovery_email
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to save recovery email. Error: {e}")
+        log_message = f"Failed to save recovery email. Error: {str(e)}"
+        logging.error(log_message)
+        log_set_recovery_email(500, log_message, user_agent, client_ip, user.id)
         return jsonify(error_response), 500
     
     # Send confirmation emails that new recovery has been added 
     if old_recovery_email:
         #TODO: SSL issue not resolved
         send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
+        log_set_recovery_email(204, f"Previous recovery email: {old_recovery_email}", user_agent, client_ip, user.id)
     else:
         send_email_recovery_set(user.name, user.email, recovery_email)
+
+    # Log
+    log_set_recovery_email(200, "", user_agent, client_ip, user.id)
 
     # Anonymize recovery email
     anonymized_recovery_email = anonymize_email(recovery_email)
@@ -158,7 +181,7 @@ def set_recovery_email():
 #        GET RECOVERY STATUS       #
 ####################################
 
-@auth.route("/get_recovery_status")
+@recovery.route("/get_recovery_status")
 @login_required
 def get_recovery_status():
     """
@@ -204,7 +227,7 @@ def get_recovery_status():
 #        GET RECOVERY EMAIL        #
 ####################################
 
-@auth.route("/get_recovery_email", methods=["POST"])
+@recovery.route("/get_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;10/day")
 @validate_schema(get_recovery_email_schema) 
@@ -232,26 +255,34 @@ def get_recovery_email():
     # Get the JSON data from the request body 
     json_data = request.get_json()
     password = json_data["password"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+    
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie --- try to call method directly on current_user to see if it works!
+    # Get the user from cookie
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Database query failed: {e}")
+        log_message = f"Database query failed: {str(e)}"
+        logging.error(log_message)
+        log_get_recovery_email(500, log_message, user_agent, client_ip, 0)
         return jsonify({"response": "An error occurred while fetching the user."}), 500
 
     # Check password     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_get_recovery_email(500, "Wrong password input.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
 
     # Get the recovery email (it may be None or a string)
     recovery_email = user.recovery_email
 
     if not recovery_email:
+        log_get_recovery_email(404, "", user_agent, client_ip, user.id)
         return jsonify({"response": "No recovery email found."} ), 404
     
+    log_get_recovery_email(100, "", user_agent, client_ip, user.id)
 
     response_data = {
             "response":"success",
@@ -263,7 +294,7 @@ def get_recovery_email():
 #      DELETE RECOVERY EMAIL       #
 ####################################
 
-@auth.route("/delete_recovery_email", methods=["POST"])
+@recovery.route("/delete_recovery_email", methods=["POST"])
 @login_required
 @limiter.limit("5/minute;10/day")
 @validate_schema(delete_recovery_email_schema) 
@@ -293,18 +324,24 @@ def delete_recovery_email():
     # Get the JSON data from the request body 
     json_data = request.get_json()
     password = json_data["password"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+    
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Get the user from cookie 
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Database query failed: {e}")
+        log_message = f"Database query failed: {str(e)}"
+        logging.error(log_message)
+        log_delete_recovery_email(500, log_message, user_agent, client_ip, 0)
         return jsonify({"response": "An error occurred while fetching the user."}), 500
 
     # Check password     
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_delete_recovery_email(500, "Incorrect password input.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
 
     # Delete the recovery email
@@ -314,7 +351,9 @@ def delete_recovery_email():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to delete recovery email: {e}")
+        log_message = f"Failed to delete recovery email: {str(e)}"
+        logging.error(log_message)
+        log_delete_recovery_email(500, log_message, user_agent, client_ip, user.id)
         return {"response": "Failed to delete recovery email."}, 500
     
     # Send confirmation emails that recovery has been removed
@@ -325,6 +364,8 @@ def delete_recovery_email():
     #         logging.error(f"Failed to send confirmation emails of set account recovery email.")
     # except Exception as e:
     #     logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+
+    log_delete_recovery_email(200, "", user_agent, client_ip, user.id)
 
     response_data = {
             "response":"Recovery email deleted sucessfully!",

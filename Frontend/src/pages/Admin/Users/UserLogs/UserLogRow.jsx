@@ -7,14 +7,14 @@ import PropTypes from 'prop-types';
  * @param {object} props
  * @param {object} props.log 
  * @param {string} props.log.createdAt
- * @param {string} props.log.type
+ * @param {string} props.log.level
  * @param {string} props.log.activity
  * @param {string} props.log.message
  * @returns {React.ReactElement}
  */
 function UserLogRow(props) {
     const { log } = props;
-    const { createdAt, type, activity, message } = log;
+    const { createdAt, level, activity, message } = log;
 
     return (
         <tr role="row">
@@ -23,8 +23,8 @@ function UserLogRow(props) {
                 {createdAt}
             </td>
             <td role="cell">
-                <label className="MAIN-table-label" htmlFor="type">Type:</label>
-                {type}
+                <label className="MAIN-table-label" htmlFor="level">Level:</label>
+                {level}
             </td>
             <td role="cell">
                 <label className="MAIN-table-label" htmlFor="activity">Activity:</label>
@@ -40,7 +40,7 @@ function UserLogRow(props) {
 UserLogRow.propTypes = {
     log: PropTypes.shape({
         createdAt: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
+        level: PropTypes.string.isRequired,
         activity: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
     }).isRequired,

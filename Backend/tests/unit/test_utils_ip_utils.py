@@ -79,3 +79,16 @@ def test_geolocate_ip():
     }
 
     assert result == expected_result
+
+    # Test 3: Simulate a failure response (no arguments passed to function)
+    with requests_mock.Mocker() as m:
+        expected_result = {
+        "continent": "N/A",
+        "country": "N/A",
+        "country_code": "N/A",
+        "city": "N/A"
+        }
+
+        result = geolocate_ip()
+
+        assert result == expected_result

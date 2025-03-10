@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_session.py contains routes responsible for core authentication and authorization functionalities.
+auth/session/routes.py contains routes responsible for core authentication and authorization functionalities.
 Here you will find the following routes:
 - **get_otp** sends an otp to the registered user's email to enable login (in some cases: not required)
 - **login** route starts the session
@@ -51,19 +51,24 @@ from app.utils.bot_detection.bot_detection import bot_caught
 from app.utils.constants.enum_class import AuthMethods,modelBool
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.log_event_utils.log import log_event
 from app.utils.salt_and_pepper.helpers import get_pepper
 
 # Auth helpers
-from app.routes.auth.helpers_general.helpers_auth import (
+from app.routes.auth.helpers_auth import (
     check_if_user_blocked, 
     get_user_or_none, 
     reset_user_session)
-from app.routes.auth.helpers_email.email_helpers import send_email_admin_blocked, send_otp_email
-from app.routes.auth.schemas import login_schema, get_otp_schema
+from app.routes.auth.email_helpers import send_email_admin_blocked, send_otp_email
+
+# Session helpers
+from app.routes.auth.session.log import (
+    log_get_otp,
+    log_login
+)
+from app.routes.auth.session.schemas import login_schema, get_otp_schema
 
 # Blueprint
-from . import auth
+from . import session
 
 
 ############# ROUTES ###############
@@ -72,7 +77,7 @@ from . import auth
 #             GET OTP              #
 ####################################
 
-@auth.route("/get_otp", methods=["POST"])
+@session.route("/get_otp", methods=["POST"])
 @limiter.limit("20/minute;50/day")
 @validate_schema(get_otp_schema)
 def get_otp(): 
@@ -110,10 +115,15 @@ def get_otp():
     json_data = request.get_json()
     email = json_data["email"]
     honeypot = json_data["honeypot"]
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Filter out bots
     if len(honeypot) > 0:
         bot_caught(request, "login")
+        log_get_otp(418, f"Email given: {email}", user_agent, client_ip, 0)
         return jsonify(error_response), 418
 
     # Check if user exists
@@ -124,6 +134,7 @@ def get_otp():
 
     # Return success even if user does not exist (to avoid information leakage)
     if user is None:
+        log_get_otp(404, f"Email given: {email}", user_agent, client_ip, 0)
         return jsonify(success_response)
 
     # Create OTP
@@ -131,9 +142,13 @@ def get_otp():
         otp = user.generate_otp()
         send_otp_email(user.name, otp, email) # not using user.email because otp can be used to confirm recovery email address
     except Exception as e:
-        logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
+        log_message = f"Failed to generate OTP and/or send it per email. Error: {str(e)}"
+        logging.warning(log_message) 
+        log_get_otp(500, log_message, user_agent, client_ip, user.id)
         return jsonify(error_response), 500
     
+    log_get_otp(200, "", user_agent, client_ip, user.id)
+
     # Return success response
     return jsonify(error_response)
 
@@ -143,7 +158,7 @@ def get_otp():
 #             LOG IN               #
 ####################################
 
-@auth.route("/login", methods=["POST"])
+@session.route("/login", methods=["POST"])
 @limiter.limit("20/minute;50/day")
 @validate_schema(login_schema)
 def login_user():
@@ -195,11 +210,15 @@ def login_user():
     method =json_data["method"] # login method can be "otp" or "password"
     honeypot = json_data["honeypot"]
     is_first_factor = json_data["is_first_factor"]
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+    
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Filter out bots
     if len(honeypot) > 0:
         bot_caught(request, "login")
+        log_login(418, f"Email given: {email}", user_agent, client_ip, 0)
         return jsonify(error_response), 418
     
     # Check if user exists
@@ -209,6 +228,7 @@ def login_user():
     # Delay response in case user does not exist
     # Reason: mitigating timing attacks by introducing randomized delay
     if user is None:
+        log_login(404, f"Email given: {email}", user_agent, client_ip, 0)
         delay = random.uniform(1, 6)
         time.sleep(delay)
         return jsonify(error_response), 401
@@ -236,17 +256,22 @@ def login_user():
             user.increment_login_attempts()
             db.session.commit()
         except Exception as e:
-            logging.error(f"Login attempt counter could not be incremented, function will continue. Error: {e}")
+            log_message = f"Login attempt counter could not be incremented, function will continue. Error: {str(e)}"
+            logging.error(log_message)
+            log_login(500, log_message, user_agent, client_ip, user.id)
+
     blocked_status = check_if_user_blocked(user, get_client_ip(request))
     user_is_blocked = blocked_status["blocked"]
 
     if user_is_blocked:
         if blocked_status["temporary_block"] is False:
             send_email_admin_blocked(user.name, user.email)
+        log_login(403, "", user_agent, client_ip, user.id)
         return jsonify(blocked_status["message"]), 401 #should be 403, but do not want to give clues
 
     # If pw/otp is invalid, return
     if invalid_pw:
+        log_login(401, f"Wrong password.", user_agent, client_ip, user.id)
         return jsonify(error_response), 401
     
     # MFA: if enabled, handle the step the user is in now
@@ -262,10 +287,14 @@ def login_user():
                     otp = user.generate_otp()
                     send_otp_email(user.name, otp, user.email)
                 except Exception as e:
-                    logging.warning(f"Failed to generate OTP and/or send it per email. Error: {e}") 
+                    log_message = f"Failed to generate OTP and/or send it per email. Error: {str(e)}"
+                    logging.warning(log_message)
+                    log_login(500, log_message, user_agent, client_ip, user.id) 
                     return jsonify(error_response), 500
             else: 
                 msg = "Please confirm your password."
+
+            log_login(202, "", user_agent, client_ip, user.id) 
             res = {
                 "message": f"First authentication factor accepted. {msg}",
                 "response": "pending"
@@ -275,10 +304,12 @@ def login_user():
             # confirm that first factor has indeed been used
             is_really_first = user.first_factor_used == modelBool.TRUE
             if is_really_first is False:
+                log_login(422, "", user_agent, client_ip, user.id) 
                 return jsonify({"response": "First MFA factor was not completed or the request is out of sequence."} ), 422
             second_factor_success = user.mfa_second_factor_check(AuthMethods(method).name)
             if second_factor_success is False:
                 # Likely the user failed to submit the second factor within a specific time frame
+                log_login(408, "", user_agent, client_ip, user.id) 
                 res = {"response": "Request Timeout (process abandoned) . Please re-start login process."}
                 return jsonify(error_response), 408
             
@@ -289,12 +320,9 @@ def login_user():
         # new_session = user.new_session()
         db.session.commit()
     except Exception as e:
-        logging.error(f"Login attempt counter could not be reset, function will continue. Error: {e}")
-
-    try:
-        log_event("ACCOUNT_LOGIN", "login successful", user.id)
-    except Exception as e:
-        logging.error(f"Failed to create event log. Error: {e}")
+        log_message = f"Login attempt counter could not be reset, function will continue. Error: {str(e)}"
+        logging.error(log_message)
+        log_login(500, log_message, user_agent, client_ip, user.id) 
 
     # TODO: consider the bellow if user does not want to be remembered:
     # user.new_session() 
@@ -305,6 +333,7 @@ def login_user():
 
     # event and system logs
     logging.info("A user logged in.")
+    log_login(200, "", user_agent, client_ip, user.id) 
     # logging.debug(f"Session after login: {session}") # Uncomment to debug session
     
     response_data ={
@@ -328,7 +357,7 @@ def login_user():
 #            LOG OUT               #
 ####################################
 
-@auth.route("/logout", methods=["POST"])
+@session.route("/logout", methods=["POST"])
 @login_required
 def logout_user():
     """
@@ -348,16 +377,27 @@ def logout_user():
             }
     ``` 
     """
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
+
+    # Current user saved for logging
+    if current_user.is_authenticated:
+        user_id = current_user.id
+    else:
+        user_id = 0
+
     reset_user_session(current_user) # invalidate old auth sessions
     flask_logout_user() # classic flask-login log out
     logging.info(f"Successful logout") 
+    log_login(204, "", "N/A", client_ip, user_id) 
+
     return jsonify({"response":"success"})
 
 ####################################
 #   GET CURRENT USER FROM COOKIE   #
 ####################################
 
-@auth.route("/@me")
+@session.route("/@me")
 @login_required
 def get_current_user():
     """
@@ -407,4 +447,5 @@ def get_current_user():
                 "night_mode_enabled": user.night_mode_enabled.value,
             }
         }
+    
     return jsonify(response_data)

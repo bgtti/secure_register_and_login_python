@@ -14,35 +14,44 @@ const adminUrl = {
     users: `${urlPrefix.admin}/users`,
 }
 
+const authUrl = {
+    credentialChange: `${urlPrefix.auth}/credential_change`,
+    profile: `${urlPrefix.auth}/profile`,
+    recovery: `${urlPrefix.auth}/recovery`,
+    registration: `${urlPrefix.auth}/registration`,
+    safety: `${urlPrefix.auth}/safety`,
+    session: `${urlPrefix.auth}/session`,
+}
+
 export const apiEndpoints = {
     baseURL: "http://127.0.0.1:5000",
     //AUTH
     //authentication -- credential change
-    resetPasswordToken: `${urlPrefix.auth}/reset_password_token`, //OK
-    changePassword: `${urlPrefix.auth}/change_password`, //OK
-    changeEmail: `${urlPrefix.auth}/change_email`, //OK (test unvalidated account)
-    changeEmailTokenVerification: `${urlPrefix.auth}/email_change_token_validation`, //OK
+    resetPasswordToken: `${authUrl.credentialChange}/reset_password_token`, //OK
+    changePassword: `${authUrl.credentialChange}/change_password`, //OK
+    changeEmail: `${authUrl.credentialChange}/change_email`, //OK (test unvalidated account)
+    changeEmailTokenVerification: `${authUrl.credentialChange}/email_change_token_validation`, //OK
     //authentication -- profile
-    acctChangeName: `${urlPrefix.auth}/change_user_name`, //OK
+    acctChangeName: `${authUrl.profile}/change_user_name`, //OK
     //authentication -- recovery
-    setRecoveryEmail: `${urlPrefix.auth}/set_recovery_email`, //OK
-    getRecoveryEmailStatus: `${urlPrefix.auth}/get_recovery_status`, //OK
-    getRecoveryEmail: `${urlPrefix.auth}/get_recovery_email`, //OK
-    deleteRecoveryEmail: `${urlPrefix.auth}/delete_recovery_email`, //OK
+    setRecoveryEmail: `${authUrl.recovery}/set_recovery_email`, //OK
+    getRecoveryEmailStatus: `${authUrl.recovery}/get_recovery_status`, //OK
+    getRecoveryEmail: `${authUrl.recovery}/get_recovery_email`, //OK
+    deleteRecoveryEmail: `${authUrl.recovery}/delete_recovery_email`, //OK
     //authentication -- registration
-    userSignUp: `${urlPrefix.auth}/signup`, //OK
-    acctDeleteOwnAccount: `${urlPrefix.auth}/delete_user`, //OK
+    userSignUp: `${authUrl.registration}/signup`, //OK
+    acctDeleteOwnAccount: `${authUrl.registration}/delete_user`, //OK
     //authentication -- session
-    getOTP: `${urlPrefix.auth}/get_otp`, //OK
-    userLogIn: `${urlPrefix.auth}/login`, //OK
-    userLogOut: `${urlPrefix.auth}/logout`, //OK
-    userGetOwnAcctInfo: `${urlPrefix.auth}/@me`, //OK
-    //authentication -- security
-    setMfa: `${urlPrefix.auth}/set_mfa`, //OK
-    verifyAccount: `${urlPrefix.auth}/verify_account`, //OK
+    getOTP: `${authUrl.session}/get_otp`, //OK
+    userLogIn: `${authUrl.session}/login`, //OK
+    userLogOut: `${authUrl.session}/logout`, //OK
+    userGetOwnAcctInfo: `${authUrl.session}/@me`, //OK
+    //authentication -- safety
+    setMfa: `${authUrl.safety}/set_mfa`, //OK
+    verifyAccount: `${authUrl.safety}/verify_account`, //OK
     //user_settings (preferences)
-    setMailingList: `${urlPrefix.userSettings}/set_mailing_list`, //OK
-    setNightMode: `${urlPrefix.userSettings}/set_night_mode`, //OK
+    setMailingList: `${authUrl.userSettings}/set_mailing_list`, //OK
+    setNightMode: `${authUrl.userSettings}/set_night_mode`, //OK
     //ADMIN
     //admin - dashboard
     adminGetDashboardData: `${adminUrl.dash}/admin_dash`, //MISSING

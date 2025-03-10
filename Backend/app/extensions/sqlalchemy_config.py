@@ -35,6 +35,7 @@ class UTCDateTime(TypeDecorator):
     - All retrieved datetimes will always be timezone-aware in UTC.
     """
     impl = DateTime(timezone=True)
+    cache_ok = True
 
     def process_result_value(self, value, dialect):
         """

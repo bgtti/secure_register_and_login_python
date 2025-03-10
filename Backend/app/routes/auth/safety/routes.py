@@ -1,7 +1,7 @@
 """
 **ABOUT THIS FILE**
 
-auth/routes_safety.py contains routes responsible for the user account's safety and verification.
+auth/safety/routes.py contains routes responsible for the user account's safety and verification.
 Here you will find the following routes:
 - **verify_acct_email** route is the second step in the email verification process
 - **set_mfa** route enables or disables multi factor authentication
@@ -19,8 +19,6 @@ Setting MFA does not require the user to have a recovery email address. If the u
 
 # Python/Flask libraries
 import logging
-
-# from flask import Blueprint, request, jsonify, session
 from flask import request, jsonify
 from flask_login import (
     current_user,
@@ -34,21 +32,28 @@ from app.extensions.extensions import db, limiter, flask_bcrypt, limiter
 from app.models.user import User
 
 # Utilities
-from app.utils.salt_and_pepper.helpers import get_pepper
 from app.utils.custom_decorators.json_schema_validator import validate_schema
+from app.utils.ip_utils.ip_address_validation import get_client_ip
+from app.utils.salt_and_pepper.helpers import get_pepper
 
-# Auth helpers (this file)
-from app.routes.auth.helpers_email.email_helpers_safety import (
+# Safety helpers 
+from app.routes.auth.safety.email import (
     send_acct_verification_sucess_email,
     send_email_mfa_set
 )
-from app.routes.auth.schemas import (
+
+from app.routes.auth.safety.log import (
+    log_verify_account,
+    log_set_mfa
+)
+
+from app.routes.auth.safety.schemas import (
     verify_account_schema,
     set_mfa_schema
 )
 
 # Blueprint
-from . import auth
+from . import safety
 
 
 ############# ROUTES ###############
@@ -58,7 +63,7 @@ from . import auth
 #            VERIFY ACCT           #
 ####################################
 
-@auth.route("/verify_account", methods=["POST"]) 
+@safety.route("/verify_account", methods=["POST"]) 
 @login_required
 @validate_schema(verify_account_schema)
 @limiter.limit("5/day")
@@ -89,8 +94,10 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
     # Get the JSON data from the request body
     json_data = request.get_json()
     otp = json_data["otp"]
+    user_agent = json_data.get("user_agent", "") 
 
-    #TODO: get user_agent and log it
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Standard error response
     error_response = {
@@ -98,13 +105,22 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
         "mail_sent": False,
         "acct_verified": False,
         }
-    
-    user = current_user
+
+    # Get the user from cookie
+    try:
+        user = User.query.filter_by(email=current_user.email).first()
+    except Exception as e:
+        log_message = f"Database query failed: {str(e)}"
+        logging.error(log_message)
+        log_verify_account(500, log_message, user_agent, client_ip, 0)
+        return jsonify({"response": "An error occurred while fetching the user."}), 500
     
     try:
         # Check OTP
         if user.check_otp(otp) is False:
-            logging.info(f"Invalid or expired token could not be validated. Account validation failed for {user.email}.")
+            log_message = f"Invalid or expired token could not be validated. Account validation failed for {user.email}."
+            logging.info(log_message)
+            log_verify_account(401, log_message, user_agent, client_ip, user.id)
             return jsonify(error_response), 400
         
         # Verify account
@@ -112,12 +128,15 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
         db.session.commit()
         if is_verified:
             email_sent = send_acct_verification_sucess_email(user.name, user.email)
+            log_verify_account(200, "", user_agent, client_ip, user.id)
         else:
             email_sent = False
 
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Database error. Error: {e}")
+        log_message = f"Database error. Error: {str(e)}"
+        logging.error(log_message)
+        log_verify_account(500, log_message, user_agent, client_ip, user.id)
         return jsonify(error_response), 500
 
         
@@ -132,7 +151,7 @@ def verify_account(): # TODO --> Add to logs so user actions can show in history
 #             SET MFA              #
 ####################################
 
-@auth.route("/set_mfa", methods=["POST"]) 
+@safety.route("/set_mfa", methods=["POST"]) 
 @login_required
 @validate_schema(set_mfa_schema)
 @limiter.limit("5/day")
@@ -163,13 +182,18 @@ def set_mfa():
     enable_mfa = json_data["enable_mfa"]
     password = json_data["password"]
     otp = json_data.get("otp", "")
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
 
     # Get the user from cookie 
     try:
         user = User.query.filter_by(email=current_user.email).first()
     except Exception as e:
-        logging.error(f"Failed to get user. Error: {e}")
+        log_message = f"Failed to get user. Error: {str(e)}"
+        logging.error(log_message)
+        log_set_mfa(500, log_message, user_agent, client_ip, 0)
         return jsonify({"response": "A database error prevented user retrieval."}), 500
     
     #TODO: consider not allowing superadmin to disable mfa
@@ -177,11 +201,13 @@ def set_mfa():
     # Check password 
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
+        log_set_mfa(401, "Password incorrect.", user_agent, client_ip, user.id)
         return jsonify({"response": "Password incorrect."} ), 401
     
     # Check OTP
     if enable_mfa is False:
         if user.check_otp(otp) is False:
+            log_set_mfa(401, "Provided OTP is wrong or expired.", user_agent, client_ip, user.id)
             return jsonify({"response": "Provided OTP is wrong or expired."} ), 401
         
     try:
@@ -189,18 +215,24 @@ def set_mfa():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
+        log_message = f"Failed to set MFA. Error: {str(e)}"
         logging.error(f"Failed to set MFA. Error: {e}")
-
+        log_set_mfa(500, log_message, user_agent, client_ip, user.id)
         return jsonify({"response": "A database error prevented MFA to be set."}), 500
     
     try:
         send_email_mfa_set(user.name, user.email, enable_mfa)
     except Exception as e:
-            logging.error(f"Error encountered while trying to send confirmation of setting mfa. Error: {e}")
+        log_message = f"Error encountered while trying to send confirmation of setting mfa. Error: {str(e)}"
+        logging.error(f"Error encountered while trying to send confirmation of setting mfa. Error: {e}")
+        log_set_mfa(500, log_message, user_agent, client_ip, user.id)
 
-        
+    success_message = "MFA was successfully enabled!" if enable_mfa else "MFA was successfully disabled!"
+
+    log_set_mfa(200, success_message, user_agent, client_ip, user.id)
+
     response_data ={
-            "response":"MFA was successfully disabled!",
+            "response":success_message,
             "mfa_enabled": user.mfa_enabled.value,
         }
     return jsonify(response_data)
