@@ -8,3 +8,6 @@ Files contain database models used by SQLAlchemy to create the db tables.
 """
 from .user import User
 from .token import Token
+
+# List of all models for easier imports elsewhere
+__all__ = ["User", "Token"]
