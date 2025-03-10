@@ -74,7 +74,7 @@ def create_app(config_class):
     # Blueprint registration
     # Note admin has nested blueprits: check admin routes file
     from app.routes.auth import auth
-    from app.routes.admin.routes import admin
+    from app.routes.admin import admin
     from app.routes.contact.routes import contact
     from app.routes.user_settings.routes import user_settings
     from app.routes.stats.routes import stats

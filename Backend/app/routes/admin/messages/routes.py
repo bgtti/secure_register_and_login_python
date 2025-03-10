@@ -14,7 +14,9 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.routes.admin.messages.schemas import admin_messages_table_schema
 
 
-messages = Blueprint('messages', __name__)
+
+# Blueprint
+from . import messages
 
 # In this file: routes that provide message-related information (to be accessed by admin users only) 
 #   - table with all messages, 

@@ -12,7 +12,8 @@ from app.utils.constants.enum_helpers import map_string_to_enum
 from app.utils.custom_decorators.admin_protected_route import admin_only
 from app.utils.custom_decorators.json_schema_validator import validate_schema
 
-user_action = Blueprint('user_action', __name__)
+# Blueprint
+from . import user_action
 
 # In this file: routes that modify user-related information (to be accessed by admin users only) 
 #   - change a user's flag colour, 

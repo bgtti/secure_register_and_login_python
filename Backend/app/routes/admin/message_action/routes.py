@@ -17,7 +17,8 @@ from app.utils.detect_html.detect_html import check_for_html
 from app.routes.admin.message_action.helpers import set_spammer,send_answer_by_email
 from app.routes.admin.message_action.schemas import admin_message_action_mark_as, admin_message_action_flag_change, admin_message_action_answer_message, admin_message_delete_schema
 
-message_action = Blueprint('message_action', __name__)
+# Blueprint
+from . import message_action
 
 # In this file: routes that provide message-related actions (to be accessed by admin users only) 
 #   - mark message as... (..."answer is needed", "no answer is needed", "spam") 

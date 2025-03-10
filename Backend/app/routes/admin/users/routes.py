@@ -15,7 +15,9 @@ from app.utils.custom_decorators.json_schema_validator import validate_schema
 from app.routes.admin.users.schemas import admin_users_table_schema, admin_user_information, admin_user_logs_schema, admin_user_messages_schema
 
 
-users = Blueprint('users', __name__)
+
+# Blueprint
+from . import users
 
 # In this file: routes that provide user-related information (to be accessed by admin users only) 
 #   - table with all users, 

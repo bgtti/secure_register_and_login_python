@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify
+from flask import jsonify
 
-admin_dash = Blueprint('admin_dash', __name__)
+# Blueprint
+from . import admin_dash
 
 # In this file: routes concerning admin  
 
