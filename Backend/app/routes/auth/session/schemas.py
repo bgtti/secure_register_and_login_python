@@ -23,6 +23,12 @@ get_otp_schema = {
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
             "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
             },
+        "user_agent": {
+            "description": "The HTTP User-Agent request header. ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['user_agent']['minValue'], 
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            }
     },
     "additionalProperties": False,
     "required": ["email", "honeypot"]
