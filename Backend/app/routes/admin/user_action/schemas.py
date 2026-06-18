@@ -1,10 +1,10 @@
-from app.utils.constants.enum_class import UserFlag
+from app.constants.flags import Flag
 
-user_flag_values = [flag.value for flag in UserFlag]
+user_flag_values = [flag.value for flag in Flag]
 
-admin_user_flag_change = {
+change_user_flag_schema = {
     "type": "object",
-    "title": "Change a user's flag colour", 
+    "title": "Change a user's flag colour.", 
     "properties": {
         "user_id": {
             "description": "Id of user to change flag.",
@@ -21,28 +21,28 @@ admin_user_flag_change = {
     "required": ["user_id", "new_flag_colour"]
 }
 
-admin_user_access_type_change = {
+user_role_change_schema = {
     "type": "object",
-    "title": "Change a user's access type to admin or regular user.", 
+    "title": "Change a user's role to admin or regular user.", 
     "properties": {
         "user_id": {
             "description": "Id of user whose type needs changing.",
             "type": "integer",
             "exclusiveMinimum": 0 
             },
-        "new_type": {
+        "new_role": {
             "description": "A user's type can be either 'user' or 'admin'.",
             "type": "string",
             "enum": ["user", "admin"],
             },
     },
     "additionalProperties": False,
-    "required": ["user_id", "new_type"]
+    "required": ["user_id", "new_role"]
 }
 
-admin_block_and_unblock_user_schema = {
+block_and_unblock_user_schema = {
     "type": "object",
-    "title": "Users table pagination", 
+    "title": "Block or unblock user's access to their accounts.", 
     "properties": {
         "user_id": {
             "description": "Id of user to block/unblock.",
@@ -60,14 +60,20 @@ admin_block_and_unblock_user_schema = {
 
 admin_delete_user_schema = {
     "type": "object",
-    "title": "Users table pagination", 
+    "title": "Delete a user's account.", 
     "properties": {
         "user_id": {
             "description": "Id of user to delete.",
             "type": "integer",
             "exclusiveMinimum": 0 
-            }
+            },
+        "reason": {
+            "description": "Reason given by admin to delete a user's account.",
+            "type": "string",
+            "minLength":  1, 
+            "maxLength": 200, 
+            },
     },
     "additionalProperties": False,
-    "required": ["user_id"]
+    "required": ["user_id", "reason"]
 }

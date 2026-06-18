@@ -1,56 +1,64 @@
+# Python/Flask libraries
 import logging
-from app.extensions.extensions import  db
-from app.models.log_activity import LogActivity
+
+# Constants
+from app.constants.log_events_security import SecurityEvent
+
+# Services
+from app.services.logging.security_log_services import svc_add_log_security
 
 # Use for function: verify_account
 def log_verify_account(http_code: int, text: str="", user_agent: str="", user_ip: str="", user_id: int=0) -> None: 
     """
-    Function will log events from the route to the db.
+    Function will log events from the route to the DB.
 
-    ---------------
-
-    **Parameters**
-    - http_code: the http error code (eg: 200)
-    - text: extra information relevant to the log
-    - user_agent: the user agent
-    - user_ip: the user's ip address (not anonymous)
-    - user_id: the user's id if available (0 if not available)
+    :param http_code (int): the http error code (eg: 200)
+    :param text (str): extra information relevant to the log
+    :param user_agent (str): the user agent
+    :param user_ip (str): the user's ip address (not anonymous)
+    :param user_id (int): the user's id if available (0 if not available)
 
     """
     if http_code is None:
-        logging.error("Logging activity error: http_code is None.")
+        logging.error("Logging security error: http_code is None.")
         return
     
-    activity = "verify email account"
+    activity = "verify account email"
     level = "INFO" # According to the dictionary defined in models/log_activity.py
     message = ""
+    event = SecurityEvent.EMAIL_VERIFICATION_SUCCESS
     match http_code:
         case 200:
             message = "Account successfully verified."
+        case 206:
+            message = "Account successfully verified." #Email sending failure
         case 401:
-            message = "Failed: authentication error."
+            message = "Account verification failed: OTP incorrect or expired." # OTP wrong/expired
+            event = SecurityEvent.EMAIL_VERIFICATION_FAILURE
+        case 440:
+            message = "Account verification failed: authentication error." # User not found
+            event = SecurityEvent.EMAIL_VERIFICATION_FAILURE
         case 500:
-            message = "Error: recovery email not set."
+            message = "Account verification failed: system error."
+            event = SecurityEvent.EMAIL_VERIFICATION_FAILURE
             level = "WARNING"
         case _:
             level = "NOTSET"
-            logging.error("Logging activity error: unexpected HTTP code received.")
+            message = "Event not set."
+            event = SecurityEvent.UNKNOWN_EVENT
+            logging.error("Logging security error: unexpected HTTP code received.")
     
-    try:
-        new_log= LogActivity(
-        level=level,
-        activity=activity,
-        message=message,
-        more_info=text,
-        ip=user_ip,
-        user_agent=user_agent,
-        user_id=user_id  
+    svc_add_log_security(
+        level,
+        event,
+        activity,
+        message,
+        text,
+        user_ip,
+        user_agent,
+        user_id
         )
-        db.session.add(new_log)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"LogActivity creation failed. Log activity: {activity}, http code: {http_code}  Error: {e}")
+    
     return 
 
 # Use for function: set_mfa
@@ -58,18 +66,15 @@ def log_set_mfa(http_code: int, text: str="", user_agent: str="", user_ip: str="
     """
     Function will log events from the route to the db.
 
-    ---------------
-
-    **Parameters**
-    - http_code: the http error code (eg: 200)
-    - text: extra information relevant to the log
-    - user_agent: the user agent
-    - user_ip: the user's ip address (not anonymous)
-    - user_id: the user's id if available (0 if not available)
+    :param http_code (int): the http error code (eg: 200)
+    :param text (str): extra information relevant to the log
+    :param user_agent (str): the user agent
+    :param user_ip (str): the user's ip address (not anonymous)
+    :param user_id (int): the user's id if available (0 if not available)
 
     """
     if http_code is None:
-        logging.error("Logging activity error: http_code is None.")
+        logging.error("Logging security error: http_code is None.")
         return
     
     activity = "set MFA"
@@ -77,29 +82,43 @@ def log_set_mfa(http_code: int, text: str="", user_agent: str="", user_ip: str="
     message = ""
     match http_code:
         case 200:
-            message = "MFA successfully set."
+            message = "MFA successfully disabled." # MFA disabled
+            event = SecurityEvent.MFA_DISABLED
+        case 201:
+            message = "MFA successfully enabled." # MFA enabled
+            event = SecurityEvent.MFA_ENABLED
+        case 206:
+            message = "MFA successfully enabled." # MFA enabled but email failed
+            event = SecurityEvent.MFA_ENABLED
+        case 207:
+            message = "MFA successfully disabled." # MFA disabled but email failed
+            event = SecurityEvent.MFA_DISABLED
         case 401:
-            message = "Failed: authentication error."
+            message = "Failed to set MFA: incorrect password."
+            event = SecurityEvent.MFA_SET_FAILURE
+        case 403:
+            message = "Failed to set MFA: pre-conditions not met." #verified email/missing recovery
+            event = SecurityEvent.MFA_SET_FAILURE
+            level = "ERROR"
         case 500:
-            message = "Error: MFA not set."
+            message = "Failed to set MFA: system error."
+            event = SecurityEvent.MFA_SET_FAILURE
             level = "WARNING"
         case _:
             level = "NOTSET"
-            logging.error("Logging activity error: unexpected HTTP code received.")
+            message = "Event not set."
+            event = SecurityEvent.UNKNOWN_EVENT
+            logging.error("Logging security error: unexpected HTTP code received.")
     
-    try:
-        new_log= LogActivity(
-        level=level,
-        activity=activity,
-        message=message,
-        more_info=text,
-        ip=user_ip,
-        user_agent=user_agent,
-        user_id=user_id  
+    svc_add_log_security(
+        level,
+        event,
+        activity,
+        message,
+        text,
+        user_ip,
+        user_agent,
+        user_id
         )
-        db.session.add(new_log)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"LogActivity creation failed. Log activity: {activity}, http code: {http_code}  Error: {e}")
+    
     return 

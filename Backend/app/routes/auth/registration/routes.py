@@ -21,10 +21,9 @@ Checkout the docs for more information about how Flask-Login works: https://flas
 
 # Python/Flask libraries
 import logging
-from datetime import datetime, timezone
 import random
 import time
-from flask import request, jsonify
+from flask import request, jsonify, session
 from flask_login import (
     current_user,
     login_user as flask_login_user,
@@ -39,33 +38,32 @@ from app.extensions.extensions import db, limiter, flask_bcrypt
 from app.models.user import User
 
 # Utilities: general
-from app.utils.bot_detection.bot_detection import bot_caught
-from app.utils.constants.enum_class import modelBool
-from app.utils.detect_html.detect_html import check_for_html
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import generate_salt, get_pepper
-from app.utils.custom_decorators.json_schema_validator import validate_schema
+from app.common.detect_html.detect_html import check_for_html
+from app.common.ip_utils.ip_address_validation import get_client_ip
+from app.common.profanity_check.profanity_check import has_profanity
+from app.common.salt_and_pepper.helpers import generate_salt, get_pepper
+from app.common.custom_decorators.json_schema_validator import validate_schema
 
-# Auth helpers (general)
-from app.routes.auth.helpers_auth import (
-    get_hashed_pw, 
-    get_user_or_none, 
-    user_name_is_valid, 
-    reset_user_session
-    )
+# Services
+from app.services.auth.user_acct_deletion_service import svc_delete_user_account
+from app.services.auth.user_acct_registration_service import svc_register_user
+from app.services.bot.bot_service import svc_bot_caught
+from app.services.user.user_service import svc_get_user_or_none
 
-# AResgistration helpers
-from app.routes.auth.registration.email import (
+# Email services
+from app.emails.auth.acct_registration_email import (
     send_email_acct_exists,
-    send_email_acct_created,
-    send_email_acct_deleted
+    send_email_acct_created
 )
+from app.emails.auth.acct_deletion_email import send_email_acct_deleted
+
+# Log helpers
 from app.routes.auth.registration.log import(
     log_signup_user,
     log_delete_user
 )
 
+# Json schemas
 from app.routes.auth.registration.schemas import (
     signup_schema,
     delete_user_schema
@@ -103,7 +101,7 @@ def signup_user():
         response_data = {
                 "response":"success",
                 "user": {
-                    "access": "user"
+                    "access": "user",
                     "name": "John", 
                     "email": "john@email.com",
                     "email_is_verified": False # will always be false after signup,
@@ -130,119 +128,96 @@ def signup_user():
     name = json_data["name"]
     email = json_data["email"]
     password = json_data["password"]
-    honeypot = json_data["honeypot"]
-    user_agent = json_data["honeypot"]#TODO: FRONT END MUST SEND IT: check api call react
+    honeypot = json_data["honeypot"] #TODO: change name!
+    user_agent = json_data.get("user_agent", "") #TODO: FRONT END MUST SEND IT: check api call react
     client_ip = get_client_ip(request) or ""
 
     if len(honeypot) > 0:
-        bot_caught(request, "signup")
-        log_signup_user(418, "", user_agent, client_ip, 0)
-        return jsonify(error_response), 418
+        svc_bot_caught(request, "signup", "auth/registration/signup_user")
+        log_signup_user(418, f"Email given: {email}", user_agent, client_ip, 0)
+        #--> TODO front end adaptation: if screen readers fall in honeypot, 
+        # Ideally: force email validation
+        time.sleep(random.uniform(1, 7)) # Added delay before returning
+        bot_res = {"response": "Complete next steps for account creation."}
+        return jsonify(bot_res), 202
+    
+    # Try to register user
+    reg_outcome = svc_register_user(name, email, password)
 
-    # Check if user already exists 
-    try:
-        user_if_exists = get_user_or_none(email, "signup")
-        user_exists = user_if_exists is not None 
-    except Exception as e:
-        logging.error(f"Could not check if user exists in db: {e}")
+    user_created = reg_outcome["success"]
+    user_id = reg_outcome["user_id"]
+    log_code = reg_outcome["log_code"]
+    log_text = reg_outcome["log_text"]
 
-    if user_exists:
+    # Log
+    log_signup_user(log_code, log_text, user_agent, client_ip, user_id)
+
+    # Registration successful
+    if user_created:
         try:
-            send_email_acct_exists(user_if_exists.name, user_if_exists.email)
-            logging.info(f"User already in db (error 409 in reality): {email}")
-            log_signup_user(409, f"Email:{email}", user_agent, client_ip, user_if_exists.id)
+            # Get newly created user
+            user = db.session.get(User, user_id)
+            if not user:
+                raise ValueError(f"User {user_id} not found after registration")
+            # Create session
+            user.new_session() # an alternative id should be created to be used in session management
+            db.session.commit()
         except Exception as e:
-            logging.error(f"Could not log event in signup: {e}")
+            db.session.rollback()
+            l_msg = f"User should have been created but could not be found by id or session could not be registered. Registration of {email} possibly failed or new_session() error."
+            logging.error(f"{l_msg} Info: {e}")
+            log_signup_user(500, l_msg, user_agent, client_ip, user_id)
+            return jsonify(error_response), 500
+        
+        # Send account creation email
+        send_email_acct_created(name, email)
+
+        # Login user
+        flask_login_user(user)
+
+        # Return success
+        response_data ={
+                "response":"success",
+                "user": {
+                    "access": user.role.access_level, 
+                    "name": user.name, 
+                    "email": user.email,
+                    "email_is_verified": False,
+                    "mfa_enabled": False,
+                    },
+                "preferences":{
+                    "in_mailing_list": False,
+                    "night_mode_enabled": True,
+                }
+            }
+        # Note we are not encoding user input when sending to FE because the FE is built with React with JSX
+        # JSX auto-escapes the data before putting it into the page, so deemed escaping to be unecessary.
+        return jsonify(response_data)
     
-    # Check if password meets safe password criteria, salt and pepper password, then hash it
-    date = datetime.now(timezone.utc) # date is required to get apropriate Pepper value
-    salt = generate_salt()
-    hashed_password = get_hashed_pw(password, date, salt) # will be null if password does not meet criteria
+    # Registration failed
 
-    if not hashed_password:
-        log_signup_user(400, f"Password does not meet criteria. Email: {email}", user_agent, client_ip, 0)
-    
-    # Determine if the new user should be flagged on the base of possible html or profanity in input (so admin could check). Flag colours described in enum in user's model page.
-    flag = False
-
-    name_is_valid = user_name_is_valid(name)
-    if name_is_valid is False:
-        log_signup_user(400, f"Name does not meet criteria. Name: {name}", user_agent, client_ip, 0)
-
-    html_in_name = check_for_html(name, "signup - name field", email)
-    html_in_email = check_for_html(email, "signup - email field", email)
-
-    if html_in_email or html_in_name:
-        flag = "YELLOW"
-    else:
-        profanity_in_name = has_profanity(name) 
-        profanity_in_email = has_profanity(email)
-        if profanity_in_name or profanity_in_email:
-            flag = "PURPLE"
-    
-    # Return if: user already exists or hashed_password is Null
-    # Note we ran most of the function before returning. The reason is to diminish the response time discrepancy between a successfully created user and a failed response. The difference in response time can be used by bad actors to deduce whether an account exists or not in the system.
-    
-    if user_exists or not hashed_password or name_is_valid is False:
-        return jsonify({"response": "There was an error registering user."}), 400 
-
-    # Create user
-    try:
-        new_user = User(name=name, email=email, password=hashed_password, salt=salt, created_at=date) # passing on the creation date to make sure it is the same used for pepper
-        db.session.add(new_user)
-        if flag:
-            new_user.flag_change(flag)
-        new_user.new_session() # an alternative id should be created to be used in session management
-        db.session.commit()
-
-        send_email_acct_created(new_user.name, new_user.email)
-
-    except Exception as e:
-        db.session.rollback() 
-        logging.error(f"User registration failed. Error: {e}")
-        log_signup_user(500, f"Name: {name}, Email: {email}", user_agent, client_ip, 0)
+    # If there was a DB failure, send a 500
+    if log_code == 500:
         return jsonify(error_response), 500
 
-    # Log event to user and system logs
-    try:
-        logging.info(f"New user created.")
-        log_signup_user(200, "", user_agent, client_ip, new_user.id)
+    # If user already exists, send email 
+    if reg_outcome["user_already_exists"]:
+        send_email_acct_exists(reg_outcome["user_name"], email)
+    
+    # Add delay before returning a failure. The reason is to diminish the response time discrepancy between a successfully created user and a failed response. The difference in response time can be used by bad actors to deduce whether an account exists or not in the system.
+    time.sleep(random.uniform(1, 6)) # Added delay
 
-        if flag:
-            if html_in_name or html_in_email:
-                log_signup_user(207, "Html detected in name or email.", user_agent, client_ip, new_user.id)
-            else:
-                log_signup_user(207, "Profanity detected in name or email.", user_agent, client_ip, new_user.id)
-    except Exception as e:
-        logging.error(f"Log event error. Error: {e}")
+    # Any client failure is treated the same and this is on purpose: we do not want to give much information about whether accounts may exists or not. --> give information on the frontend about pw and name requirements that may lead to failure. All client failures will yield a 400.
 
-    # Use Flask-Login to log in the user
-    flask_login_user(new_user)
+    return jsonify(error_response), 400
 
-    # Note we are not encoding user input when sending to FE because the FE is built with React with JSX
-    # JSX auto-escapes the data before putting it into the page, so deemed escaping to be unecessary.
-
-    response_data ={
-            "response":"success",
-            "user": {
-                "access": new_user.access_level.value, 
-                "name": new_user.name, 
-                "email": new_user.email,
-                "email_is_verified": False,
-                "mfa_enabled": False,
-                },
-            "preferences":{
-                "in_mailing_list": False,
-                "night_mode_enabled": True,
-            }
-        }
-    return jsonify(response_data)
 
 
 
 ####################################
 #       DELETE USER ACCOUNT        #
 ####################################
+# NOTE: consider placing account in quarantene (in case user did not want a deletion)
 
 @registration.route("/delete_user", methods=["POST"])
 @login_required
@@ -269,40 +244,30 @@ def delete_user():
             }
     ``` 
     """
-    # NOTE: consider placing account in quarantene (in case user did not want a deletion)
-
-    # Standard error response
-    error_response = {"response": "An error prevented account from being deleted."} 
-
     # Get the JSON data from the request body 
     json_data = request.get_json()
     password = json_data["password"]
     otp = json_data.get("otp", "")
-    user_agent = json_data.get("user_agent", "") #TODO log this in event
+    user_agent = json_data.get("user_agent", "")
+
+    # Standard error response
+    error_response = {"response": "An error prevented account from being deleted."} 
     
     # Check if user exists
-    user = get_user_or_none(current_user.email, "delete_user")
+    user = svc_get_user_or_none(current_user.email, "delete_user")
     client_ip = get_client_ip(request) or ""
-
 
     # Delay response in case of wrong credentials to mitigate attacks by introducing randomized delay
     def delay_response():
         delay = random.uniform(1, 10)
         time.sleep(delay)
 
-    # Do not allow deletion of super user
-    # TODO: do not allow the deletion of super user by role instead of by id!
-    if user is None or user.id == 1:
-        if user is None:
-            log_delete_user(404, "", user_agent, client_ip, 0)
-        else:
-            log_delete_user(403, "", user_agent, client_ip, user.id)
+    if user is None:
+        log_delete_user(404, "User could not be found from current_user although login_required is present.", user_agent, client_ip, 0)
+        logging.warning("User deletion route failed to find current_user even though login_required decorator present. Investigation necessary.")
         delay_response()
-        return jsonify(error_response), 404
-    
-    # Wrong credentials response
-    # wrong_creds_res = {"response": "Wrong credentials: password/OTP expired or incorrect."} 
-
+        return jsonify(error_response), 500
+        
     # Check password
     salted_password = user.salt + password + get_pepper(user.created_at)
     if not flask_bcrypt.check_password_hash(user.password, salted_password):
@@ -311,31 +276,31 @@ def delete_user():
         return jsonify({"response": "Wrong credentials: password incorrect."} ), 401
     
     # Check OTP only if user has mfa set
-    mfa_enabled = user.mfa_enabled == modelBool.TRUE
-    if mfa_enabled:
+    if user.mfa_enabled:
         if user.check_otp(otp) is False:
             log_delete_user(401, "Incorrect OTP.", user_agent, client_ip, user.id)
             delay_response()
             return jsonify({"response": "Wrong credentials: OTP incorrect or expired."}), 401
-        
+    
+    # Temporarily save some user details for later:
+    user_id = user.id
+    name=user.name
+    email=user.email
+
     # Credentials correct: delete user
-    try:
-        user_id = user.id
-        name=user.name
-        email=user.email
-        db.session.delete(user)
-        db.session.commit()
+    del_outcome = svc_delete_user_account(user)
+
+    user_deleted = del_outcome["success"]
+    log_code = del_outcome["log_code"]
+    log_text = del_outcome["log_text"] 
+
+    log_delete_user(log_code, log_text, user_agent, client_ip, user_id)
+
+    if user_deleted:
         send_email_acct_deleted(name, email)
-        logging.info("User deleted account.")
-        log_delete_user(200, "", user_agent, client_ip, user_id)
-
-        #logout user
-        reset_user_session(current_user) # invalidate old auth sessions
         flask_logout_user() # classic flask-login log out
-
-        return jsonify({"message": "User deleted successfully!"}), 200
-    except Exception as e:
-        db.session.rollback() 
-        logging.error(f"Failed to delete user. Details: {str(e)}")
-        log_delete_user(500, f"{str(e)}", user_agent, client_ip, user.id)
+        session.clear() # Flask-Session to clear session data in Redis 
+        return jsonify({"response": "User deleted successfully!"}), 200
+    else:
         return jsonify(error_response), 500
+

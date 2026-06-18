@@ -1,7 +1,7 @@
-from app.utils.constants.account_constants import INPUT_LENGTH
-from app.utils.constants.enum_class import UserFlag
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.flags import Flag
 
-user_flag_values = [flag.value for flag in UserFlag]
+user_flag_values = [flag.value for flag in Flag]
 
 admin_users_table_schema = {
     "type": "object",
@@ -32,7 +32,7 @@ admin_users_table_schema = {
         "filter_by": {
             "description": "Filter items according to this criteria. Defaults to 'none' if not specified.",
             "type": "string",
-            "enum": ["none", "is_blocked", "is_unblocked","flag", "flag_not_blue","is_admin", "is_user", "last_seen"],
+            "enum": ["none", "is_blocked", "is_unblocked", "flag", "flag_not_blue","is_admin", "is_user", "last_seen"],
             },
         "filter_by_flag": {
             "description": "If filter_by == 'flag', specify flag color. Defaults to 'blue' if not specified.",
@@ -40,7 +40,7 @@ admin_users_table_schema = {
             "enum": user_flag_values,
             },
         "filter_by_last_seen": {
-            "description": "If filter_by == 'last_seen', specify date in the past. Defaults to today - 1 month if not specified. Format: YYYY-MM-DD",
+            "description": "If filter_by == 'last_seen', specify date in the past. Defaults to today - 1 month if not specified. Format: yyyy-mm-dd (example: 2026-05-24)",
             "type": "string",
             "minLength": 8, 
             "maxLength": 10, 
@@ -84,14 +84,26 @@ admin_user_logs_schema = {
             "type": "integer",
             "exclusiveMinimum": 0 
             },
+        "log_type": {
+            "description": "Whether security logs or activity logs are desired. If 'both' is chosen, page nr will be ignored and only max 25 items of each will be sent.",
+            "type": "string",
+            "enum": ["security", "activity", "both"],
+            },
         "page_nr": {
-            "description": "Page number as int > 0",
+            "description": "Page number as int > 0. Defaults to 1 if not specified.",
             "type": "integer",
             "exclusiveMinimum": 0 
             },
+        "items_per_page": {
+            "description": "Number of items per page. Defaults to 25 if not specified.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "multipleOf" : 5,
+            "maximum": 50, 
+            }
     },
     "additionalProperties": False,
-    "required": ["user_id", "page_nr"]
+    "required": ["user_id", "log_type"]
 }
 
 admin_user_messages_schema = {

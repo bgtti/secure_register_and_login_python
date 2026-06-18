@@ -1,5 +1,5 @@
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN
-from app.utils.constants.enum_class import TokenPurpose, AuthMethods, PasswordChangeReason
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.validation_patterns import NAME_PATTERN
 
 ####################################
 #         PROFILE SCHEMAS          #

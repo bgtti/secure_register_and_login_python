@@ -1,422 +1,444 @@
+"""
+In this file: routes that provide message-related actions (to be accessed by admin users only) 
+  - mark message as spam
+  - change message flag
+  - answer message
+  - edit thread attributes
+  - delete message thread
+  - add/edit/remove notes from threads
+
+Note: only basic logging implemented here. More robust logging logic may be necessary.
+"""
+
+# Python/Flask libraries
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone, timedelta
+
+# Extensions and configurations
 from flask_login import login_required, current_user
-from sqlalchemy.exc import IntegrityError
+from app.extensions.extensions import db
 import logging
-from utils.print_to_terminal import print_to_terminal
-from config.values import EMAIL_CREDENTIALS, ENVIRONMENT
-from app.extensions.extensions import limiter, db
-from app.models.user import User
-# from app.models.log_event import LogEvent
-from app.models.message import Message
-from app.utils.constants.enum_class import modelBool, UserAccessLevel, UserFlag
-from app.utils.constants.enum_helpers import map_string_to_enum
-from app.utils.custom_decorators.admin_protected_route import admin_only
-from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.detect_html.detect_html import check_for_html
-from app.routes.admin.message_action.helpers import set_spammer,send_answer_by_email
-from app.routes.admin.message_action.schemas import admin_message_action_mark_as, admin_message_action_flag_change, admin_message_action_answer_message, admin_message_delete_schema
+
+# Constants and common helpers
+from app.constants.message_and_thread import MessageDirection, MessageChannel
+from app.common.custom_decorators.admin_protected_route import admin_only
+from app.common.custom_decorators.json_schema_validator import validate_schema
+
+# Email service
+from app.emails.admin.message_answering_email import send_answer_by_email
+
+# Services
+from app.services.message.add_message_service import svc_add_message
+from app.services.message.delete_thread_service import svc_delete_thread
+from app.services.message.edit_message_service import svc_mark_message_read_by_admin
+from app.services.message.edit_thread_service import (
+    svc_set_thread_is_spam, 
+    svc_change_thread_flag, 
+    svc_set_thread_status, 
+    svc_set_thread_priority,
+    svc_set_thread_category,
+    svc_assign_thread_to_admin
+    )
+from app.services.message.get_message_service import svc_get_message_by_id
+from app.services.message.get_thread_service import svc_get_thread_by_id
+from app.services.message.note_service import (
+    svc_add_thread_note,
+    svc_get_thread_note_by_id,
+    svc_edit_thread_note,
+    svc_delete_thread_note
+)
+
+# Json Schema
+from app.routes.admin.message_action.schemas import( 
+    mark_spam_schema, 
+    flag_change_schema, 
+    answer_message_schema, 
+    edit_thread_schema,
+    delete_thread_schema, 
+    add_note_schema,
+    edit_note_schema,
+    delete_note_schema
+    )
 
 # Blueprint
 from . import message_action
 
-# In this file: routes that provide message-related actions (to be accessed by admin users only) 
-#   - mark message as... (..."answer is needed", "no answer is needed", "spam") 
-#   - answer message
-#   - change message flag
-#   - delete message
 
-#TODO: I adapted manage.py to retrieve mode from Config to use MODE in answer_message(). Make sure to organize Config files appropriately and use mode whenever similarly needed in apis
-
-# ----- MESSAGES MARK AS 
-#TODO: 500 error could be generalized in response: see answer_message() for example
-#TODO: block user that is marked as spammer
-#TODO: make sure to mark messages as spam that come from users in spammer list (in appropriate function)
-@message_action.route("/mark_as", methods=["POST"])
+# ----- MESSAGES MARK AS -----
+@message_action.route("/mark_spam", methods=["POST"])
 @login_required
 @admin_only
-@validate_schema(admin_message_action_mark_as)
-def mark_as():
+@validate_schema(mark_spam_schema)
+def mark_spam():
     """
-    mark_as() -> JsonType
-    ----------------------------------------------------------
-    Route to mark a message as spam or answer needed.
-    Takes a JSON payload with the following required parameters:
-    - "message_id": the id of the message to be marked (int)
-    - "answer_needed": boolean indicating whether answer is needed.
-    - "is_spam": boolean indicating whether message is spam.
-    - "sender_is_spammer": boolean indicating whether sender should be included in the spammer list.
-
-    Note that if message is marked as spam, it will automatically be marked as no answer needed.
+    Route to mark (or unmark) a message as spam.
+    Note that if message is marked as spam, it will change the thread status.
     
-    Returns a JSON object with a "response" field.
-    ----------------------------------------------------------
-    Request example:
-    json_payload = {
-        "message_id": 6,
-        "answer_needed": true,
-        "is_spam": false
-        "sender_is_spammer": false
-    }
-    ----------------------------------------------------------
-    Response examples:
-
-    {"response": "Requested page out of range"}
-
-    {"response":"success",
-    "requested":{
-        "message_id": 6,
-        "answer_needed": true,
-        "is_spam": false,
-        "sender_is_spammer": false
-    }
-    }
+    Possible responses: 200, 404, 500.
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
 
     # Get info from JSON payload
-    message_id = json_data["message_id"] 
-    answer_needed = json_data["answer_needed"] 
+    message_thread_id = json_data["message_thread_id"] 
     is_spam = json_data["is_spam"] 
-    sender_is_spammer = json_data["sender_is_spammer"]
 
-    try:
-        the_message = Message.query.filter_by(id=message_id).first()
+    # Responses
+    res_200 = {"response": "Message spam mark changed."}
+    res_404 = {"response": "Message or thread not found."}
+    res_500 = {"response": "Error prevented answer to be recorded"}
 
-        if not the_message:
-            logging.warning(f"Message id={message_id} could not be found, 404 not found.") 
-            return jsonify({"response": "Message not found"}), 404
+    # Get Thread
+    thread = svc_get_thread_by_id(message_thread_id)
+    if not thread:
+        return jsonify(res_404), 404
+
+    thread_ok = svc_set_thread_is_spam(thread, is_spam=is_spam, commit=True)
+
+    if not thread_ok:
+        return jsonify(res_500), 500
         
-        if is_spam is True:
-            the_message.mark_spam()
-            if sender_is_spammer is True:
-                admin_id = current_user.id
-                spammer_added = set_spammer(admin_id, the_message.sender_email)
-                if not spammer_added:
-                    logging.error(f"Setting Spammer failed: returning error 500 from mark_message_as api.")
-                    return jsonify({"response": "Failed to mark sender as spammer"}), 500
-        else:
-            if the_message.is_spam == modelBool.TRUE:
-                the_message.is_spam = modelBool.FALSE
-                the_message.flagged = UserFlag.BLUE
-            if answer_needed is True:
-                the_message.reply_needed()
-            if answer_needed is False:
-                the_message.no_reply_needed()
-        
-        db.session.commit()
-        logging.info(f"Message id={message_id} has been marked succesfully.") 
-        
-    except IntegrityError as e:
-        db.session.rollback()
-        logging.error(f"DB integrity error prevented message to be marked: {e}")
-        return jsonify({"response": "Integrity error prevented message to be marked."}), 500
-    
-    except Exception as e:
-        logging.error(f"Error prevented message to be marked: {e}")
-        return jsonify({"response": "Error prevented message to be marked."}), 500
-
-    response_data ={
-            "response":"success",
-            "requested":{
-                "message_id": message_id,
-                "answer_needed": answer_needed,
-                "is_spam": is_spam,
-                "sender_is_spammer":sender_is_spammer
-            }
-        }
-    
-    return jsonify(response_data)
-
+    return jsonify(res_200), 200
 
 # ----- MESSAGES FLAG CHANGE -----
-#TODO: 500 error could be generalized in response: see answer_message() for example
 @message_action.route("/flag_change", methods=["POST"])
 @login_required
 @admin_only
-@validate_schema(admin_message_action_flag_change)
+@validate_schema(flag_change_schema)
 def flag_change():
     """
-    flag_change() -> JsonType
-    ----------------------------------------------------------
-    Route to change a message's flag.
-    Takes a JSON payload with the following required parameters:
-    - "message_id": the id of the message to be edited (int)
-    - "message_flag": the new flag colour that must be value from UserFlag enum class (str)
-    
-    Returns a JSON object with a "response" field.
-    ----------------------------------------------------------
-    Request example:
-    json_payload = {
-        "message_id": 6,
-        "message_flag": "blue"
-    }
-    ----------------------------------------------------------
-    Response examples:
+    Route to change a message thread's flag.
 
-    {"response":"success",
-    "requested":{
-        "message_id": 6,
-        "answer_needed": true,
-        "is_spam": false,
-        "sender_is_spammer": false
-    }
-    }
-
-    {"response": "Message not found"}
+    Possible responses: 200, 404, 500.
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
 
     # Get info from JSON payload
-    message_id = json_data["message_id"] 
-    message_flag = json_data["message_flag"] 
+    message_thread_id = json_data["message_thread_id"] 
+    flag = json_data["flag"] 
 
-    # Make sure flag exists
-    flag = map_string_to_enum(message_flag, UserFlag)
-    if flag == None:
-        return jsonify({"response": "Flag colour not found"}), 404
+    # Responses
+    res_200 = {"response": "Flag colour changed."}
+    res_404 = {"response": "Message or thread not found."}
+    res_500 = {"response": "Error prevented answer to be recorded"}
 
-    try:
-        the_message = Message.query.filter_by(id=message_id).first()
+    # Get Thread
+    thread = svc_get_thread_by_id(message_thread_id)
+    if not thread:
+        return jsonify(res_404), 404
 
-        if not the_message:
-            logging.info(f"Message id={message_id} could not be found, 404 not found.") 
-            return jsonify({"response": "Message not found"}), 404
-        
-        the_message.flag_change(message_flag)
-        
-        db.session.commit()
-        
-    except IntegrityError as e:
-        db.session.rollback()
-        logging.error(f"DB integrity error prevented message to be flagged: {e}")
-        return jsonify({"response": "Integrity error prevented message to be flagged."}), 500
-    
-    except Exception as e:
-        logging.error(f"Error prevented message to be flagged: {e}")
-        return jsonify({"response": "Error prevented message to be flagged."}), 500
+    flag_change_ok = svc_change_thread_flag(thread, flag, True)
 
-    response_data ={
-            "response":"success",
-            "requested":{
-                "message_id": message_id,
-                "message_flag": message_flag,
-            }
-        }
-    
-    return jsonify(response_data)
+    if not flag_change_ok:
+        return jsonify(res_500), 500
 
-# ANSWER MESSAGE 
-# #TODO: function could be improved by dividing answer recording from answer sending in helper functions, making API shorter 
+    return jsonify(res_200), 200
+
+# ----- ANSWER MESSAGE ----- 
 @message_action.route("/answer_message", methods=["POST"])
 @login_required
 @admin_only
-@validate_schema(admin_message_action_answer_message)
+@validate_schema(answer_message_schema)
 def answer_message():
     """
-    answer_message() -> JsonType
-    ----------------------------------------------------------
-    Route to change a message's flag.
-    Takes a JSON payload with the following required parameters:
-    - "message_id": the id of the message to be edited (int)
-    - "email_answer": whether the answer should be recorded (false) or sent by email (true) (bool)
-    - "answer": answer text (str)
-    Optional arguments:
-    - "subject": email subject of the answer (str)
-    - "answered_by": email of admin who answered (str)
-    - "answer_date": answer date formatted YYYY-MM-DD (str)
+    Route used by admins to answer a message from a user.
+    Answer can optionally also be sent by email.
+    Original message will be marked as read.
     
-    Returns a JSON object with a "response" field.
-    ----------------------------------------------------------
-    Request example:
-    json_payload = {
-        "message_id": 6,
-        "answered_by": "example@fakemail.com",
-        "answer": "Hi George, we are working to solve your issue."
-        "email_answer": false
-    }
-    ----------------------------------------------------------
-    Response examples:
-
-    {"response":"success",
-        "requested":{
-            "message_id": 6,
-            "answer": "Hi George, we are working to solve your issue.",
-            "email_answer": false
-        }
-    }
-
-    {"response": "Message not found"}
+    Possible responses: 200, 201, 404, 500.
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
 
     # Get required info from JSON payload
     message_id = json_data["message_id"]
-    email_answer = json_data["email_answer"]
+    subject = json_data["subject"]
     answer = json_data["answer"]
-    # Optional values bellow...
+    send_per_email = json_data["send_per_email"]
 
-    # Debug log
-    logging.debug(f"Request to record answer received: Message id={message_id}, email_answer={email_answer}, answer={answer}.") 
+    # Responses
+    res_200 = {"response": "Message sent."} if send_per_email else {"response": "Message recorded."}
+    res_201 = {"response": "Message recorded, but email could not be sent."}
+    res_404 = {"response": "Message not found."}
+    res_500 = {"response": "Error prevented answer from being recorded."}
 
-    # 500 error response
-    res_500 = {"response": "Error prevented answer to be recorded"}
+    # Get original message
+    orig_msg = svc_get_message_by_id(message_id)
+    if not orig_msg:
+        return jsonify(res_404), 404
 
-    try:
-        the_message = Message.query.filter_by(id=message_id).first_or_404()
+    # Mark original message as read by admin
+    if not orig_msg.marked_read_by_admin:
+        svc_mark_message_read_by_admin(orig_msg, True, current_user.id, False) # add message should commit both
     
-    except Exception as e:
-        logging.error(f"Error prevented message id={message_id} to be retrieved: {e}")
+    # Add Message to Thread
+    msg = svc_add_message(
+        thread= orig_msg.thread, 
+        sender_name = current_user.name, 
+        sender_email = current_user.email,
+        sender_id = current_user.id,
+        subject = subject,
+        message_body = answer,
+        direction = MessageDirection.OUTBOUND,
+        channel = MessageChannel.STAFF_TO_USER,
+        user_agent = None,
+        ip_address = None,
+        geo_location = None,
+        recipient_id = orig_msg.sender_id,
+        recipient_email = orig_msg.sender_email,
+        recipient_name = orig_msg.sender_name,
+    )
+
+    if not msg["success"]:
+        logging.error(msg["log_txt"])
         return jsonify(res_500), 500
+
+    # Done if admin does not want to send it by email
+    if not send_per_email:
+        return jsonify(res_200), 200
+
+    email_data = {
+        "recipient": orig_msg.sender_email,
+        "message": answer,
+        "subject": subject,
+        "sender_name": f"{current_user.name} - Admin Team",
+        "thread_ref": orig_msg.thread.reference,
+        "original_message":orig_msg.body,
+        "original_message_date":orig_msg.created_at,
+    }
+    email_sent = send_answer_by_email(email_data)
+
+    if not email_sent:
+        logging.error(f"Email could not be sent.")
+        return jsonify(res_201), 201
     
-    user = current_user
-    answerer_name= current_user.name
-    answerer_id = current_user.id
-    
-    if email_answer is False:
-        # get relevant optional info from JSON payload (if it exists, else use a default value)
-        answered_by = json_data.get("answered_by", user.email)
-        answer_date = datetime.strptime(json_data["answer_date"], "%Y-%m-%d").date() if "answer_date" in json_data else datetime.now(timezone.utc)
+    return jsonify(res_200), 200
 
-        try:
-            the_message.record_answer(answered_by, answerer_name, answerer_id, answer, answer_date)
-            
-            db.session.commit()
-            
-        except IntegrityError as e:
-            db.session.rollback()
-            logging.error(f"DB integrity error prevented message id={message_id} answer to be recorded: {e}")
-            return jsonify(res_500), 500
-        
-        except Exception as e:
-            logging.error(f"Error prevented message id={message_id} answer to be recorded: {e}")
-            return jsonify(res_500), 500
-        
-        try:
-            if user.email != answered_by:
-                logging.info(f"Admin with id {user.id} recorded a message answer answered by {answered_by} but own email is {user.email}")
-        except Exception as e:
-            logging.error(f"Error prevented log of answer to be recorded: {e}")
-
-    if email_answer is True:
-        # get relevant optional info from JSON payload (if it exists, else use a default value)
-        subject = json_data.get("subject", "Re: contact form submission")
-
-        if EMAIL_CREDENTIALS["email_set"] is False:
-            if ENVIRONMENT != "production":
-                print_to_terminal("Email credentials not set up. Email was not sent but will be recorded in DB to make testing possible. ", "RED")
-                email_sent = True
-            else:
-                logging.error(f"Email credentials not set up. Email could not be sent and system will return a 500 response.")
-                return jsonify(res_500), 500
-
-        else:
-            email_data = {
-                "recepient": the_message.sender_email,
-                "message": answer,
-                "subject": subject,
-                "sender_name": "Admin Team",
-                "original_message":the_message.message,
-                "original_message_date":the_message.date,
-            }
-            email_sent = send_answer_by_email(email_data)
-
-        if email_sent:
-            try:
-                the_message.email_answer(answerer_name, answerer_id, answer, subject)
-                
-                db.session.commit()
-                
-            except IntegrityError as e:
-                db.session.rollback()
-                logging.error(f"DB integrity error prevented message id={message_id} answer to be recorded: {e}")
-                return jsonify(res_500), 500
-            
-            except Exception as e:
-                logging.error(f"Error prevented message id={message_id} answer to be recorded: {e}")
-                return jsonify(res_500), 500
-            
-        else:
-            logging.error(f"Answer could not be sent. Answer will not be recorded in DB. App will return 500.")
-            return jsonify(res_500), 500
-        
-    response_data ={
-            "response":"success",
-            "requested":{
-                "message_id": message_id,
-                "answer": answer,
-                "email_answer": email_answer
-            }
-        }
-    
-    return jsonify(response_data)  
-            
-    
-    
-
-# ----- ACTION: DELETE Message ----- 
-#TODO: 500 error could be generalized in response: see answer_message() for example
-#TODO: Check logs to see if appropriate
-@message_action.route("/delete_message", methods=["POST"])
+# ----- ANSWER MESSAGE -----
+@message_action.route("/edit_thread", methods=["POST"])
 @login_required
 @admin_only
-@validate_schema(admin_message_delete_schema) 
-def delete_message():
+@validate_schema(edit_thread_schema)
+def edit_thread():
     """
-    delete_message() -> JsonType
-    ----------------------------------------------------------
-    Route to delete a message by id.
-    Takes a JSON payload with the following parameters:
-    - "message_id": Message's id to be deleted.
+    Route to change a thread's:
+    - status
+    - priority
+    - category
+    - admin id assignment
+    
+    Possible responses: 200, 404, 500.
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
 
-    Returns a JSON object with a "response" field:
-    - If deletion is successful: {"response": "success"}
-    - If the id is not found: {"response": "Message not found"}
-    - If an error occurs during deletion: {"response": "Error deleting message", "error": "Details of the error"}
+    thread_id = json_data["thread_id"]
+    thread_status = json_data["thread_status"]
+    thread_priority = json_data["thread_priority"]
+    thread_category = json_data["thread_category"]
+    thread_assined_to = json_data["thread_assined_to"]
 
-    ----------------------------------------------------------
-    Request example:
-    json_payload = {
-        "message_id": 12345
-    }
-    ----------------------------------------------------------
-    Response examples:
-    {"response": "success"}
-    {"response": "Message not found"}
-    {"response": "Error deleting message", "error": "Details of the error"}
+    # Responses
+    res_200 = {"response": "Thread edited successfully."}
+    res_404 = {"response": "Thread not found."}
+    res_500 = {"response": "Error prevented thread from being changed."}
+
+    # Get Thread
+    thread = svc_get_thread_by_id(thread_id)
+    if not thread:
+        return jsonify(res_404), 404
+    
+    # Check changes
+    status_changed = priority_changed = category_changed = assignment_changed = False
+
+    if thread.status.value != thread_status:
+        status_changed = svc_set_thread_status(thread, thread_status, False)
+    if thread.priority.value != thread_priority:
+        priority_changed = svc_set_thread_priority(thread, thread_priority, False)
+    if thread.category != thread_category:
+        category_changed = svc_set_thread_category(thread, thread_category, False)
+    if thread.assigned_to_admin_id != thread_assined_to:
+        assignment_changed = svc_assign_thread_to_admin(thread, thread_assined_to, False)
+
+    # Commit to db if changed
+        
+    if status_changed or priority_changed or category_changed or assignment_changed:
+        try:
+            db.session.commit()
+        except Exception as e:
+            logging.error(f"Changes to thread could not be saved. Error: {e}")
+            return jsonify(res_500), 500
+    
+    return jsonify(res_200), 200
+
+# ----- ACTION: DELETE Thread and Messages ----- 
+@message_action.route("/delete_thread", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(delete_thread_schema) 
+def delete_thread():
+    """
+    Route can be used to:
+    - soft-delete thread
+    - remove thread's "is_deleted" mark
+    - purge thread (actually delete from DB)
+
+    Possible responses: 200, 404, 500.
     """
     # Get the JSON data from the request body
     json_data = request.get_json()
 
     # Get id from JSON payload
-    message_id = json_data["message_id"]
+    thread_id = json_data["thread_id"]
+    delete = json_data["delete"]
 
-    try:
-        the_message = Message.query.filter_by(id=message_id).first()
+    # Responses
+    res_200 = {"response": "Thread deleted successfully."} if delete else {"response": "Thread moved to inbox."}
+    res_404 = {"response": "Thread not found."}
+    res_500 = {"response": "Error prevented thread from being (un)deleted."}
 
-        if not the_message:
-            logging.info(f"Message id={message_id} could not be found, 404 not found.") 
-            return jsonify({"response": "Message not found"}), 404
-        
-        db.session.delete(the_message)
-        
-        db.session.commit()
-        
-        logging.info("Message deleted successfully.")
-        #log_event("ADMIN_DELETE_USER","deletion successful",user.id, f"Admin action from: {current_user.email}.")
+    # Get Thread
+    thread = svc_get_thread_by_id(thread_id)
+    if not thread:
+        return jsonify(res_404), 404
+    
+    # Mark deletion
+    del_ok = svc_delete_thread(thread, delete, True)
 
-        return jsonify({"response": "success"})
+    if not del_ok:
+        return jsonify(res_500), 500
+    
+    return jsonify(res_200), 200
 
-    except IntegrityError as e:
-        db.session.rollback()
-        logging.error(f"DB integrity error prevented message deletion: {e}")
-        #log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting message"}), 500
+# ----- ACTION: ADD Note ----- 
+@message_action.route("/add_note", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(add_note_schema) 
+def add_note():
+    """
+    Route adds an internal admin/staff note to a message thread.
 
-    except Exception as e:
-        logging.error(f"Error prevented message deletion: {e}")
-        #log_event("ADMIN_DELETE_USER","deletion problem",user.id)
-        return jsonify({"response": "Error deleting message"}), 500
+    Possible responses: 200, 404, 500.
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get id from JSON payload
+    thread_id = json_data["thread_id"]
+    note = json_data["note"]
+    is_pinned = json_data["is_pinned"]
+
+    # Responses
+    res_200 = {"response": "Note added successfully."} 
+    res_404 = {"response": "Thread not found."}
+    res_500 = {"response": "Error prevented note from being added."}
+
+    # Get Thread
+    thread = svc_get_thread_by_id(thread_id)
+    if not thread:
+        return jsonify(res_404), 404
+    
+    # Add note
+    note_ok = svc_add_thread_note(
+        thread=thread, 
+        staff_id=current_user.id, 
+        body=note,
+        is_pinned=is_pinned,
+        commit=True)
+
+    if not note_ok:
+        return jsonify(res_500), 500
+    
+    return jsonify(res_200), 200
+
+# ----- ACTION: EDIT Note ----- 
+@message_action.route("/edit_note", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(edit_note_schema) 
+def edit_note():
+    """
+    Route edits an internal thread note.
+
+    Allows changing:
+    - note body
+    - pinned status
+
+    Possible responses: 200, 404, 500.
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get id from JSON payload
+    note_id = json_data["note_id"]
+    note = json_data["note"]
+    is_pinned = json_data["is_pinned"]
+
+    # Responses
+    res_200 = {"response": "Note edited successfully."}
+    res_404 = {"response": "Note not found."}
+    res_500 = {"response": "Error prevented note from being edited."}
+
+    # Get note
+    note = svc_get_thread_note_by_id(note_id)
+
+    if not note:
+        return jsonify(res_404), 404
+
+    # Edit note
+    note_ok = svc_edit_thread_note(
+        note=note,
+        body=note_body,
+        is_pinned=is_pinned,
+        commit=True,
+    )
+
+    if not note_ok:
+        return jsonify(res_500), 500
+
+    return jsonify(res_200), 200
+
+# ----- ACTION: DELETE Note ----- 
+@message_action.route("/delete_note", methods=["POST"])
+@login_required
+@admin_only
+@validate_schema(delete_note_schema) 
+def delete_note():
+    """
+    Route deletes an internal thread note.
+
+    Allows changing:
+    - note body
+    - pinned status
+
+    Possible responses: 200, 404, 500.
+    """
+    # Get the JSON data from the request body
+    json_data = request.get_json()
+
+    # Get id from JSON payload
+    note_id = json_data["note_id"]
+
+    # Responses
+    res_200 = {"response": "Note deleted successfully."}
+    res_404 = {"response": "Note not found."}
+    res_500 = {"response": "Error prevented note from being deleted."}
+
+    # Get note
+    note = svc_get_thread_note_by_id(note_id)
+
+    if not note:
+        return jsonify(res_404), 404
+
+    # Edit note
+    note_ok = svc_delete_thread_note(
+        note=note,
+        commit=True,
+    )
+
+    if not note_ok:
+        return jsonify(res_500), 500
+
+    return jsonify(res_200), 200

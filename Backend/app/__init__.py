@@ -76,13 +76,15 @@ def create_app(config_class):
     from app.routes.auth import auth
     from app.routes.admin import admin
     from app.routes.contact.routes import contact
-    from app.routes.user_settings.routes import user_settings
+    from app.routes.user_preferences.routes import user_preferences
+    from app.routes.user_messages.routes import user_messages
     from app.routes.stats.routes import stats
     app.register_blueprint(auth, url_prefix='/api/auth')
     app.register_blueprint(admin, url_prefix='/api/admin')
     app.register_blueprint(contact, url_prefix='/api/contact')
     app.register_blueprint(stats, url_prefix='/api/stats')
-    app.register_blueprint(user_settings, url_prefix='/api/user_settings')
+    app.register_blueprint(user_preferences, url_prefix='/api/user_preferences')
+    app.register_blueprint(user_messages, url_prefix='/api/user_messages')
 
     # TODO remove test route in production
     @app.route('/test/')

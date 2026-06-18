@@ -1,4 +1,5 @@
 from app.extensions.extensions import db
+from app.extensions.sqlalchemy_config import UTCDateTime
 from flask_login import UserMixin
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -115,7 +116,8 @@ class VisitorStats(UserMixin, db.Model):
     referrer = db.Column(db.String(100), nullable=True)
     page_accessed = db.Column(db.String(50), nullable=True)
     session_visit = db.Column(db.String(32), nullable=True, default="")
-    date_accessed = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    # date_accessed = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     def __init__(self, ip_address, continent, country, country_code, city, user_agent, screen_size , referrer, page_accessed, session_visit, **kwargs):
         self.ip_address = self.check_and_hash_ip(ip_address)

@@ -1,9 +1,9 @@
 from flask import Flask, jsonify
-from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.custom_decorators.admin_protected_route import admin_only
+from app.common.custom_decorators.json_schema_validator import validate_schema
+from app.common.custom_decorators.admin_protected_route import admin_only
 from flask_login import UserMixin, login_user, logout_user, login_required
 from app.extensions.extensions import login_manager
-from app.utils.constants.enum_class import UserAccessLevel
+from app.common.constants.enum_class import UserAccessLevel
 
 def test_validate_schema():
     """

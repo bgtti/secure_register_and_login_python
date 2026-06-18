@@ -1,4 +1,5 @@
-from app.utils.constants.account_constants import INPUT_LENGTH, PASSWORD_PATTERN, OTP_PATTERN
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.validation_patterns import NAME_PATTERN, EMAIL_PATTERN, OTP_PATTERN
 
 ####################################
 #         SAFETY SCHEMAS           #
@@ -38,15 +39,7 @@ set_mfa_schema = {
             "description": "Can only accept password.",
             "type": "string", 
             "minLength":  INPUT_LENGTH['password']['minValue'],
-            "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
-            },
-        "otp": {
-            "description": "Can only accept otp.",
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['otp']['minValue'], 
-            "maxLength": INPUT_LENGTH['otp']['maxValue'], 
-            "pattern": OTP_PATTERN
+            "maxLength": INPUT_LENGTH['password']['maxValue']
             },
         "user_agent": {
             "description": "The HTTP User-Agent request header. ",

@@ -1,44 +1,40 @@
-from app.utils.constants.account_constants import INPUT_LENGTH, EMAIL_PATTERN, DATE_PATTERN 
-from app.utils.constants.enum_class import UserFlag
-message_flag_values = [flag.value for flag in UserFlag]
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.flags import Flag
+from app.constants.message_and_thread import ThreadStatus, ThreadPriority
 
-admin_message_action_mark_as = {
+message_flag_values = [flag.value for flag in Flag]
+thread_status_values = [status.value for status in ThreadStatus]
+thread_priority_values = [priority.value for priority in ThreadPriority]
+
+mark_spam_schema = {
     "type": "object",
-    "title": "Mark message as", 
+    "title": "Mark or unmark message thread as spam.", 
     "properties": {
         "message_id": {
             "description": "Id of message to be marked as",
             "type": "integer",
             "exclusiveMinimum": 0 
-            },
-        "answer_needed": {
-            "description": "Mark as answer is needed: set to true.",
-            "type": "boolean" 
             },
         "is_spam": {
             "description": "Mark as spam: set to true.",
             "type": "boolean",
             },
-        "sender_is_spammer": {
-            "description": "Mark sender as spammer: set to true.",
-            "type": "boolean",
-            },
     },
     "additionalProperties": False,
-    "required": ["message_id","answer_needed", "is_spam", "sender_is_spammer"]
+    "required": ["message_id","is_spam"]
 }
 
-admin_message_action_flag_change = {
+flag_change_schema = {
     "type": "object",
-    "title": "Mark message as", 
+    "title": "Flag message thread.", 
     "properties": {
-        "message_id": {
-            "description": "Id of message to be marked as",
+        "message_thread_id": {
+            "description": "Id of message thread to be flagged",
             "type": "integer",
             "exclusiveMinimum": 0 
             },
-        "message_flag": {
-            "description": "Flag colour to flag user.",
+        "flag": {
+            "description": "Flag colour to flag message thread.",
             "type": "string",
             "enum": message_flag_values,
             },
@@ -47,60 +43,144 @@ admin_message_action_flag_change = {
     "required": ["message_id","message_flag"]
 }
 
-admin_message_action_answer_message = {
+answer_message_schema = {
     "type": "object",
     "properties": {
         "message_id": {
-            "description": "Id of message to be marked as",
+            "description": "Id of original message.",
             "type": "integer",
             "exclusiveMinimum": 0 
             },
-        "email_answer": {
-            "description": "Email answer: set to true. If false, it will record answer but not send it.",
-            "type": "boolean",
-            },
-        "answer": {
-            "description": "Text of answer to message",
-            "type": "string", 
-            "minLength":  INPUT_LENGTH['contact_message']['minValue'], 
-            "maxLength": INPUT_LENGTH['contact_message']['maxValue'],
-        },
         "subject": {
-            "description": "Optional: subject of email answer (if answer is emailed)",
+            "description": "Subject of email answer.",
             "type": "string", 
             "minLength":  INPUT_LENGTH['contact_message_subject']['minValue'], 
             "maxLength": INPUT_LENGTH['contact_message_subject']['maxValue'],
         },
-        "answered_by": {
-            "description": "Optional: Email of the admin who answered message (if answer is recorded)",
+        "answer": {
+            "description": "Body of the answer to message.",
             "type": "string", 
-            "minLength": INPUT_LENGTH['email']['minValue'], 
-            "maxLength": INPUT_LENGTH['email']['maxValue'], 
-            "pattern": EMAIL_PATTERN
-            },
-        "answer_date": {
-            "description": "Optional: answer date formatted YYYY-MM-DD (if answer is recorded)",
-            "type": "string", 
-            "format": "date",
-            "minLength":  10, 
-            "maxLength": 10,
-            "pattern": DATE_PATTERN ,
-        }
+            "minLength":  INPUT_LENGTH['contact_message']['minValue'], 
+            "maxLength": INPUT_LENGTH['contact_message']['maxValue'],
+        },
+        "send_per_email": {
+            "description": "If True will also send the answer per email to the original sender.",
+            "type": "boolean",
+            }
     },
     "additionalProperties": False,
-    "required": ["message_id","email_answer", "answer"]
+    "required": ["message_id", "subject", "answer", "send_per_email"]
 }
 
-admin_message_delete_schema = {
+edit_thread_schema = {
     "type": "object",
-    "title": "Delete message", 
     "properties": {
-        "message_id": {
-            "description": "Id of message to delete.",
+        "thread_id": {
+            "description": "Id of thread that should be edited.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "thread_status": {
+            "description": "Thread status: enum selection.",
+            "type": "string",
+            "enum": thread_status_values,
+            },
+        "thread_priority": {
+            "description": "Thread priority: enum selection.",
+            "type": "string",
+            "enum": thread_priority_values,
+            },
+        "thread_category": {
+            "description": "Thread category: free text string. Empty string possible.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['thread_category']['minValue'], 
+            "maxLength": INPUT_LENGTH['thread_category']['maxValue'],
+            },
+        "thread_assined_to": {
+            "description": "Id of admin that should be responsible for the thread. None if no responsible person assigned.",
+            "type": ["integer", "null"],
+            },
+    },
+    "additionalProperties": False,
+    "required": ["thread_id", "thread_status", "thread_priority", "thread_category", "thread_assined_to"]
+}
+
+delete_thread_schema = {
+    "type": "object",
+    "title": "Delete thread", 
+    "properties": {
+        "thread_id": {
+            "description": "Id of thread to delete.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "delete": {
+            "description": "To delete thread: set to true.",
+            "type": "boolean",
+            },
+    },
+    "additionalProperties": False,
+    "required": ["thread_id", "delete"]
+}
+
+add_note_schema = {
+    "type": "object",
+    "title": "Add note to thread.", 
+    "properties": {
+        "thread_id": {
+            "description": "Id of thread to which the note should be added.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "note": {
+            "description": "Body of the note.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['thread_note']['minValue'], 
+            "maxLength": INPUT_LENGTH['thread_note']['maxValue'],
+        },
+        "is_pinned": {
+            "description": "To pin a note to the top: set to true.",
+            "type": "boolean",
+            },
+    },
+    "additionalProperties": False,
+    "required": ["thread_id", "note", "is_pinned"]
+}
+
+edit_note_schema = {
+    "type": "object",
+    "title": "Edit a thread note.", 
+    "properties": {
+        "note_id": {
+            "description": "Id of note to edit.",
+            "type": "integer",
+            "exclusiveMinimum": 0 
+            },
+        "note": {
+            "description": "Body of the note.",
+            "type": "string", 
+            "minLength":  INPUT_LENGTH['thread_note']['minValue'], 
+            "maxLength": INPUT_LENGTH['thread_note']['maxValue'],
+        },
+        "is_pinned": {
+            "description": "To pin a note to the top: set to true.",
+            "type": "boolean",
+            },
+    },
+    "additionalProperties": False,
+    "required": ["note_id", "note", "is_pinned"]
+}
+
+delete_note_schema = {
+    "type": "object",
+    "title": "Delete a thread note.", 
+    "properties": {
+        "note_id": {
+            "description": "Id of note to delete.",
             "type": "integer",
             "exclusiveMinimum": 0 
             }
     },
     "additionalProperties": False,
-    "required": ["message_id"]
+    "required": ["note_id"]
 }

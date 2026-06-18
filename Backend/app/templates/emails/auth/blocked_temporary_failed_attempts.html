@@ -1,0 +1,42 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Temporary block: too many failed attempts
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>Your account has been temporarily blocked due to too many failed log-in attempts.</p>
+</div>
+
+<div class="p_block">
+    <p> <b> block will be lifted automatically in {{wait_time}} {{wait_time_measure}}.</b></p>
+
+</div>
+
+<div class="p_block">
+    <p>No action is required from your part.</p>
+    <p>After the block is lifted, you may try to log in or change your credentials again.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}

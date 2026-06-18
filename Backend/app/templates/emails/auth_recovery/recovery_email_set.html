@@ -1,0 +1,95 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+Recovery email set
+{% endblock %}
+
+{% block extra_styles %}
+<style type="text/css">
+    .p_block {
+        margin-bottom: 30px;
+        margin-top: 30px;
+    }
+
+    .button_parent {
+        padding: 10px 0 10px 0;
+    }
+
+    .button_shadow {
+        /* box shadow usually does not work in emails, so one must be creative */
+        border-radius: 7px;
+        background-color: #eaeaea;
+        padding: 10px 3px 14px 0px;
+        margin-left: 5px;
+    }
+
+    .button {
+        margin-left: -5px;
+        background-color: #4B83E3;
+        border-bottom: 2px solid #4170c0;
+        border-right: 2px solid #4170c0;
+        border-radius: 7px;
+        color: #ffffff !important;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-decoration: none !important;
+        padding: 10px 25px;
+    }
+
+    .button:hover {
+        background-color: #4170c0 !important;
+    }
+
+    .button:visited {
+        background-color: #384d4f !important;
+        color: #152325;
+    }
+
+    .team_name {
+        color: #7e7e7e;
+    }
+
+    .token {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.8em;
+        font-weight: bold;
+        background-color: #EBEBEB;
+        padding: 7px 15px;
+        border-radius: 5px;
+        display: inline-block;
+        user-select: text;
+        /* Ensures easy selection */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<div class="p_block">
+    <p>A recovery email has been added to your account.</p>
+</div>
+
+<div class="p_block">
+    <p class="code">Recovery email:</p>
+    <p class="code"><b>{{ new_recovery_email }}</b></p>
+</div>
+
+<div class="p_block">
+    <p>This email address may be used to help recover access to your account if you become locked out or lose access to
+        your
+        primary email address.</p>
+
+    <p>If you made this change, no further action is required.</p>
+
+    <p>If you did not make this change, please secure your account immediately and contact support.</p>
+</div>
+
+
+<div class="p_block">
+    <p class="team_name"><b>---The SafeDev Team</b></p>
+</div>
+
+{% endblock %}

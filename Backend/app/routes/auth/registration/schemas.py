@@ -9,7 +9,9 @@ auth/schemas.py contains the json schemas to validate request data in the auth r
 These schemas are passed in to `validate_schema` (see `app/utils/custom_decorators/json_schema_validator.py`) through the route's decorator to validate client data received in json format by comparing it to the schema rules.
 
 """
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN, PASSWORD_PATTERN, OTP_PATTERN
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.validation_patterns import NAME_PATTERN, EMAIL_PATTERN, OTP_PATTERN
+
 
 
 ####################################
@@ -35,7 +37,7 @@ signup_schema = {
             "type": "string", 
             "minLength":  INPUT_LENGTH['password']['minValue'], 
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
+            # "pattern": PASSWORD_PATTERN
             },
         "honeypot": {
             "type": "string", 
@@ -62,7 +64,7 @@ delete_user_schema = {
             "type": "string", 
             "minLength":  INPUT_LENGTH['password']['minValue'],
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
+            # "pattern": PASSWORD_PATTERN
             },
         "otp": {
             "description": "Can only accept otp.",

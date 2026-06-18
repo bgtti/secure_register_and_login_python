@@ -6,8 +6,9 @@ Files contain database models used by SQLAlchemy to create the db tables.
 --------------------------------------
 `models/__init__.py` (this) is use to centralize model imports (used as fix against circular imports)
 """
+from .role import Role
 from .user import User
 from .token import Token
 
 # List of all models for easier imports elsewhere
-__all__ = ["User", "Token"]
+__all__ = ["User", Role, "Token"]
