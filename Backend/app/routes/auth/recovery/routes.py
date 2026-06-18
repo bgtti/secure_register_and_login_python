@@ -45,29 +45,47 @@ from app.extensions.extensions import db, flask_bcrypt, limiter
 from app.models.user import User
 
 # Utilities
-from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.detect_html.detect_html import check_for_html
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.profanity_check.profanity_check import has_profanity
-from app.utils.salt_and_pepper.helpers import get_pepper
+from app.common.custom_decorators.json_schema_validator import validate_schema
+from app.common.ip_utils.ip_address_validation import get_client_ip
+from app.common.anonymization.anonymize import anonymize_email
 
-# Auth helpers
-from app.routes.auth.helpers_auth import anonymize_email
+# Services
+from app.services.auth.user_acct_recovery_service import (
+    svc_reset_new_recovery_email,
+    svc_save_new_recovery_email,
+    svc_set_recovery_email,
+    svc_delete_recovery_email
+)
+from app.services.auth.user_otp_and_pw_service import svc_is_pw_or_otp_valid
+from app.services.auth.user_security_code_service import (
+    svc_generate_security_code, 
+    svc_reset_security_codes,
+    svc_validate_security_codes
+    )
+from app.services.user.user_service import svc_get_user_or_none
 
-# Recovery helpers 
-from app.routes.auth.recovery.email import (
-    send_email_recovery_set, 
-    send_email_recovery_deletion, 
-    send_email_change_and_set_recovery
+
+# Email Services
+from app.emails.auth.recovery_email import (
+    send_recovery_email_req_set_email,
+    send_recovery_email_changed_email,
+    send_recovery_email_set_email,
+    send_email_recovery_deletion
     )
 
+# Log helpers
 from app.routes.auth.recovery.log import (
+    log_req_set_recovery_email,
     log_set_recovery_email,
     log_get_recovery_email,
     log_delete_recovery_email
 )
-
-from app.routes.auth.recovery.schemas import set_recovery_email_schema, get_recovery_email_schema, delete_recovery_email_schema
+# JSON Schema
+from app.routes.auth.recovery.schemas import (
+    req_set_recovery_email_schema,
+    set_recovery_email_schema, 
+    get_recovery_email_schema, 
+    delete_recovery_email_schema)
 
 # Blueprint
 from . import recovery
@@ -76,19 +94,19 @@ from . import recovery
 ############# ROUTES ###############
 
 ####################################
-#         SET RECOVERY EMAIL       #
+#    REQUEST SET RECOVERY EMAIL    #
 ####################################
 
-@recovery.route("/set_recovery_email", methods=["POST"])
+@recovery.route("/request_set_recovery_email", methods=["POST"])
 @login_required
-@limiter.limit("5/minute;6/day")
-@validate_schema(set_recovery_email_schema) 
-def set_recovery_email(): 
+@limiter.limit("5/minute;10/day")
+@validate_schema(req_set_recovery_email_schema) 
+def request_set_recovery_email(): 
     """
-    get_otp() -> JsonType
+    request_set_recovery_email() -> JsonType
     ----------------------------------------------------------
 
-    Sets a recovery email to the user's account.
+    Step 1/2 to set user's recovery email address. Sends a security code to to a given recovery email as the first step to set a recovery email.
     
     Returns Json object containing strings:
     - "response" value is always included. 
@@ -103,72 +121,159 @@ def set_recovery_email():
             }
     ``` 
     """
-    # Standard error response
-    error_response = {"response": "There was an error saving recovery email."} 
-
     # Get the JSON data from the request body 
     json_data = request.get_json()
     recovery_email = json_data["recovery_email"]
     password = json_data["password"]
-    otp = json_data["otp"]
     user_agent = json_data.get("user_agent", "") 
 
     # Get the request ip
     client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie 
-    try:
-        user = User.query.filter_by(email=current_user.email).first()
-    except Exception as e:
-        log_message = f"Failed to retrieve user from database. Error: {str(e)}"
-        logging.error(log_message)
-        log_set_recovery_email(500, log_message, user_agent, client_ip, 0)
-        return jsonify(error_response), 500
-    
-    # Recovery email should not be the same as email
-    if user.email == recovery_email:
-        user.otp_reset()
-        db.session.commit()
-        log_set_recovery_email(400, "", user_agent, client_ip, user.id)
-        return jsonify({"response": "Recovery must be different than account email."} ), 400
+    # Standard response
+    success_response = {"response": "Successfully sent security code to recovery email."}
+    error_401 = {"response": "Wrong password."}
+    error_440 = {"response": "Session expired. Please log in again."}
+    error_500 = {"response": "An error occurred, please try again."}
 
-    # Check password and OTP
-    if user.check_otp(otp) is False:
-        log_set_recovery_email(401, "Provided OTP is wrong or expired.", user_agent, client_ip, user.id)
-        return jsonify({"response": "Provided OTP is wrong or expired."} ), 401
+    # Get user
+    user = svc_get_user_or_none(current_user.email, "change_email")
+    if user is None:
+        log_req_set_recovery_email(500, "Session did not return current user.", user_agent, client_ip, 0)
+        return jsonify(error_440), 440
     
-    salted_password = user.salt + password + get_pepper(user.created_at)
-    if not flask_bcrypt.check_password_hash(user.password, salted_password):
-        log_set_recovery_email(401, "Incorrect password.", user_agent, client_ip, user.id)
-        return jsonify({"response": "Password incorrect."} ), 401
+    # Check password
+    pw_ok = svc_is_pw_or_otp_valid(user, password, "password")
 
-    try:
-        if check_for_html(recovery_email, "set recovery email", recovery_email):
-            user.flag = "YELLOW"
-            log_set_recovery_email(207, f"Recovery set to: {recovery_email}", user_agent, client_ip, user.id)
-        old_recovery_email = user.recovery_email
-        user.recovery_email = recovery_email
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log_message = f"Failed to save recovery email. Error: {str(e)}"
-        logging.error(log_message)
-        log_set_recovery_email(500, log_message, user_agent, client_ip, user.id)
-        return jsonify(error_response), 500
+    if not pw_ok:
+        log_req_set_recovery_email(401, f"Wrong password input.", user_agent, client_ip, user.id)
+        return jsonify(error_401), 401
     
-    # Send confirmation emails that new recovery has been added 
-    if old_recovery_email:
-        #TODO: SSL issue not resolved
-        send_email_change_and_set_recovery(user.name, user.email, old_recovery_email, recovery_email)
-        log_set_recovery_email(204, f"Previous recovery email: {old_recovery_email}", user_agent, client_ip, user.id)
-    else:
-        send_email_recovery_set(user.name, user.email, recovery_email)
+    # Check recovery email and save it to db
+    recovery_status = svc_save_new_recovery_email(user, recovery_email)
 
-    # Log
-    log_set_recovery_email(200, "", user_agent, client_ip, user.id)
+    log_req_set_recovery_email(recovery_status["log_code"], recovery_status["log_text"], user_agent, client_ip, user.id)
+
+    if not recovery_status["success"]:
+        jsonify({"response": recovery_status["res_msg"]}), recovery_status["res_code"]
+
+    # Send security code to new recovery email
+    code = svc_generate_security_code(user, False)
+
+    if not code or not code[0]:
+        log_req_set_recovery_email(500, "Failed to generate security codes.", user_agent, client_ip, user.id)
+        return jsonify(error_500), 500
+    
+    email_sent = send_recovery_email_req_set_email(user.name, recovery_email, code[0])
+
+    if not email_sent:
+        svc_reset_security_codes(user)
+        svc_reset_new_recovery_email(user)
+        msg = f"Failed to send security code email. Security codes were reset."
+        logging.error(msg)
+        log_req_set_recovery_email(500, msg, user_agent,client_ip, user.id)
+        return jsonify(error_500), 500
+    
+    log_req_set_recovery_email(200, "Successfully sent security code to recovery email.", user_agent,client_ip, user.id)
+
+    return jsonify(success_response)
+
+####################################
+#         SET RECOVERY EMAIL       #
+####################################
+
+@recovery.route("/set_recovery_email", methods=["POST"])
+@login_required
+@limiter.limit("5/minute;10/day")
+@validate_schema(set_recovery_email_schema) 
+def set_recovery_email(): 
+    """
+    set_recovery_email() -> JsonType
+    ----------------------------------------------------------
+
+    Step 2/2 of setting a recovery email.
+    Receives a security code to validate, sets new recovery email, and confirms change to the user's email address(es).
+    
+    Returns Json object containing strings:
+    - "response" value is always included. 
+
+    ----------------------------------------------------------
+    **Response example:**
+
+    ```python
+        response_data = {
+                "response":"success",
+                "recovery_email": "john@doe.com"
+            }
+    ``` 
+    """
+    # Get the JSON data from the request body 
+    json_data = request.get_json()
+    security_code = json_data["security_code"]
+    user_agent = json_data.get("user_agent", "") 
+
+    # Get the request ip
+    client_ip = get_client_ip(request) or ""
+
+    # Standard response
+    error_400 = {"response": "Security code is missing, wrong, or expired."}
+    error_422 = {"response": "New recovery email missing. Please Re-start the process."}
+    error_440 = {"response": "Session expired. Please log in again."}
+    error_500 = {"response": "An error occurred, please try again."}
+
+    # Get user
+    user = svc_get_user_or_none(current_user.email, "set_recovery_email")
+    if user is None:
+        log_set_recovery_email(500, "Session did not return current user.", user_agent, client_ip, 0)
+        return jsonify(error_440), 440
+    
+    # Check whether a new recovery email exsts
+    if not user.new_recovery_email:
+        log_set_recovery_email(422, "No pending recovery email found.", user_agent, client_ip, user.id)
+        return jsonify(error_422), 422
+
+    # Check security code
+    code_ok = svc_validate_security_codes(user, security_code)
+
+    if not code_ok:
+        log_set_recovery_email(400, "Security code wrong or expired.", user_agent, client_ip, user.id)
+        return jsonify(error_400), 400
+    
+    # Save user's current settings
+    old_recovery_email = user.recovery_email
+    new_recovery_email = user.new_recovery_email
+
+    recovery_change_ok = svc_set_recovery_email(user)
+
+    if not recovery_change_ok:
+        log_set_recovery_email(500, "Could not set recovery email due to DB error.", user_agent, client_ip, user.id)
+        return jsonify(error_500), 500
+    
+    #NOTE: failure in sending emails are ignored at this time
+
+    # Confirm per email to the newly set recovery email
+    send_recovery_email_set_email(user.name, new_recovery_email, new_recovery_email)
 
     # Anonymize recovery email
-    anonymized_recovery_email = anonymize_email(recovery_email)
+    anonymized_recovery_email = anonymize_email(new_recovery_email)
+    anonymized_old_recovery_email = anonymize_email(old_recovery_email)
+
+    # Confirm change or setting of new recovery email to user
+    if old_recovery_email:
+        # Confirm change to user's email
+        send_recovery_email_changed_email(user.name, user.email, new_recovery_email)
+        # Confirm change to user's old recovery email
+        send_recovery_email_changed_email(user.name, old_recovery_email, new_recovery_email)
+        
+        # Log change
+        log_set_recovery_email(200, f"Old recovery: {anonymized_old_recovery_email}, new: {anonymized_recovery_email}", user_agent, client_ip, user.id)
+    else:
+        # Confirm change to user's email
+        send_recovery_email_set_email(user.name, user.email, new_recovery_email)
+        
+        # Log set
+        log_set_recovery_email(201, f"Recovery set to: {anonymized_recovery_email}", user_agent, client_ip, user.id)
+    
 
     response_data = {
             "response":"Recovery email added successfully!",
@@ -211,7 +316,7 @@ def get_recovery_status():
     recovery_email = current_user.recovery_email
 
     # Determine if a recovery email was added
-    recovery_email_added = recovery_email is not None and recovery_email.strip() != ""
+    recovery_email_added = bool(recovery_email and recovery_email.strip())
 
     # Anonymize email if it's provided
     anonymized_recovery_email = anonymize_email(recovery_email) if recovery_email_added else ""
@@ -248,7 +353,7 @@ def get_recovery_email():
     ```python
         response_data = {
                 "response":"success",
-                "recovery_email": john@email.com" 
+                "recovery_email": "john@email.com" 
             }
     ``` 
     """
@@ -260,29 +365,31 @@ def get_recovery_email():
     # Get the request ip
     client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie
-    try:
-        user = User.query.filter_by(email=current_user.email).first()
-    except Exception as e:
-        log_message = f"Database query failed: {str(e)}"
-        logging.error(log_message)
-        log_get_recovery_email(500, log_message, user_agent, client_ip, 0)
-        return jsonify({"response": "An error occurred while fetching the user."}), 500
+    # Standard response
+    error_401 = {"response": "Wrong password."}
+    error_422 = {"response": "No recovery email found."}
+    error_440 = {"response": "Session expired. Please log in again."}
+
+    # Get user
+    user = svc_get_user_or_none(current_user.email, "get_recovery_email")
+    if user is None:
+        log_get_recovery_email(440, "Session did not return current user.", user_agent, client_ip, 0)
+        return jsonify(error_440), 440
 
     # Check password     
-    salted_password = user.salt + password + get_pepper(user.created_at)
-    if not flask_bcrypt.check_password_hash(user.password, salted_password):
-        log_get_recovery_email(500, "Wrong password input.", user_agent, client_ip, user.id)
-        return jsonify({"response": "Password incorrect."} ), 401
+    pw_ok = svc_is_pw_or_otp_valid(user, password, "password")
+    if not pw_ok:
+        log_get_recovery_email(401, "Wrong password input.", user_agent, client_ip, user.id)
+        return jsonify(error_401 ), 401
 
     # Get the recovery email (it may be None or a string)
     recovery_email = user.recovery_email
 
     if not recovery_email:
-        log_get_recovery_email(404, "", user_agent, client_ip, user.id)
-        return jsonify({"response": "No recovery email found."} ), 404
+        log_get_recovery_email(422, "", user_agent, client_ip, user.id)
+        return jsonify(error_422 ), 422
     
-    log_get_recovery_email(100, "", user_agent, client_ip, user.id)
+    log_get_recovery_email(200, "", user_agent, client_ip, user.id)
 
     response_data = {
             "response":"success",
@@ -304,6 +411,7 @@ def delete_recovery_email():
     ----------------------------------------------------------
 
     Route deletes the user's recovery_email. 
+    PS: FE should make sure user is aware that this action will disable MFA.
     
     Returns Json object containing strings:
     - "response" value is always included.  
@@ -329,46 +437,52 @@ def delete_recovery_email():
     # Get the request ip
     client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie 
-    try:
-        user = User.query.filter_by(email=current_user.email).first()
-    except Exception as e:
-        log_message = f"Database query failed: {str(e)}"
-        logging.error(log_message)
-        log_delete_recovery_email(500, log_message, user_agent, client_ip, 0)
-        return jsonify({"response": "An error occurred while fetching the user."}), 500
+    # Standard response
+    error_401 = {"response": "Wrong password."}
+    error_422 = {"response": "No recovery email found."}
+    error_440 = {"response": "Session expired. Please log in again."}
+    error_500 = {"response": "An error occurred, please try again."}
 
+    # Get user
+    user = svc_get_user_or_none(current_user.email, "delete_recovery_email")
+    if user is None:
+        log_delete_recovery_email(440, "Session did not return current user.", user_agent, client_ip, 0)
+        return jsonify(error_440), 440
+    
     # Check password     
-    salted_password = user.salt + password + get_pepper(user.created_at)
-    if not flask_bcrypt.check_password_hash(user.password, salted_password):
-        log_delete_recovery_email(500, "Incorrect password input.", user_agent, client_ip, user.id)
-        return jsonify({"response": "Password incorrect."} ), 401
+    pw_ok = svc_is_pw_or_otp_valid(user, password, "password")
+    if not pw_ok:
+        log_delete_recovery_email(401, "Wrong password input.", user_agent, client_ip, user.id)
+        return jsonify(error_401 ), 401
+    
+    # Check whether recovery email exists
+    if not user.recovery_email:
+        log_delete_recovery_email(422, "No recovery email found.", user_agent, client_ip, user.id)
+        return jsonify(error_422 ), 422
+    
+    # Save current user data:
+    mfa_was_enabled = user.mfa_enabled
+    old_recovery_email = user.recovery_email
 
     # Delete the recovery email
-    try:
-        old_recovery_email = user.recovery_email
-        user.recovery_email = None
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log_message = f"Failed to delete recovery email: {str(e)}"
-        logging.error(log_message)
-        log_delete_recovery_email(500, log_message, user_agent, client_ip, user.id)
-        return {"response": "Failed to delete recovery email."}, 500
+    recovery_deleted = svc_delete_recovery_email(user)
+    if not recovery_deleted:
+        log_delete_recovery_email(500, "Could not delete recovery email: DB failure or incorrect user.", user_agent, client_ip, user.id)
+        return jsonify(error_500), 500
     
-    # Send confirmation emails that recovery has been removed
+    # Send confirmation emails that recovery has been removed to main email and old recovery email
     send_email_recovery_deletion(user.name, user.email, old_recovery_email)
-    # try:
-    #     mail_sent = send_email_recovery_deletion(user.name, user.email, old_recovery_email)
-    #     if not mail_sent:
-    #         logging.error(f"Failed to send confirmation emails of set account recovery email.")
-    # except Exception as e:
-    #     logging.error(f"Error encountered while trying to send confirmation of setting recovery email. Error: {e}")
+    
+    # Log
+    if mfa_was_enabled:
+        log_delete_recovery_email(201, "", user_agent, client_ip, user.id)
+    else:
+        log_delete_recovery_email(200, "", user_agent, client_ip, user.id)
 
-    log_delete_recovery_email(200, "", user_agent, client_ip, user.id)
+    #TODO: check if FE requires new MFA data
 
     response_data = {
-            "response":"Recovery email deleted sucessfully!",
+            "response":"Recovery email deleted successfully!",
             "recovery_email_added": False,
             "recovery_email_preview": ""
         }

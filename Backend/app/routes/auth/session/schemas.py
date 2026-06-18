@@ -1,5 +1,11 @@
-from app.utils.constants.account_constants import INPUT_LENGTH,  EMAIL_PATTERN, PASSWORD_PATTERN
-from app.utils.constants.enum_class import TokenPurpose, AuthMethods, PasswordChangeReason
+# from app.common.constants.account_constants import INPUT_LENGTH,  EMAIL_PATTERN, PASSWORD_PATTERN
+# from app.common.constants.enum_class import TokenPurpose, AuthMethods, PasswordChangeReason
+
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.validation_patterns import EMAIL_PATTERN
+# from app.constants.auth_token_purpose import TokenPurpose
+from app.constants.auth_methods import AuthMethods
+# from app.constants.auth_password_change import PasswordChangeReason
 
 
 login_method_values = [method.value for method in AuthMethods]
@@ -18,7 +24,7 @@ get_otp_schema = {
             "minLength": INPUT_LENGTH['email']['minValue'], 
             "maxLength": INPUT_LENGTH['email']['maxValue'], 
             "pattern": EMAIL_PATTERN},
-        "honeypot": {
+        "honeypot": { #TODO: rename 'honeypot' to something else!
             "type": "string", 
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
             "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
@@ -27,7 +33,13 @@ get_otp_schema = {
             "description": "The HTTP User-Agent request header. ",
             "type": "string", 
             "minLength": INPUT_LENGTH['user_agent']['minValue'], 
-            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], 
+            },
+        "form_name": {
+            "description": "Name of the form (if any) that triggered the call ",
+            "type": "string", 
+            "minLength": INPUT_LENGTH['form_name']['minValue'], 
+            "maxLength": INPUT_LENGTH['form_name']['maxValue'], 
             }
     },
     "additionalProperties": False,
@@ -49,7 +61,6 @@ login_schema = {
             "type": "string", 
             "minLength":  INPUT_LENGTH['password']['minValue'], # should be the same as OTP length
             "maxLength": INPUT_LENGTH['password']['maxValue'], 
-            "pattern": PASSWORD_PATTERN
             },
         "method": {
             "description": "Whether user wants to log in with otp or password",
@@ -60,7 +71,7 @@ login_schema = {
             "description": "Indicates whether this is the first (true) or second (false) authentication factor",
             "type": "boolean", 
         },
-        "honeypot": {
+        "honeypot": { #TODO: rename 'honeypot' to something else!
             "description": "Designed for catching bots.",
             "type": "string", 
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
@@ -70,7 +81,7 @@ login_schema = {
             "description": "The HTTP User-Agent request header. Optional.",
             "type": "string", 
             "minLength": INPUT_LENGTH['user_agent']['minValue'], 
-            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], #TODO get regex pattern
+            "maxLength": INPUT_LENGTH['user_agent']['maxValue'], 
             }
     },
     "additionalProperties": False,

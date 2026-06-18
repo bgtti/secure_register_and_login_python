@@ -1,7 +1,7 @@
 {% extends "emails/base.html" %}
 
 {% block title %}
-Recovery email changed
+Change of recovery email address
 {% endblock %}
 
 {% block extra_styles %}
@@ -11,8 +11,56 @@ Recovery email changed
         margin-top: 30px;
     }
 
+    .button_parent {
+        padding: 10px 0 10px 0;
+    }
+
+    .button_shadow {
+        /* box shadow usually does not work in emails, so one must be creative */
+        border-radius: 7px;
+        background-color: #eaeaea;
+        padding: 10px 3px 14px 0px;
+        margin-left: 5px;
+    }
+
+    .button {
+        margin-left: -5px;
+        background-color: #4B83E3;
+        border-bottom: 2px solid #4170c0;
+        border-right: 2px solid #4170c0;
+        border-radius: 7px;
+        color: #ffffff !important;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-decoration: none !important;
+        padding: 10px 25px;
+    }
+
+    .button:hover {
+        background-color: #4170c0 !important;
+    }
+
+    .button:visited {
+        background-color: #384d4f !important;
+        color: #152325;
+    }
+
     .team_name {
         color: #7e7e7e;
+    }
+
+    .token {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.8em;
+        font-weight: bold;
+        background-color: #EBEBEB;
+        padding: 7px 15px;
+        border-radius: 5px;
+        display: inline-block;
+        user-select: text;
+        /* Ensures easy selection */
     }
 </style>
 {% endblock %}
@@ -21,29 +69,18 @@ Recovery email changed
 <p>Dear {{ user_name }},</p>
 
 <div class="p_block">
-    <p>We wanted to let you know that changes were made to the recovery email associated with your account:</p>
-    <p><b>{{ acct_email}}</b></p>
+    <p>The recovery email associated with your account has been changed.</p>
 </div>
 
 <div class="p_block">
-    <p>The email address <b>{{ old_recovery_email }}</b> has been removed as the backup method for accessing your
-        account.</p>
+    <p class="code">New recovery email:</p>
+    <p class="code"><b>{{ new_recovery_email }}</b></p>
 </div>
 
 <div class="p_block">
-    <p>A new recovery email address has been added. </p>
-    <p>You will receive a confirmation email about the new recovery email shortly,
-        sent to both your primary and new recovery email addresses.</p>
-</div>
+    <p>If you made this change, no further action is required.</p>
 
-<div class="p_block">
-    <p>Recovery emails help you regain access to your account if you lose access to your primary email or forget your
-        password.
-        We recommend keeping this information up-to-date for account security.</p>
-</div>
-
-<div class="p_block">
-    <p>In case you did not make this change, contact support immediatelly.</p>
+    <p>If you did not make this change, please secure your account immediately and contact support.</p>
 </div>
 
 

@@ -11,7 +11,7 @@ This package contains authentication-related modules, including:
 - Safety: account verification and safety-related routes (verify email, enable MFA)
 - Session: routes that authenticate a session (login, logout, otp request)
 
-Util/helper files may be used by multiple route files.
+Utility/helper files may be used by multiple route files.
 
 **auth/__init__.py** (this) contains the Blueprint definition "auth" to be imported into the route files.
 

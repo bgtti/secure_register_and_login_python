@@ -31,10 +31,14 @@ from app.extensions.extensions import db, limiter
 from app.models.user import User
 
 # Utilities
-from app.utils.custom_decorators.json_schema_validator import validate_schema
-from app.utils.detect_html.detect_html import check_for_html
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.profanity_check.profanity_check import has_profanity
+from app.common.custom_decorators.json_schema_validator import validate_schema
+from app.common.detect_html.detect_html import check_for_html
+from app.common.ip_utils.ip_address_validation import get_client_ip
+from app.common.profanity_check.profanity_check import has_profanity
+
+# Services
+from app.services.auth.user_profile_service import svc_change_user_name
+from app.services.user.user_service import svc_get_user_or_none
 
 # Auth helpers
 from app.routes.auth.helpers_auth import user_name_is_valid
@@ -61,7 +65,7 @@ from . import profile
 @login_required
 @validate_schema(change_name_schema)
 @limiter.limit("10/day")
-def change_user_name(): # TODO --> Add to logs so user actions can show in history
+def change_user_name(): 
     """
     change_user_name() -> JsonType
     ----------------------------------------------------------
@@ -87,9 +91,7 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
             }
     ``` 
     """
-    # Standard error response
-    error_response = {"response": "There was an error changing user's name."}
-
+    
     # Get the JSON data from the request body
     json_data = request.get_json()
     new_name = json_data["new_name"]
@@ -98,66 +100,36 @@ def change_user_name(): # TODO --> Add to logs so user actions can show in histo
     # Get the request ip
     client_ip = get_client_ip(request) or ""
 
-    # Get the user from cookie 
-    try:
-        user = User.query.filter_by(email=current_user.email).first()
-    except Exception as e:
-        log_message = f"Failed to retrieve user from database. Error: {str(e)}"
-        logging.error(log_message)
-        log_change_name(500, log_message, user_agent, client_ip, 0)
-        return jsonify(error_response), 500
+    # Error messages
+    error_400 = {"response": "Error: name could not be changed."}
+    error_440 = {"response": "Session expired. Please log in again."}
+    error_500 = {"response": "System error: could not change name."}
+
+
+    # Check if user exists
+    user = svc_get_user_or_none(current_user.email, "change_user_name")
 
     if user is None:
-        log_change_name(500, "Session did not return current user.", user_agent, client_ip, 0)
-        return jsonify({"response": "Error: user not found."}), 500 #500 instead of 401 because @login_required so current_user should exist
-
-    new_name_is_valid = user_name_is_valid(new_name)
-
-    if not new_name_is_valid:
-        log_change_name(400, f"New name is not valid. New name: {new_name}", user_agent, client_ip, user.id)
-        return jsonify(error_response), 400
-
-    # the_user = User.query.filter_by(email=current_user.email).first()
-    old_name = user.name
-
-    try:
-        user.name = new_name
-        db.session.commit()
-        log_message = f"User {current_user.email} name changed from {old_name} to {new_name}."
-        logging.info(log_message)
-        log_change_name(200, log_message, user_agent, client_ip, user.id)
-        
-    except Exception as e:
-        db.session.rollback()
-        log_message = f"User could not change name. Error: {str(e)}"
-        logging.error(log_message)
-        log_change_name(500, log_message, user_agent, client_ip, user.id)
-        return jsonify(error_response), 500
-
-    flag = False
-
-    html_in_name = check_for_html(new_name, "auth - change_user_name", current_user.email)
-    if html_in_name:
-        flag = "YELLOW"
-        user.flag_change(flag)
-    else:
-        profanity_in_name = has_profanity(new_name) 
-        if profanity_in_name:
-            flag = "PURPLE"
-            user.flag_change(flag)
+        log_change_name(440, "Session did not return current user.", user_agent, client_ip, 0)
+        return jsonify(error_440), 440 
     
-    if flag:
-            user.flag_change(flag)
-            db.session.commit()
-            log_change_name(207, f"New name: {new_name}.", user_agent, client_ip, user.id)
+    change_name_res = svc_change_user_name(user, new_name)
+
+    log_change_name(change_name_res["log_code"], change_name_res["log_text"], user_agent, client_ip, user.id)
+
+    if not change_name_res["success"]:
+        if change_name_res["log_code"] == 500:
+            return jsonify(error_500), 500
+        else:
+            return jsonify(error_400), 400
 
     response_data ={
             "response":"success",
             "user": {
-                "access": user.access_level.value, 
+                "access": user.role.access_level, 
                 "name": user.name, 
                 "email": user.email,
-                "email_is_verified": user.email_is_verified.value
+                "email_is_verified": user.email_is_verified
                 },
         }
     return jsonify(response_data)

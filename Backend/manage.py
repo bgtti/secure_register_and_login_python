@@ -24,6 +24,8 @@ from scripts.setup import initial_setup
 # - Check whether there is a .env file and warn in case the data in this file is incorrect
 
 
+#TODO: pip install python-dateutil
+
 if ENVIRONMENT == "local" or ENVIRONMENT == "development":
     app = create_app(DevelopmentConfig)
 else:

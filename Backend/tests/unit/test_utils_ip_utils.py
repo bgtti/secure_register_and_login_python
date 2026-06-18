@@ -1,8 +1,8 @@
 from flask import request
 import requests_mock
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.ip_utils.ip_geolocation import geolocate_ip 
-from app.utils.ip_utils.ip_anonymization import anonymize_ip
+from app.common.ip_utils.ip_address_validation import get_client_ip
+from app.common.ip_utils.ip_geolocation import geolocate_ip 
+from app.common.ip_utils.ip_anonymization import anonymize_ip
 
 def test_get_client_ip(app_test):
     """

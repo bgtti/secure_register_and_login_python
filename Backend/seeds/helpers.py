@@ -14,7 +14,7 @@ The following functions deal with with date handling:
 """
 from datetime import datetime, timezone
 from app.extensions.extensions import flask_bcrypt
-from app.utils.salt_and_pepper.helpers import get_pepper
+from app.common.salt_and_pepper.helpers import get_pepper
 
 # DATE-RELATED FUNCTIONS
 

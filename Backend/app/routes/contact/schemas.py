@@ -1,4 +1,5 @@
-from app.utils.constants.account_constants import INPUT_LENGTH, NAME_PATTERN, EMAIL_PATTERN
+from app.constants.validation_input_length import INPUT_LENGTH
+from app.constants.validation_patterns import NAME_PATTERN, EMAIL_PATTERN
 
 contact_form_schema = {
     "type": "object",
@@ -25,16 +26,12 @@ contact_form_schema = {
             "minLength":  INPUT_LENGTH['contact_message']['minValue'], 
             "maxLength": INPUT_LENGTH['contact_message']['maxValue'],
         },
-        "is_user": {
-            "description": "Set to true if user is logged in.",
-            "type": "boolean",
-        },
-        "honeypot": {
+        "honeypot": { #TODO rename
             "type": "string", 
             "minLength":  INPUT_LENGTH['honeypot']['minValue'], 
             "maxLength": INPUT_LENGTH['honeypot']['maxValue'], 
         },
     },
     "additionalProperties": False,
-    "required": ["name","email", "message", "is_user", "honeypot"]
+    "required": ["name","email", "message", "honeypot"]
 }

@@ -1,6 +1,11 @@
+# Python/Flask libraries
 import logging
-from app.extensions.extensions import  db
-from app.models.log_activity import LogActivity
+
+# Constants
+from app.constants.log_events_security import SecurityEvent
+
+# Services
+from app.services.logging.security_log_services import svc_add_log_security
 
 # Use for function: reset_password_token
 def log_change_name(http_code: int, text: str="", user_agent: str="", user_ip: str="", user_id: int=0) -> None: 
@@ -27,31 +32,36 @@ def log_change_name(http_code: int, text: str="", user_agent: str="", user_ip: s
     match http_code:
         case 200:
             message = "Name changed successfully."
+            event = SecurityEvent.USER_NAME_CHANGE_SUCCESS
         case 207:
-            message = "Name changed. User flagged."
+            message = "Name changed successfully." # User was flagged
+            event = SecurityEvent.USER_NAME_CHANGE_SUCCESS
         case 400:
-            message = "Failed name change: malformed client request."
+            message = "Name change failed: malformed client request." #likely impersonation, possible abuse
             level = "SUSPICIOUS"
+            event = SecurityEvent.USER_NAME_CHANGE_FAILURE
+        case 440:
+            message = "Name change failed: user not found." 
+            event = SecurityEvent.USER_NAME_CHANGE_FAILURE
         case 500:
-            message = "Error: password reset failed."
+            message = "Name change failed: system error."
             level = "WARNING"
+            event = SecurityEvent.USER_NAME_CHANGE_FAILURE
         case _:
             level = "NOTSET"
-            logging.error("Logging activity error: unexpected HTTP code received.")
+            message = "Event not set."
+            event = SecurityEvent.UNKNOWN_EVENT
+            logging.error("Logging security error: unexpected HTTP code received.")
     
-    try:
-        new_log= LogActivity(
-        level=level,
-        activity=activity,
-        message=message,
-        more_info=text,
-        ip=user_ip,
-        user_agent=user_agent,
-        user_id=user_id  
+    svc_add_log_security(
+        level,
+        event,
+        activity,
+        message,
+        text,
+        user_ip,
+        user_agent,
+        user_id
         )
-        db.session.add(new_log)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f"LogActivity creation failed. Log activity: {activity}, http code: {http_code}  Error: {e}")
-    return 
+    
+    return  

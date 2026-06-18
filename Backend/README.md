@@ -12,7 +12,7 @@ testing with pytest
 ## Installation
 
 <details>
-   <summary>1. Clone this repository</summary>
+   <summary>1. Fork or Clone this repository</summary>
 
 > \
 > More information on how to clone this repository available at https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
@@ -82,20 +82,36 @@ deactivate
 
 > \
 >
-> Create a .env file inside the Back-End folder and add the following information:
-> SECRET_KEY = "your_password"
-> JWT_SECRET_KEY = "your_password"
-> PEPPER = '["str1", "str2", "str3", "str4", "str5", "str6"]'
-> 
-> Replace "your_password" with a password of your choice.
-> Replace "str1"... with random strings that are 1 to 4 characters long
+> Create a .env file inside the Back-End folder.
+> Copy the contents of .env.default into it.
+> Don't forget to replace the values for SECRET_KEY, SUPER_ADMIN and EMAIL credentials, and PEPPER.
 >
 > <br/><br/>
 
 </details>
 
 <details>
-   <summary>5. Run the app</summary>
+   <summary>5. Run Redis</summary>
+
+> \
+>
+> You can install redis or install docker and start a redis container.
+> On Windows, I recommend installing docker: https://docs.docker.com/get-docker/
+> Then run the following command start a redis via docker:
+> 
+> ```pwsh
+> docker run -p 6379:6379 -it redis/redis-stack:latest
+> ```
+> This is necessary to use flask-session.
+> More information flask-session: https://flask-session.readthedocs.io/en/latest/interfaces.html
+> More information: https://github.com/redis/redis-py
+>
+> <br/><br/>
+
+</details>
+
+<details>
+   <summary>6. Run the app</summary>
 
 > \
 >
@@ -126,19 +142,52 @@ deactivate
 
 </details>
 
-## Docker: redis
-You can install redis or install docker and start a redis container.
-On Windows, I recommend installing docker: https://docs.docker.com/get-docker/
 
-Then run the following command start a redis via docker:
+***************************************************
+## Project Structure
 
-```pwsh
-docker run -p 6379:6379 -it redis/redis-stack:latest
+### manage.py, scripts, config, seeds, and utils
+These are the main files and modules outside the application scope.
 
-```
-This is necessary to use flask-session.
-More information flask-session: https://flask-session.readthedocs.io/en/latest/interfaces.html
-More information: https://github.com/redis/redis-py
+`manage.py` is the entry point to the application.
+It will get the environment set in your .env file (or default to "local").
+It will then create the app and configure it accordingly (using the `config` module).
+
+Once the app is created, it will call the `initial_setup` function from the `scripts` module.
+This function will check if Redis is working, will create the super user (if it does not already exist), and - if not running in production environment - will seed the database.
+
+Database seeding is used for testing. It will create dummie users and data that allows developers to live-test the app. This is done in the module `seeds`.
+
+`utils` contains helpers used inside and outside the application scope. Namely, contains a tree file generator (which can be safely deleted) and a function that prints colourful massages to the terminal (to help the debugging process).
+
+### app
+
+`app/__init__.py` contains the create_app function, which takes the configuration file (from `config`), registers blueprints and initializes flask extensions from the `extensions` module. You can find out more about extensions in `app/extensions/extensions.py`. In this module you will also find sqlalchemy custom decorators and login_manager configuration. 
+
+`app/models` contains all db models in the application.
+
+
+flow is basically:
+
+routes = request handling
+services = DB operations
+models = schema/data structure
+emails = email services (email sending)
+
+
+
+
+
+
+
+*****************************************************
+
+
+
+
+
+
+
 
 
 ## Running tests

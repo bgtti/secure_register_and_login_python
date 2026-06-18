@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-from app.utils.bot_detection.bot_detection import bot_caught
+from app.common.bot_detection.bot_detection import bot_caught
 from app.extensions.extensions import db
-from app.models.bot_catch import BotCatch
-from app.utils.ip_utils.ip_address_validation import get_client_ip
-from app.utils.ip_utils.ip_geolocation import geolocate_ip 
+from app.models.bot_trap import BotTrap
+from app.common.ip_utils.ip_address_validation import get_client_ip
+from app.common.ip_utils.ip_geolocation import geolocate_ip 
 
 def test_bot_capture(app_test):
     """
@@ -29,7 +29,7 @@ def test_bot_capture(app_test):
 
     # Check if the bot information is stored in the database
     with app_test.app_context():
-        bot = BotCatch.query.first()
+        bot = BotTrap.query.first()
         assert bot is not None
         assert bot.ip_address == "unknown"  # Update with the expected IP address
         assert bot.country == "unknown"  # Update with the expected values

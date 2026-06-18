@@ -1,5 +1,5 @@
 import pytest
-from app.utils.detect_html.detect_html import check_for_html
+from app.common.detect_html.detect_html import check_for_html
 
 @pytest.mark.parametrize("data, route, user_email, expected_result", [
     ("<base href='http://example.com/'>", "signup: name field input", "user@example.com", True),
